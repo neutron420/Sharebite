@@ -87,11 +87,15 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
     const status = searchParams.get("status") || "AVAILABLE";
+    const donorId = searchParams.get("donorId");
+    const city = searchParams.get("city");
 
     const donations = await prisma.foodDonation.findMany({
       where: {
         status: status as any,
         ...(category && { category: category as any }),
+        ...(donorId && { donorId }),
+        ...(city && { city }),
       },
       include: {
         donor: {
