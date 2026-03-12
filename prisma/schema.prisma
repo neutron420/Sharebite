@@ -58,7 +58,6 @@ model User {
   city        String?
   imageUrl    String?
 
-
   isVerified      Boolean @default(false)
   verificationDoc String?
 
@@ -72,9 +71,9 @@ model User {
   notifications Notification[]
 
   // Chat relations
-  sentMessages      Message[]
-  conversationsAsA  Conversation[] @relation("ParticipantA")
-  conversationsAsB  Conversation[] @relation("ParticipantB")
+  sentMessages     Message[]
+  conversationsAsA Conversation[] @relation("ParticipantA")
+  conversationsAsB Conversation[] @relation("ParticipantB")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -101,10 +100,10 @@ model FoodDonation {
   imageUrl        String?
   status          DonationStatus @default(AVAILABLE)
 
-  donorId  String
-  donor    User            @relation("DonorDonations", fields: [donorId], references: [id], onDelete: Cascade)
-  requests PickupRequest[]
-  reviews  Review[]
+  donorId       String
+  donor         User            @relation("DonorDonations", fields: [donorId], references: [id], onDelete: Cascade)
+  requests      PickupRequest[]
+  reviews       Review[]
   conversations Conversation[]
 
   createdAt DateTime @default(now())
@@ -176,7 +175,7 @@ model Notification {
   isRead    Boolean          @default(false)
   userId    String
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  link      String?          
+  link      String?
   createdAt DateTime         @default(now())
 
   @@index([userId])
@@ -184,17 +183,17 @@ model Notification {
 }
 
 model Conversation {
-  id         String   @id @default(uuid())
+  id         String       @id @default(uuid())
   donationId String
   donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
-  
+
   participantAId String
   participantA   User   @relation("ParticipantA", fields: [participantAId], references: [id])
   participantBId String
   participantB   User   @relation("ParticipantB", fields: [participantBId], references: [id])
 
   messages Message[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -202,18 +201,18 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(uuid())
-  text           String?  @db.Text
+  id             String       @id @default(uuid())
+  text           String?      @db.Text
   senderId       String
-  sender         User     @relation(fields: [senderId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id])
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
-  imageUrl       String?  
-  locationLat    Float?   
-  locationLng    Float?
 
-  createdAt      DateTime @default(now())
+  imageUrl    String?
+  locationLat Float?
+  locationLng Float?
+
+  createdAt DateTime @default(now())
 
   @@index([conversationId])
 }
