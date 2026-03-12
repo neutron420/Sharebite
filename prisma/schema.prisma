@@ -7,6 +7,13 @@ datasource db {
   provider = "postgresql"
 }
 
+enum NotificationType {
+  REQUEST_STATUS
+  NEW_DONATION
+  URGENT_EXPIRY
+  SYSTEM
+}
+
 enum UserRole {
   DONOR
   NGO
@@ -41,19 +48,19 @@ enum FoodCategory {
 }
 
 model User {
-  id              String   @id @default(uuid())
-  email           String   @unique
-  password        String
-  name            String
-  role            UserRole @default(DONOR)
-  phoneNumber     String?
-  address         String?
-  city            String?
-  imageUrl        String?
-  
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  name        String
+  role        UserRole @default(DONOR)
+  phoneNumber String?
+  address     String?
+  city        String?
+  imageUrl    String?
+
   // Verification for NGOs
-  isVerified      Boolean  @default(false)
-  verificationDoc String?  // URL to registration certificate
+  isVerified      Boolean @default(false)
+  verificationDoc String? // URL to registration certificate
 
   donations FoodDonation[]  @relation("DonorDonations")
   requests  PickupRequest[] @relation("NGORequests")
@@ -61,7 +68,13 @@ model User {
   reviewsGiven    Review[] @relation("Reviewer")
   reviewsReceived Review[] @relation("Reviewee")
 
-  auditLogs AuditLog[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+
+  // Chat relations
+  sentMessages      Message[]
+  conversationsAsA  Conversation[] @relation("ParticipantA")
+  conversationsAsB  Conversation[] @relation("ParticipantB")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -72,25 +85,26 @@ model User {
 }
 
 model FoodDonation {
-  id             String         @id @default(uuid())
-  title          String
-  description    String
-  quantity       Int
-  weight         Float?         @default(0) // Estimated weight in Kgs for impact analytics
-  category       FoodCategory
-  expiryTime     DateTime
+  id              String         @id @default(uuid())
+  title           String
+  description     String
+  quantity        Int
+  weight          Float?         @default(0) // Estimated weight in Kgs for impact analytics
+  category        FoodCategory
+  expiryTime      DateTime
   pickupStartTime DateTime
   pickupEndTime   DateTime
-  pickupLocation String
-  latitude       Float?
-  longitude      Float?
-  imageUrl       String?
-  status         DonationStatus @default(AVAILABLE)
+  pickupLocation  String
+  latitude        Float?
+  longitude       Float?
+  imageUrl        String?
+  status          DonationStatus @default(AVAILABLE)
 
   donorId  String
   donor    User            @relation("DonorDonations", fields: [donorId], references: [id], onDelete: Cascade)
   requests PickupRequest[]
   reviews  Review[]
+  conversations Conversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -139,16 +153,66 @@ model Review {
 }
 
 model AuditLog {
-  id        String   @id @default(uuid())
-  action    String  
-  details   String?  @db.Text
+  id        String  @id @default(uuid())
+  action    String
+  details   String? @db.Text
   ipAddress String?
-  
-  adminId   String
-  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  adminId String
+  admin   User   @relation(fields: [adminId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@index([action])
   @@index([adminId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  link      String?          
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model Conversation {
+  id         String   @id @default(uuid())
+  donationId String
+  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  
+  participantAId String
+  participantA   User   @relation("ParticipantA", fields: [participantAId], references: [id])
+  participantBId String
+  participantB   User   @relation("ParticipantB", fields: [participantBId], references: [id])
+
+  messages Message[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([donationId, participantAId, participantBId])
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  text           String?  @db.Text
+  senderId       String
+  sender         User     @relation(fields: [senderId], references: [id])
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  imageUrl       String?  
+  locationLat    Float?   
+  locationLng    Float?
+
+  createdAt      DateTime @default(now())
+
+  @@index([conversationId])
 }

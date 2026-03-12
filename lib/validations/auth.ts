@@ -8,6 +8,8 @@ export const registerSchema = z.object({
   phoneNumber: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
+  imageUrl: z.string().optional(),
+  verificationDoc: z.string().optional(),
 });
 
 export const loginSchema = z.object({

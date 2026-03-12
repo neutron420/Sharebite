@@ -35,6 +35,8 @@ export async function POST(request: Request) {
         phoneNumber: validatedData.phoneNumber,
         address: validatedData.address,
         city: validatedData.city,
+        imageUrl: validatedData.imageUrl,
+        verificationDoc: validatedData.verificationDoc,
       },
     });
 

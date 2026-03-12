@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { createNotification } from "@/lib/notifications";
 
 export async function PATCH(
   request: Request,
@@ -66,6 +67,15 @@ export async function PATCH(
     const updatedRequest = await prisma.pickupRequest.update({
       where: { id },
       data: updateData,
+    });
+
+    // Notify the NGO
+    await createNotification({
+      userId: pickupRequest.ngoId,
+      type: "REQUEST_STATUS",
+      title: `Request ${status.toLowerCase()}`,
+      message: `Your request for "${pickupRequest.donation.title}" has been ${status.toLowerCase()}.`,
+      link: `/dashboard/requests/${id}`
     });
 
     return NextResponse.json(updatedRequest);
