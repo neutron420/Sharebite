@@ -25,6 +25,7 @@ export const donationSchema = z.object({
     message: "Invalid date format for pickup end time",
   }),
   pickupLocation: z.string().min(5, "Pickup location must be at least 5 characters"),
+  city: z.string().min(2, "City must be at least 2 characters"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   weight: z.number().nonnegative("Weight cannot be negative").optional(),

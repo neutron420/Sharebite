@@ -28,6 +28,43 @@ export async function POST(request: Request) {
       },
     });
 
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { id: true }
+    });
+
+    const adminNotifications = admins.map(admin => ({
+      userId: admin.id,
+      type: "SYSTEM" as any,
+      title: "New Donation Posted",
+      message: `A new donation "${donation.title}" has been posted and needs oversight.`,
+      link: `/admin/donations/${donation.id}`
+    }));
+
+    // 2. Notify all Verified NGOs in the same city
+    const nearbyNGOs = await prisma.user.findMany({
+      where: {
+        role: "NGO",
+        isVerified: true,
+        city: validatedData.city || "",
+      },
+      select: { id: true }
+    });
+
+    const ngoNotifications = nearbyNGOs.map(ngo => ({
+      userId: ngo.id,
+      type: "NEW_DONATION" as any,
+      title: "Fresh Food Available Near You!",
+      message: `"${donation.title}" was just posted in ${donation.pickupLocation}. Request it before it expires!`,
+      link: `/donations/${donation.id}`
+    }));
+
+    if (adminNotifications.length > 0 || ngoNotifications.length > 0) {
+      await prisma.notification.createMany({
+        data: [...adminNotifications, ...ngoNotifications]
+      });
+    }
+
     return NextResponse.json(donation, { status: 201 });
   } catch (error: any) {
     if (error.name === "ZodError") {
