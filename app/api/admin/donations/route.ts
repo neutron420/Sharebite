@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { createAuditLog } from "@/lib/audit";
 
 export async function GET() {
   try {
@@ -35,7 +36,16 @@ export async function DELETE(request: Request) {
   
       if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
   
-      await prisma.foodDonation.delete({ where: { id } });
+      const donation = await prisma.foodDonation.findUnique({ where: { id } });
+      if (donation) {
+        await prisma.foodDonation.delete({ where: { id } });
+        
+        await createAuditLog({
+          adminId: session.userId as string,
+          action: "DELETE_DONATION",
+          details: `Deleted donation: ${donation.title} (ID: ${id})`,
+        });
+      }
   
       return NextResponse.json({ message: "Donation deleted by admin" });
     } catch (error) {

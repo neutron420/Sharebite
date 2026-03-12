@@ -27,6 +27,7 @@ export const donationSchema = z.object({
   pickupLocation: z.string().min(5, "Pickup location must be at least 5 characters"),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  weight: z.number().nonnegative("Weight cannot be negative").optional(),
   imageUrl: z.string().url().optional().or(z.literal("")),
 });
 

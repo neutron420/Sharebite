@@ -14,7 +14,9 @@ export async function GET() {
       totalDonations,
       totalRequests,
       recentDonations,
-      pendingRequests
+      pendingRequests,
+      totalWeightResult,
+      ngoLeaderboard
     ] = await Promise.all([
       prisma.user.count(),
       prisma.foodDonation.count(),
@@ -24,7 +26,24 @@ export async function GET() {
         orderBy: { createdAt: "desc" },
         include: { donor: { select: { name: true } } }
       }),
-      prisma.pickupRequest.count({ where: { status: "PENDING" } })
+      prisma.pickupRequest.count({ where: { status: "PENDING" } }),
+      prisma.foodDonation.aggregate({
+        where: { status: "COLLECTED" },
+        _sum: { weight: true }
+      }),
+      prisma.user.findMany({
+        where: { role: "NGO" },
+        select: {
+          name: true,
+          _count: {
+            select: { requests: { where: { status: "COMPLETED" } } }
+          }
+        },
+        orderBy: {
+          requests: { _count: "desc" }
+        },
+        take: 5
+      })
     ]);
 
     return NextResponse.json({
@@ -32,9 +51,11 @@ export async function GET() {
         totalUsers,
         totalDonations,
         totalRequests,
-        pendingRequests
+        pendingRequests,
+        totalWeightSaved: totalWeightResult._sum.weight || 0
       },
-      recentDonations
+      recentDonations,
+      ngoLeaderboard
     });
   } catch (error) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

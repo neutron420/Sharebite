@@ -41,15 +41,19 @@ enum FoodCategory {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  password    String
-  name        String
-  role        UserRole @default(DONOR)
-  phoneNumber String?
-  address     String?
-  city        String?
-  imageUrl    String?
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  name            String
+  role            UserRole @default(DONOR)
+  phoneNumber     String?
+  address         String?
+  city            String?
+  imageUrl        String?
+  
+  // Verification for NGOs
+  isVerified      Boolean  @default(false)
+  verificationDoc String?  // URL to registration certificate
 
   donations FoodDonation[]  @relation("DonorDonations")
   requests  PickupRequest[] @relation("NGORequests")
@@ -57,11 +61,14 @@ model User {
   reviewsGiven    Review[] @relation("Reviewer")
   reviewsReceived Review[] @relation("Reviewee")
 
+  auditLogs AuditLog[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([email])
   @@index([role])
+  @@index([isVerified])
 }
 
 model FoodDonation {
@@ -69,6 +76,7 @@ model FoodDonation {
   title          String
   description    String
   quantity       Int
+  weight         Float?         @default(0) // Estimated weight in Kgs for impact analytics
   category       FoodCategory
   expiryTime     DateTime
   pickupStartTime DateTime
@@ -128,4 +136,19 @@ model Review {
   @@unique([reviewerId, donationId])
   @@index([revieweeId])
   @@index([donationId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String  
+  details   String?  @db.Text
+  ipAddress String?
+  
+  adminId   String
+  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([adminId])
 }
