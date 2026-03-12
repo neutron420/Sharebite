@@ -89,6 +89,11 @@ export async function PATCH(
     const body = await request.json();
     const { status } = body;
 
+    const validStatuses = ["AVAILABLE", "REQUESTED", "APPROVED", "COLLECTED", "EXPIRED"];
+    if (!status || !validStatuses.includes(status)) {
+      return NextResponse.json({ error: "Invalid status. Must be one of: " + validStatuses.join(", ") }, { status: 400 });
+    }
+
     const donation = await prisma.foodDonation.findUnique({
       where: { id },
     });

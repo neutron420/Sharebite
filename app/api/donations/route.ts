@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { donationSchema } from "@/lib/validations/donation";
 import { getSession } from "@/lib/auth";
+import { NotificationType } from "@/app/generated/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
 
     const adminNotifications = admins.map(admin => ({
       userId: admin.id,
-      type: "SYSTEM" as any,
+      type: NotificationType.SYSTEM,
       title: "New Donation Posted",
       message: `A new donation "${donation.title}" has been posted and needs oversight.`,
       link: `/admin/donations/${donation.id}`
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
 
     const ngoNotifications = nearbyNGOs.map(ngo => ({
       userId: ngo.id,
-      type: "NEW_DONATION" as any,
+      type: NotificationType.NEW_DONATION,
       title: "Fresh Food Available Near You!",
       message: `"${donation.title}" was just posted in ${donation.pickupLocation}. Request it before it expires!`,
       link: `/donations/${donation.id}`

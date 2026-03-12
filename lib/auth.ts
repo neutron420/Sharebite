@@ -2,9 +2,11 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 
-const secretKey = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-secret-key-123456"
-);
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is not set");
+}
+
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export async function signToken(payload: any) {
   return await new SignJWT(payload)

@@ -7,9 +7,11 @@ import "dotenv/config";
 const prisma = new PrismaClient();
 const wss = new WebSocketServer({ port: 8080 });
 
-const secretKey = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-secret-key-123456"
-);
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is not set");
+}
+
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 // Map to track active connections per user
 const clients = new Map<string, WebSocket>();
@@ -38,7 +40,7 @@ wss.on("connection", async (ws, req) => {
         const { type, payload: msgPayload } = message;
 
         if (type === "SEND_MESSAGE") {
-          const { conversationId, text, receiverId, donationId, imageUrl, location } = msgPayload;
+          const { conversationId, text, receiverId, imageUrl, location } = msgPayload;
 
           const savedMsg = await prisma.message.create({
             data: {
@@ -70,12 +72,12 @@ wss.on("connection", async (ws, req) => {
       console.log(`User ${userId} disconnected`);
     });
 
-  } catch (err) {
+  } catch {
     ws.close(1008, "Invalid token");
   }
 });
 
-export async function sendNotification(userId: string, notification: any) {
+export async function sendNotification(userId: string, notification: Record<string, unknown>) {
   const ws = clients.get(userId);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({

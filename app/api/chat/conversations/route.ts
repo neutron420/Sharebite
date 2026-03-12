@@ -47,18 +47,23 @@ export async function POST(request: Request) {
        return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const conversation = await prisma.conversation.upsert({
+    const userId = session.userId as string;
+
+    // Check both directions — conversation may have been started by either participant
+    const existing = await prisma.conversation.findFirst({
       where: {
-        donationId_participantAId_participantBId: {
-          donationId,
-          participantAId: session.userId as string,
-          participantBId,
-        },
-      },
-      update: {},
-      create: {
         donationId,
-        participantAId: session.userId as string,
+        OR: [
+          { participantAId: userId, participantBId },
+          { participantAId: participantBId, participantBId: userId },
+        ],
+      },
+    });
+
+    const conversation = existing ?? await prisma.conversation.create({
+      data: {
+        donationId,
+        participantAId: userId,
         participantBId,
       },
     });

@@ -38,11 +38,11 @@ export async function PATCH(
     // Logic for updating status
     const updateData: any = { status };
 
-    // If a donor approves a request, mark the donation as 'REQUESTED' (or 'APPROVED')
+    // If a donor approves a request, mark the donation as 'APPROVED'
     if (status === "APPROVED" && (isDonor || isAdmin)) {
       await prisma.foodDonation.update({
         where: { id: pickupRequest.donationId },
-        data: { status: "REQUESTED" },
+        data: { status: "APPROVED" },
       });
       
       // Optionally reject all other pending requests for the same donation
