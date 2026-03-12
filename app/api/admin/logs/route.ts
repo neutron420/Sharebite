@@ -10,17 +10,18 @@ export async function GET() {
     }
 
     const logs = await prisma.auditLog.findMany({
+      orderBy: { createdAt: "desc" },
       include: {
         admin: {
-          select: { name: true, email: true }
+          select: { name: true }
         }
       },
-      orderBy: { createdAt: "desc" },
-      take: 100 // Last 100 logs
+      take: 100
     });
 
     return NextResponse.json(logs);
   } catch (error) {
+    console.error("Admin logs fetch error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

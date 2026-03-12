@@ -10,22 +10,21 @@ export async function GET() {
     }
 
     const users = await prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
+        isVerified: true,
         city: true,
-        createdAt: true,
-        _count: {
-          select: { donations: true, requests: true }
-        }
-      },
-      orderBy: { createdAt: "desc" }
+        createdAt: true
+      }
     });
 
     return NextResponse.json(users);
   } catch (error) {
+    console.error("Admin users fetch error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
