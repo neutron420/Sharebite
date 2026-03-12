@@ -12,6 +12,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if NGO is verified
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId as string },
+      select: { isVerified: true }
+    });
+
+    if (!user?.isVerified) {
+      return NextResponse.json(
+        { error: "Access Denied. Your NGO account must be verified by an admin before you can request food." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { donationId, message } = body;
 

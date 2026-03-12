@@ -1,0 +1,37 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+
+export async function GET() {
+  try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const notifications = await prisma.notification.findMany({
+      where: { userId: session.userId as string },
+      orderBy: { createdAt: "desc" },
+      take: 50
+    });
+
+    return NextResponse.json(notifications);
+  } catch (error) {
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
+// Mark all as read
+export async function PATCH() {
+    try {
+      const session = await getSession();
+      if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  
+      await prisma.notification.updateMany({
+        where: { userId: session.userId as string, isRead: false },
+        data: { isRead: true }
+      });
+  
+      return NextResponse.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+  }
