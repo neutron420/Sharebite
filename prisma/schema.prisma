@@ -28,6 +28,18 @@ enum RequestStatus {
   COMPLETED
 }
 
+enum FoodCategory {
+  VEG
+  NON_VEG
+  DAIRY
+  BAKERY
+  FRUITS_AND_VEGGIES
+  COOKED_FOOD
+  STAPLES
+  PACKAGED_FOOD
+  OTHERS
+}
+
 model User {
   id          String   @id @default(uuid())
   email       String   @unique
@@ -56,9 +68,11 @@ model FoodDonation {
   id             String         @id @default(uuid())
   title          String
   description    String
-  quantity       String
-  category       String
+  quantity       Int
+  category       FoodCategory
   expiryTime     DateTime
+  pickupStartTime DateTime
+  pickupEndTime   DateTime
   pickupLocation String
   latitude       Float?
   longitude      Float?
@@ -66,7 +80,7 @@ model FoodDonation {
   status         DonationStatus @default(AVAILABLE)
 
   donorId  String
-  donor    User            @relation("DonorDonations", fields: [donorId], references: [id])
+  donor    User            @relation("DonorDonations", fields: [donorId], references: [id], onDelete: Cascade)
   requests PickupRequest[]
   reviews  Review[]
 
@@ -76,6 +90,7 @@ model FoodDonation {
   @@index([status])
   @@index([expiryTime])
   @@index([latitude, longitude])
+  @@index([category])
 }
 
 model PickupRequest {
@@ -84,9 +99,9 @@ model PickupRequest {
   status  RequestStatus @default(PENDING)
 
   ngoId      String
-  ngo        User         @relation("NGORequests", fields: [ngoId], references: [id])
+  ngo        User         @relation("NGORequests", fields: [ngoId], references: [id], onDelete: Cascade)
   donationId String
-  donation   FoodDonation @relation(fields: [donationId], references: [id])
+  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -98,17 +113,19 @@ model PickupRequest {
 model Review {
   id      String  @id @default(uuid())
   rating  Int
-  comment String?
+  comment String? @db.Text
 
   reviewerId String
-  reviewer   User          @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewer   User         @relation("Reviewer", fields: [reviewerId], references: [id])
   revieweeId String
-  reviewee   User          @relation("Reviewee", fields: [revieweeId], references: [id])
-  donationId String?
-  donation   FoodDonation? @relation(fields: [donationId], references: [id])
+  reviewee   User         @relation("Reviewee", fields: [revieweeId], references: [id])
+  donationId String
+  donation   FoodDonation @relation(fields: [donationId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([reviewerId, donationId])
   @@index([revieweeId])
+  @@index([donationId])
 }
