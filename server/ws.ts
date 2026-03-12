@@ -2,9 +2,11 @@ import { WebSocketServer, WebSocket } from "ws";
 import { parse } from "url";
 import { jwtVerify } from "jose";
 import { PrismaClient } from "../app/generated/prisma";
+import { PrismaPg } from "@prisma/adapter-pg";
 import "dotenv/config";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 const wss = new WebSocketServer({ port: 8080 });
 
 if (!process.env.JWT_SECRET) {
