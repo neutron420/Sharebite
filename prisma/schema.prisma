@@ -37,7 +37,7 @@ model User {
   phoneNumber String?
   address     String?
   city        String?
-  imageUrl    String? 
+  imageUrl    String?
 
   donations FoodDonation[]  @relation("DonorDonations")
   requests  PickupRequest[] @relation("NGORequests")
@@ -56,15 +56,14 @@ model FoodDonation {
   id             String         @id @default(uuid())
   title          String
   description    String
-  quantity       String 
-  category       String 
+  quantity       String
+  category       String
   expiryTime     DateTime
   pickupLocation String
   latitude       Float?
   longitude      Float?
-  imageUrl       String? 
+  imageUrl       String?
   status         DonationStatus @default(AVAILABLE)
-
 
   donorId  String
   donor    User            @relation("DonorDonations", fields: [donorId], references: [id])
