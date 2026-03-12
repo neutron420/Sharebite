@@ -60,3 +60,40 @@ export async function GET() {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+export async function PATCH(request: Request) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { name, phoneNumber, address, city, imageUrl } = body;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: session.userId as string },
+      data: {
+        ...(name && { name }),
+        ...(phoneNumber && { phoneNumber }),
+        ...(address && { address }),
+        ...(city && { city }),
+        ...(imageUrl && { imageUrl }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        phoneNumber: true,
+        address: true,
+        city: true,
+        imageUrl: true,
+      },
+    });
+
+    return NextResponse.json(updatedUser);
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}

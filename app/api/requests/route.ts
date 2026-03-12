@@ -54,6 +54,17 @@ export async function POST(request: Request) {
       },
     });
 
+    // Notify the donor
+    await prisma.notification.create({
+      data: {
+        userId: donation.donorId,
+        type: "REQUEST_STATUS",
+        title: "New Pickup Request",
+        message: `Your donation "${donation.title}" has a new request from an NGO.`,
+        link: `/dashboard/requests/${pickupRequest.id}`,
+      }
+    });
+
     return NextResponse.json(pickupRequest, { status: 201 });
   } catch (error: any) {
     if (error.code === 'P2002') { // Prisma unique constraint error

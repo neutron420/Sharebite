@@ -48,7 +48,7 @@ async function checkExpiringDonations() {
           data: {
             userId: ngo.id,
             type: "URGENT_EXPIRY",
-            title: "🔥 Urgent: Food Expiring Soon!",
+            title: " Urgent: Food Expiring Soon!",
             message: `"${donation.title}" in ${donation.donor.city} is expiring in less than 2 hours. Rescue it now!`,
             link: `/donations/${donation.id}`
           }

@@ -16,7 +16,8 @@ export async function GET() {
       recentDonations,
       pendingRequests,
       totalWeightResult,
-      ngoLeaderboard
+      ngoLeaderboard,
+      donorLeaderboard
     ] = await Promise.all([
       prisma.user.count(),
       prisma.foodDonation.count(),
@@ -35,12 +36,27 @@ export async function GET() {
         where: { role: "NGO" },
         select: {
           name: true,
+          imageUrl: true,
           _count: {
             select: { requests: { where: { status: "COMPLETED" } } }
           }
         },
         orderBy: {
           requests: { _count: "desc" }
+        },
+        take: 5
+      }),
+      prisma.user.findMany({
+        where: { role: "DONOR" },
+        select: {
+          name: true,
+          imageUrl: true,
+          _count: {
+            select: { donations: { where: { status: "COLLECTED" } } }
+          }
+        },
+        orderBy: {
+          donations: { _count: "desc" }
         },
         take: 5
       })
@@ -55,7 +71,8 @@ export async function GET() {
         totalWeightSaved: totalWeightResult._sum.weight || 0
       },
       recentDonations,
-      ngoLeaderboard
+      ngoLeaderboard,
+      donorLeaderboard
     });
   } catch (error) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

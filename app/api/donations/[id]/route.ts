@@ -8,11 +8,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const session = await getSession();
+
     const donation = await prisma.foodDonation.findUnique({
       where: { id },
       include: {
         donor: {
           select: {
+            id: true,
             name: true,
             email: true,
             phoneNumber: true,
@@ -25,6 +28,7 @@ export async function GET(
           include: {
             ngo: {
               select: {
+                id: true,
                 name: true,
                 city: true,
               },
@@ -38,8 +42,35 @@ export async function GET(
       return NextResponse.json({ error: "Donation not found" }, { status: 404 });
     }
 
+    // Check if user is authorized to see sensitive info
+    // Authorized: The Donor, an Admin, or a Verified NGO who has an APPROVED request for this donation
+    const isOwner = session?.userId === donation.donorId;
+    const isAdmin = session?.role === "ADMIN";
+    
+    let isApprovedNGO = false;
+    if (session?.role === "NGO") {
+      const approvedRequest = await prisma.pickupRequest.findFirst({
+        where: {
+          donationId: id,
+          ngoId: session.userId as string,
+          status: "APPROVED"
+        }
+      });
+      if (approvedRequest) isApprovedNGO = true;
+    }
+
+    const canSeeSensitiveInfo = isOwner || isAdmin || isApprovedNGO;
+
+    if (!canSeeSensitiveInfo) {
+      // Hide exact sensitive details for public/unauthorized users
+      (donation.donor as any).email = undefined;
+      (donation.donor as any).phoneNumber = undefined;
+      (donation.donor as any).address = "Hidden until request is approved";
+    }
+
     return NextResponse.json(donation);
   } catch (error) {
+    console.error("Fetch donation error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
@@ -81,3 +112,39 @@ export async function PATCH(
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const donation = await prisma.foodDonation.findUnique({
+      where: { id },
+    });
+
+    if (!donation) {
+      return NextResponse.json({ error: "Donation not found" }, { status: 404 });
+    }
+
+    // Only donor of this item or admin can delete
+    if (donation.donorId !== session.userId && session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    await prisma.foodDonation.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ message: "Donation deleted successfully" });
+  } catch (error) {
+    console.error("Delete donation error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+

@@ -40,7 +40,6 @@ wss.on("connection", async (ws, req) => {
         if (type === "SEND_MESSAGE") {
           const { conversationId, text, receiverId, donationId, imageUrl, location } = msgPayload;
 
-          // Save message to DB
           const savedMsg = await prisma.message.create({
             data: {
               conversationId,

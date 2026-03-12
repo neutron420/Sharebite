@@ -32,6 +32,27 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Can only review after food is collected" }, { status: 400 });
     }
 
+    // Ensure the reviewer was actually part of this donation
+    const completedRequest = await prisma.pickupRequest.findFirst({
+        where: {
+            donationId: validatedData.donationId,
+            status: "COMPLETED"
+        }
+    });
+
+    const isDonor = donation.donorId === session.userId;
+    const isNGO = completedRequest?.ngoId === session.userId;
+
+    if (!isDonor && !isNGO) {
+        return NextResponse.json({ error: "You were not involved in this donation" }, { status: 403 });
+    }
+
+    // Ensure they are reviewing the OTHER party
+    const targetId = isDonor ? completedRequest?.ngoId : donation.donorId;
+    if (validatedData.revieweeId !== targetId) {
+        return NextResponse.json({ error: "Invalid reviewee" }, { status: 400 });
+    }
+
     const review = await prisma.review.create({
       data: {
         rating: validatedData.rating,
