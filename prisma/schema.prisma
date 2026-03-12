@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  DONOR
+  NGO
+  ADMIN
+}
+
+enum DonationStatus {
+  AVAILABLE
+  REQUESTED
+  APPROVED
+  COLLECTED
+  EXPIRED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  name        String
+  role        UserRole @default(DONOR)
+  phoneNumber String?
+  address     String?
+  city        String?
+  imageUrl    String? 
+
+  donations FoodDonation[]  @relation("DonorDonations")
+  requests  PickupRequest[] @relation("NGORequests")
+
+  reviewsGiven    Review[] @relation("Reviewer")
+  reviewsReceived Review[] @relation("Reviewee")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+model FoodDonation {
+  id             String         @id @default(uuid())
+  title          String
+  description    String
+  quantity       String 
+  category       String 
+  expiryTime     DateTime
+  pickupLocation String
+  latitude       Float?
+  longitude      Float?
+  imageUrl       String? 
+  status         DonationStatus @default(AVAILABLE)
+
+
+  donorId  String
+  donor    User            @relation("DonorDonations", fields: [donorId], references: [id])
+  requests PickupRequest[]
+  reviews  Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([expiryTime])
+  @@index([latitude, longitude])
+}
+
+model PickupRequest {
+  id      String        @id @default(uuid())
+  message String?
+  status  RequestStatus @default(PENDING)
+
+  ngoId      String
+  ngo        User         @relation("NGORequests", fields: [ngoId], references: [id])
+  donationId String
+  donation   FoodDonation @relation(fields: [donationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ngoId, donationId])
+  @@index([status])
+}
+
+model Review {
+  id      String  @id @default(uuid())
+  rating  Int
+  comment String?
+
+  reviewerId String
+  reviewer   User          @relation("Reviewer", fields: [reviewerId], references: [id])
+  revieweeId String
+  reviewee   User          @relation("Reviewee", fields: [revieweeId], references: [id])
+  donationId String?
+  donation   FoodDonation? @relation(fields: [donationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([revieweeId])
+}
