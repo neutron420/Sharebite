@@ -14,7 +14,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    await prisma.notification.delete({
+    await prisma.notification.deleteMany({
       where: { id },
     });
 

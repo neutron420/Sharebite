@@ -13,6 +13,7 @@ import {
   XCircle,
   RefreshCw,
   ArrowUpRight,
+  ShieldCheck,
   BarChart3,
   Activity,
 } from "lucide-react";
@@ -43,6 +44,8 @@ interface Stats {
   totalDonations: number;
   totalRequests: number;
   totalWeightSaved: number;
+  pendingReports: number;
+  pendingVerifications: number;
 }
 
 interface UserRoles {
@@ -131,6 +134,63 @@ function formatMonthLabel(m: string) {
   return d.toLocaleDateString("en-US", { month: "long" });
 }
 
+// ── Animated Counter Component ──────────────────
+function AnimatedCounter({ value, label, icon: Icon, color, limit = 4 }: { 
+  value: number; 
+  label: string; 
+  icon: any; 
+  color: string;
+  limit?: number;
+}) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    if (start === end) return;
+
+    let totalDuration = 1000;
+    let increment = end / (totalDuration / 16);
+    
+    let timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setDisplayValue(end);
+        clearInterval(timer);
+      } else {
+        setDisplayValue(Math.floor(start));
+      }
+    }, 16);
+
+    return () => clearInterval(timer);
+  }, [value]);
+
+  const isCapped = displayValue > limit;
+  const displayText = isCapped ? `${limit}+` : displayValue;
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-5 hover:shadow-md transition-shadow relative overflow-hidden group">
+      <div className={`absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 rounded-full opacity-[0.03] transition-transform duration-700 group-hover:scale-150`} style={{ backgroundColor: color }} />
+      <div className="flex items-center justify-between relative z-10">
+        <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${color}15` }}>
+          <Icon className="h-5 w-5" style={{ color }} />
+        </div>
+        {isCapped && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 animate-pulse">
+            URGENT
+          </span>
+        )}
+      </div>
+      <div className="mt-4 relative z-10">
+        <p className={`text-3xl font-black transition-all duration-300 ${isCapped ? 'text-red-500 scale-110' : 'text-gray-900'}`}>
+          {displayText}
+        </p>
+        <p className="text-sm font-medium text-gray-500 mt-1">{label}</p>
+      </div>
+    </div>
+  );
+}
+
 // ── Component ──────────────────────────────────────────
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -216,6 +276,34 @@ export default function AdminDashboard() {
         <button onClick={fetchData} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50">
           <RefreshCw className="h-4 w-4" /> Refresh
         </button>
+      </div>
+
+      {/* ── Actionable Alerts (Lively Counters) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <AnimatedCounter 
+          value={stats.pendingReports} 
+          label="Pending Reports" 
+          icon={AlertCircle} 
+          color="#ef4444" 
+        />
+        <AnimatedCounter 
+          value={stats.pendingVerifications} 
+          label="NGO Verifications" 
+          icon={ShieldCheck} 
+          color="#3b82f6" 
+        />
+        <div className="bg-orange-500 rounded-2xl p-5 flex flex-col justify-between text-white lg:col-span-2 group cursor-pointer hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200">
+           <div className="flex items-center justify-between">
+              <div className="bg-white/20 p-2 rounded-xl">
+                 <Package className="h-5 w-5" />
+              </div>
+              <ArrowUpRight className="h-5 w-5 opacity-50 group-hover:opacity-100 transition-opacity" />
+           </div>
+           <div className="mt-4">
+              <p className="text-sm font-medium opacity-80">Quick Action</p>
+              <p className="text-xl font-bold">Review New Donations</p>
+           </div>
+        </div>
       </div>
 
       {/* ── Stat Cards ── */}

@@ -9,7 +9,17 @@ export async function GET() {
         where: { status: "COLLECTED" },
         _sum: { weight: true }
       }),
-      prisma.user.count({ where: { role: "NGO", isVerified: true } })
+      prisma.user.count({ 
+        where: { 
+          role: "NGO", 
+          isVerified: true,
+          isLicenseSuspended: false,
+          OR: [
+            { suspensionExpiresAt: null },
+            { suspensionExpiresAt: { lte: new Date() } }
+          ]
+        } 
+      })
     ]);
 
     return NextResponse.json({

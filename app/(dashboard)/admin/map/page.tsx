@@ -99,6 +99,12 @@ interface MapData {
   donations: Donation[];
   ngos: NGO[];
   donors: Donor[];
+  totalStats: {
+    donations: number;
+    ngos: number;
+    donors: number;
+    cities: number;
+  };
   cityStats: CityStats[];
   stateStats: StateStats[];
 }
@@ -355,7 +361,9 @@ export default function MapPage() {
               <Package className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{data?.donations.length || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? <span className="animate-pulse opacity-50">...</span> : (data?.totalStats.donations || 0)}
+              </p>
               <p className="text-sm text-gray-500">Donations</p>
             </div>
           </div>
@@ -366,7 +374,9 @@ export default function MapPage() {
               <Building2 className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-green-600">{data?.ngos.length || 0}</p>
+              <p className="text-2xl font-bold text-green-600">
+                {loading ? <span className="animate-pulse opacity-50">...</span> : (data?.totalStats.ngos || 0)}
+              </p>
               <p className="text-sm text-gray-500">NGOs</p>
             </div>
           </div>
@@ -377,7 +387,9 @@ export default function MapPage() {
               <Heart className="h-5 w-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-orange-600">{data?.donors.length || 0}</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {loading ? <span className="animate-pulse opacity-50">...</span> : (data?.totalStats.donors || 0)}
+              </p>
               <p className="text-sm text-gray-500">Donors</p>
             </div>
           </div>
@@ -388,7 +400,9 @@ export default function MapPage() {
               <MapPin className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-blue-600">{data?.cityStats.length || 0}</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {loading ? <span className="animate-pulse opacity-50">...</span> : (data?.totalStats.cities || 0)}
+              </p>
               <p className="text-sm text-gray-500">Cities</p>
             </div>
           </div>

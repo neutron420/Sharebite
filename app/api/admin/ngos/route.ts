@@ -22,8 +22,19 @@ export async function GET() {
         isVerified: true,
         imageUrl: true,
         createdAt: true,
+        strikeCount: true,
+        suspensionExpiresAt: true,
+        isLicenseSuspended: true,
         _count: {
-          select: { requests: true }
+          select: { 
+            requests: true,
+            violations: true
+          }
+        },
+        violations: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { reason: true, createdAt: true }
         }
       }
     });

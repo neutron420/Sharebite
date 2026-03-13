@@ -9,7 +9,9 @@ export async function DELETE() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await prisma.notification.deleteMany({});
+    await prisma.notification.deleteMany({
+      where: { userId: session.userId as string }
+    });
 
     return NextResponse.json({ message: "All notifications cleared" });
   } catch (error) {

@@ -25,6 +25,8 @@ export async function GET() {
       expiredCount,
       allDonations,
       recentLogs,
+      pendingReports,
+      pendingVerifications,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.foodDonation.count(),
@@ -59,6 +61,8 @@ export async function GET() {
         orderBy: { createdAt: "desc" },
         include: { admin: { select: { name: true } } },
       }),
+      prisma.report.count({ where: { status: "PENDING" } }),
+      prisma.user.count({ where: { role: "NGO", isVerified: false } }),
     ]);
 
     // Build monthly donation counts for the last 12 months
@@ -94,6 +98,8 @@ export async function GET() {
         totalDonations,
         totalRequests,
         totalWeightSaved: totalWeightResult._sum.weight || 0,
+        pendingReports,
+        pendingVerifications,
       },
       userRoles: { donors: donorCount, ngos: ngoCount, admins: adminCount },
       donationStatuses: {

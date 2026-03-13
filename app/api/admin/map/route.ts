@@ -9,7 +9,23 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get donations with location data
+    // Get totals for stats bar (Only active/non-suspended for a 'wise' count)
+    const [totalDonations, totalDonors, totalActiveNGOs] = await Promise.all([
+      prisma.foodDonation.count(),
+      prisma.user.count({ where: { role: "DONOR" } }),
+      prisma.user.count({ 
+        where: { 
+          role: "NGO",
+          isLicenseSuspended: false,
+          OR: [
+            { suspensionExpiresAt: null },
+            { suspensionExpiresAt: { lte: new Date() } }
+          ]
+        } 
+      }),
+    ]);
+
+    // Get donations with location data for markers
     const donations = await prisma.foodDonation.findMany({
       where: {
         latitude: { not: null },
@@ -37,12 +53,17 @@ export async function GET() {
       take: 500,
     });
 
-    // Get NGOs with location data
+    // Get NGOs with location data for markers (Only non-suspended)
     const ngos = await prisma.user.findMany({
       where: {
         role: "NGO",
         latitude: { not: null },
         longitude: { not: null },
+        isLicenseSuspended: false,
+        OR: [
+          { suspensionExpiresAt: null },
+          { suspensionExpiresAt: { lte: new Date() } }
+        ]
       },
       select: {
         id: true,
@@ -61,7 +82,7 @@ export async function GET() {
       },
     });
 
-    // Get donors with location data
+    // Get donors with location data for markers
     const donors = await prisma.user.findMany({
       where: {
         role: "DONOR",
@@ -84,13 +105,13 @@ export async function GET() {
       },
     });
 
-    // Get stats by city
+    // Get stats by city (from all donations)
     const cityStats = await prisma.foodDonation.groupBy({
       by: ["city"],
       _count: { id: true },
     });
 
-    // Get stats by state
+    // Get stats by state (from all donations)
     const stateStats = await prisma.foodDonation.groupBy({
       by: ["state"],
       where: { state: { not: null } },
@@ -101,6 +122,12 @@ export async function GET() {
       donations,
       ngos,
       donors,
+      totalStats: {
+        donations: totalDonations,
+        ngos: totalActiveNGOs,
+        donors: totalDonors,
+        cities: cityStats.length
+      },
       cityStats,
       stateStats,
     });

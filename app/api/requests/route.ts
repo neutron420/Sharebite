@@ -12,11 +12,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if NGO is verified
+    // Check for verification, blocks, and license suspension
     const user = await prisma.user.findUnique({
       where: { id: session.userId as string },
-      select: { isVerified: true }
+      select: { 
+        isVerified: true, 
+        isLicenseSuspended: true, 
+        suspensionExpiresAt: true 
+      }
     });
+
+    if (user?.isLicenseSuspended) {
+      return NextResponse.json(
+        { error: "Access Denied. Your NGO license has been permanently suspended due to policy violations." },
+        { status: 403 }
+      );
+    }
+
+    if (user?.suspensionExpiresAt && new Date() < new Date(user.suspensionExpiresAt)) {
+      const remainingTime = Math.ceil((new Date(user.suspensionExpiresAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+      return NextResponse.json(
+        { error: `Access Denied. Your account is temporarily blocked for ${remainingTime} more days.` },
+        { status: 403 }
+      );
+    }
 
     if (!user?.isVerified) {
       return NextResponse.json(
@@ -105,7 +124,14 @@ export async function GET() {
       // Donor views requests for their items
       requests = await prisma.pickupRequest.findMany({
         where: {
-          donation: { donorId: session.userId as string }
+          donation: { donorId: session.userId as string },
+          ngo: {
+            isLicenseSuspended: false,
+            OR: [
+              { suspensionExpiresAt: null },
+              { suspensionExpiresAt: { lte: new Date() } }
+            ]
+          }
         },
         include: {
           ngo: {

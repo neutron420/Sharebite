@@ -10,6 +10,7 @@ export async function PATCH() {
     }
 
     await prisma.notification.updateMany({
+      where: { userId: session.userId as string },
       data: { isRead: true },
     });
 

@@ -74,6 +74,14 @@ model User {
 
   auditLogs     AuditLog[]
   notifications Notification[]
+  violations    Violation[]  @relation("UserViolations")
+  reports       Report[]     @relation("ReportedUser")
+  reportsMade   Report[]     @relation("Reporter")
+
+  // Strike System for NGOs
+  strikeCount         Int       @default(0)
+  suspensionExpiresAt DateTime?
+  isLicenseSuspended  Boolean   @default(false)
 
   // Chat relations
   sentMessages     Message[]
@@ -151,11 +159,11 @@ model Review {
   comment String? @db.Text
 
   reviewerId String
-  reviewer   User         @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewer   User         @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
   revieweeId String
-  reviewee   User         @relation("Reviewee", fields: [revieweeId], references: [id])
+  reviewee   User         @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
   donationId String
-  donation   FoodDonation @relation(fields: [donationId], references: [id])
+  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -201,9 +209,9 @@ model Conversation {
   donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
 
   participantAId String
-  participantA   User   @relation("ParticipantA", fields: [participantAId], references: [id])
+  participantA   User   @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
   participantBId String
-  participantB   User   @relation("ParticipantB", fields: [participantBId], references: [id])
+  participantB   User   @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: Cascade)
 
   messages Message[]
 
@@ -217,7 +225,7 @@ model Message {
   id             String       @id @default(uuid())
   text           String?      @db.Text
   senderId       String
-  sender         User         @relation(fields: [senderId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
@@ -228,4 +236,34 @@ model Message {
   createdAt DateTime @default(now())
 
   @@index([conversationId])
+}
+
+model Violation {
+  id        String   @id @default(uuid())
+  level     Int 
+  reason    String   @db.Text
+  adminId   String
+  userId    String
+  user      User     @relation("UserViolations", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  reason      String   @db.Text
+  details     String?  @db.Text
+  status      String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+  
+  reporterId  String
+  reporter    User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  ngoId       String
+  ngo         User     @relation("ReportedUser", fields: [ngoId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ngoId])
+  @@index([status])
 }

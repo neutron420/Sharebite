@@ -1,3 +1,4 @@
+import { NotificationType } from "@/app/generated/prisma";
 import prisma from "./prisma";
 
 export async function createNotification({
@@ -8,13 +9,13 @@ export async function createNotification({
   link
 }: {
   userId: string;
-  type: "REQUEST_STATUS" | "NEW_DONATION" | "URGENT_EXPIRY" | "SYSTEM";
+  type: NotificationType;
   title: string;
   message: string;
   link?: string;
 }) {
   try {
-    return await prisma.notification.create({
+    const notification = await prisma.notification.create({
       data: {
         userId,
         type,
@@ -23,6 +24,19 @@ export async function createNotification({
         link,
       }
     });
+
+    // Trigger real-time delivery via internal WS server
+    try {
+      fetch('http://localhost:8081/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, notification })
+      }).catch(() => {}); // Fire and forget
+    } catch (e) {
+      // Silently fail if WS server is down
+    }
+
+    return notification;
   } catch (error) {
     console.error("Failed to create notification:", error);
   }

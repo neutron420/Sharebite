@@ -85,6 +85,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { label: "NGO Verification", icon: UserCheck, id: "verification", href: "/admin/verification" },
   { label: "Pickup Requests", icon: ClipboardList, id: "requests", href: "/admin/requests", badge: "New" },
   { label: "NGO Partners", icon: Building2, id: "ngo-partners", href: "/admin/ngo" },
+  { label: "Complaints", icon: AlertTriangle, id: "reports", href: "/admin/reports" },
   { label: "Reviews", icon: Star, id: "reviews", href: "/admin/reviews" },
   { label: "Operations Map", icon: Map, id: "map", href: "/admin/map" },
   { label: "Notifications", icon: Bell, id: "notifications", href: "/admin/notifications" },
@@ -152,6 +153,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setNotifLoading(false);
     }
   }, []);
+
+  // WebSocket for real-time notifications
+  useEffect(() => {
+    if (isAuthPage || !user) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout;
+
+    const connectWS = async () => {
+      try {
+        const tokenRes = await fetch("/api/auth/token", { credentials: "include" });
+        if (!tokenRes.ok) return;
+        const { token } = await tokenRes.json();
+
+        ws = new WebSocket(`ws://localhost:8080?token=${token}`);
+        
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === "NOTIFICATION") {
+            setNotifications(prev => [data.payload, ...prev]);
+            setUnreadCount(prev => prev + 1);
+            
+            // Play a subtle sound if possible or show a toast logic here if needed
+          }
+        };
+
+        ws.onclose = () => {
+          reconnectTimeout = setTimeout(connectWS, 10000);
+        };
+      } catch (err) {
+        reconnectTimeout = setTimeout(connectWS, 10000);
+      }
+    };
+
+    connectWS();
+
+    return () => {
+       if (ws) ws.close();
+       clearTimeout(reconnectTimeout);
+    };
+  }, [isAuthPage, user]);
 
   useEffect(() => {
     if (!isAuthPage) {

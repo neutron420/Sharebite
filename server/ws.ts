@@ -3,6 +3,7 @@ import { parse } from "url";
 import { jwtVerify } from "jose";
 import { PrismaClient } from "../app/generated/prisma";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { createServer } from "http";
 import "dotenv/config";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
@@ -86,5 +87,33 @@ export async function sendNotification(userId: string, notification: Record<stri
       type: "NOTIFICATION",
       payload: notification
     }));
+    return true;
   }
+  return false;
 }
+
+// Internal HTTP server for Next.js to trigger notifications
+const httpServer = createServer(async (req, res) => {
+  if (req.method === 'POST' && req.url === '/notify') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', async () => {
+      try {
+        const { userId, notification } = JSON.parse(body);
+        const success = await sendNotification(userId, notification);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success }));
+      } catch (err) {
+        res.writeHead(400);
+        res.end();
+      }
+    });
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+
+httpServer.listen(8081, () => {
+  console.log("Internal Trigger Server running on http://localhost:8081");
+});
