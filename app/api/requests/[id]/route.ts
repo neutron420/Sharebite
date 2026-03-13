@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
+import redis from "@/lib/redis";
 
 export async function PATCH(
   request: Request,
@@ -62,7 +63,7 @@ export async function PATCH(
         data: { status: "REJECTED" },
       });
 
-      // Special notification for NGO with PIN instructions (don't send PIN in notification for security, tell them to check dashboard)
+      // Special notification for NGO with PIN instructions
       await createNotification({
         userId: pickupRequest.ngoId,
         type: "REQUEST_STATUS",
@@ -93,6 +94,9 @@ export async function PATCH(
         where: { id: pickupRequest.donationId },
         data: { status: "COLLECTED" },
       });
+
+      // Remove from map
+      await redis.zrem("donations:geo", pickupRequest.donationId);
     }
 
     const updatedRequest = await prisma.pickupRequest.update({

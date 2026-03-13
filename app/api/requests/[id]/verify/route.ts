@@ -59,6 +59,9 @@ export async function POST(
       link: `/dashboard/requests/${id}`
     });
 
+    // Remove from Redis GEO index since it's now collected
+    await redis.zrem("donations:geo", pickupRequest.donationId);
+
     // 4. Update Redis Karma Leaderboard
     // Add 50 Karma points to the donor for a successful donation
     await redis.zincrby("leaderboard:karma", 50, pickupRequest.donation.donorId);
