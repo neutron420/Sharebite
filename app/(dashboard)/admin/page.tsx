@@ -24,6 +24,12 @@ import {
   PieChart,
   Pie,
   Cell,
+  Label,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -122,7 +128,7 @@ function formatDate(d: string) {
 function formatMonthLabel(m: string) {
   const [y, mo] = m.split("-");
   const d = new Date(Number(y), Number(mo) - 1);
-  return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+  return d.toLocaleDateString("en-US", { month: "long" });
 }
 
 // ── Component ──────────────────────────────────────────
@@ -264,28 +270,89 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <div className="mb-6">
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col">
+          <div className="mb-6 text-center">
             <h2 className="text-base font-semibold text-gray-900">User Distribution</h2>
-            <p className="text-sm text-gray-500">Breakdown by role</p>
+            <p className="text-sm text-gray-500">Breakdown by current roles</p>
           </div>
-          <div className="h-52">
+          <div className="flex-1 min-h-[250px] relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="value" paddingAngle={4} strokeWidth={0}>
-                  {pieData.map((entry, idx) => (<Cell key={idx} fill={entry.color} />))}
+                <Tooltip
+                  cursor={false}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-white border border-gray-200 p-2.5 rounded-xl shadow-sm border-gray-200">
+                          <p className="text-xs font-semibold text-gray-900">{payload[0].name}</p>
+                          <p className="text-xs text-gray-500 font-medium">Quantity: {payload[0].value}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Pie
+                  data={pieData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={65}
+                  outerRadius={95}
+                  strokeWidth={5}
+                  stroke="#fff"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        const totalUsers = pieData.reduce((acc, curr) => acc + curr.value, 0);
+                        return (
+                          <text
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                          >
+                            <tspan
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              className="fill-gray-900 text-3xl font-bold"
+                            >
+                              {totalUsers.toLocaleString()}
+                            </tspan>
+                            <tspan
+                              x={viewBox.cx}
+                              y={(viewBox.cy || 0) + 24}
+                              className="fill-gray-500 text-sm font-medium"
+                            >
+                              Users
+                            </tspan>
+                          </text>
+                        );
+                      }
+                    }}
+                  />
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-center gap-6 mt-2">
+          <div className="flex justify-center flex-wrap gap-x-6 gap-y-2 mt-4">
             {pieData.map((p) => (
               <div key={p.name} className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: p.color }} />
-                <span className="text-xs text-gray-600">{p.name} ({p.value})</span>
+                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                <span className="text-xs font-medium text-gray-600">{p.name} ({p.value})</span>
               </div>
             ))}
+          </div>
+          <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col gap-2 text-sm">
+            <div className="flex items-center gap-2 leading-none font-medium text-gray-900">
+              Community growth active <TrendingUp className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="leading-none text-gray-500">
+              Showing total community distribution
+            </div>
           </div>
         </div>
       </div>
@@ -314,7 +381,47 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-4 px-2">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900">Monthly Analysis</h2>
+              <p className="text-sm text-gray-500">Donation radar for last 12 months</p>
+            </div>
+            <TrendingUp className="h-5 w-5 text-orange-500" />
+          </div>
+          <div className="flex-1 min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartMonthly}>
+                <PolarGrid stroke="#e2e8f0" />
+                <PolarAngleAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 12 }} />
+                <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={{ fill: "#94a3b8", fontSize: 10 }} axisLine={false} />
+                <Radar
+                   name="Donations"
+                   dataKey="count"
+                   stroke="#f97316"
+                   fill="#f97316"
+                   fillOpacity={0.5}
+                 />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "#fff", 
+                    border: "1px solid #e2e8f0", 
+                    borderRadius: "12px", 
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)" 
+                  }} 
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-center gap-2 text-xs text-gray-500">
+             <div className="h-3 w-3 rounded-full bg-orange-500" />
+             <span>Active Monthly Donations</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Status Breakdown ── */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-base font-semibold text-gray-900">Donation Status</h2>
@@ -322,31 +429,30 @@ export default function AdminDashboard() {
             </div>
             <Activity className="h-5 w-5 text-gray-400" />
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {statusData.map((s) => {
               const total = Object.values(donationStatuses).reduce((a, b) => a + b, 0);
               const pct = total > 0 ? ((s.count / total) * 100).toFixed(1) : "0";
               const Icon = STATUS_ICONS[s.status.toUpperCase()] || Package;
               return (
-                <div key={s.status} className="flex items-center gap-4 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                  <div className="p-2 rounded-lg" style={{ backgroundColor: `${s.color}15` }}>
-                    <Icon className="h-4 w-4" style={{ color: s.color }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium text-gray-700">{s.status}</span>
-                      <span className="text-sm font-semibold text-gray-900">{s.count}</span>
+                <div key={s.status} className="flex flex-col gap-3 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2 rounded-lg" style={{ backgroundColor: `${s.color}15` }}>
+                      <Icon className="h-4 w-4" style={{ color: s.color }} />
                     </div>
-                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: s.color }} />
-                    </div>
+                    <span className="text-xs font-semibold text-gray-400">{pct}%</span>
                   </div>
-                  <span className="text-xs text-gray-500 w-12 text-right">{pct}%</span>
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">{s.status}</p>
+                    <p className="text-lg font-bold text-gray-900">{s.count}</p>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: s.color }} />
+                  </div>
                 </div>
               );
             })}
           </div>
-        </div>
       </div>
 
       {/* ── Recent Donations Table ── */}

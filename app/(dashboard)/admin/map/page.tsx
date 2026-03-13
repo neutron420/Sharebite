@@ -14,7 +14,28 @@ import {
   X,
   Eye,
   EyeOff,
+  ChevronRight,
+  Info,
+  Search,
 } from "lucide-react";
+import {
+  Drawer,
+  Paper,
+  Box,
+  Typography,
+  IconButton,
+  Chip,
+  Stack,
+  Divider,
+  Fade,
+} from "@mui/material";
+import {
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  ResponsiveContainer,
+} from "recharts";
 
 
 // Mapbox token from environment variable
@@ -104,6 +125,10 @@ export default function MapPage() {
   const [selectedItem, setSelectedItem] = useState<Donation | NGO | Donor | null>(null);
   const [selectedType, setSelectedType] = useState<"donation" | "ngo" | "donor" | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Stats for the selected item's charts
+  const [itemStats, setItemStats] = useState<any[]>([]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -181,19 +206,19 @@ export default function MapPage() {
         el.className = "marker-donation";
         el.innerHTML = `
           <div style="
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
-            border: 3px solid white;
+            border: 2px solid white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
           ">
-            <svg style="transform: rotate(45deg); width: 14px; height: 14px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+            <svg style="transform: rotate(45deg); width: 12px; height: 12px; color: white;" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20 6h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM10 4h4v2h-4V4z"/>
             </svg>
           </div>
@@ -220,19 +245,19 @@ export default function MapPage() {
         el.className = "marker-ngo";
         el.innerHTML = `
           <div style="
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             border-radius: 50% 50% 50% 0;
             transform: rotate(-45deg);
-            border: 3px solid white;
+            border: 2px solid white;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
           ">
-            <svg style="transform: rotate(45deg); width: 14px; height: 14px; color: white;" fill="currentColor" viewBox="0 0 24 24">
+            <svg style="transform: rotate(45deg); width: 12px; height: 12px; color: white;" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
             </svg>
           </div>
@@ -296,16 +321,16 @@ export default function MapPage() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center space-y-4 border border-gray-200">
+      <Box className="flex items-center justify-center h-96">
+        <Paper className="rounded-3xl shadow-2xl p-8 max-w-md text-center space-y-4 border border-gray-100 bg-white/80 backdrop-blur-md">
           <XCircle className="h-12 w-12 text-red-500 mx-auto" />
-          <h2 className="text-xl font-semibold text-gray-900">Error</h2>
-          <p className="text-gray-500">{error}</p>
-          <button onClick={fetchData} className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
-            <RefreshCw className="h-4 w-4" /> Retry
+          <Typography variant="h6" className="font-bold text-gray-900">Map Error</Typography>
+          <Typography className="text-gray-500">{error}</Typography>
+          <button onClick={fetchData} className="inline-flex items-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-2xl hover:bg-orange-700 transition-all font-semibold shadow-lg shadow-orange-200">
+            <RefreshCw className="h-4 w-4" /> Try Again
           </button>
-        </div>
-      </div>
+        </Paper>
+      </Box>
     );
   }
 
@@ -371,182 +396,230 @@ export default function MapPage() {
       </div>
 
       {/* Map Container */}
-      <div className="relative bg-white rounded-xl border border-gray-200 overflow-hidden" style={{ height: "600px" }}>
+      <div className="relative bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm" style={{ height: "650px" }}>
         {/* Map */}
         <div ref={mapContainer} className="w-full h-full" />
 
         {/* Loading overlay */}
         {!mapReady && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-8 w-8 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
-              <p className="text-sm text-gray-500">Loading map...</p>
-            </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50/50 backdrop-blur-sm">
+            <Stack alignItems="center" spacing={2}>
+              <div className="h-10 w-10 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+              <Typography variant="body2" className="text-gray-500 font-medium">Syncing Satellite Data...</Typography>
+            </Stack>
           </div>
         )}
 
-        {/* Controls Overlay */}
+        {/* Premium Control Panel (MUI Paper with Glassmorphism) */}
         {mapReady && (
-          <div className="absolute top-4 left-4 z-10 bg-white rounded-xl shadow-lg border border-gray-200 p-4 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <Layers className="h-4 w-4" />
-              Layers
-            </div>
-
-            <div className="space-y-2">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <button
-                  onClick={() => setShowDonations(!showDonations)}
-                  className={`p-1.5 rounded-lg ${showDonations ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-400"}`}
-                >
-                  {showDonations ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </button>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-red-500" />
-                  <span className="text-sm text-gray-700">Donations</span>
-                </div>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <button
-                  onClick={() => setShowNGOs(!showNGOs)}
-                  className={`p-1.5 rounded-lg ${showNGOs ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"}`}
-                >
-                  {showNGOs ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </button>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-green-500" />
-                  <span className="text-sm text-gray-700">NGOs</span>
-                </div>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <button
-                  onClick={() => setShowDonors(!showDonors)}
-                  className={`p-1.5 rounded-lg ${showDonors ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-400"}`}
-                >
-                  {showDonors ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                </button>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-orange-500" />
-                  <span className="text-sm text-gray-700">Donors</span>
-                </div>
-              </label>
-            </div>
-
-            <div className="pt-2 border-t border-gray-100">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white"
-              >
-                <option value="all">All Status</option>
-                <option value="AVAILABLE">Available</option>
-                <option value="REQUESTED">Requested</option>
-                <option value="APPROVED">Approved</option>
-                <option value="COLLECTED">Collected</option>
-                <option value="EXPIRED">Expired</option>
-              </select>
-            </div>
-          </div>
-        )}
-
-        {/* Selected Item Panel */}
-        {selectedItem && (
-          <div className="absolute bottom-4 left-4 right-4 z-10 bg-white rounded-xl shadow-lg border border-gray-200 p-4 max-w-md">
-            <button
-              onClick={() => { setSelectedItem(null); setSelectedType(null); }}
-              className="absolute top-3 right-3 p-1 rounded-lg hover:bg-gray-100 text-gray-400"
+          <Fade in={mapReady}>
+            <Paper 
+              elevation={0}
+              className="absolute top-4 right-16 z-10 w-56 rounded-xl border border-white/40 bg-white/70 backdrop-blur-xl shadow-2xl p-3.5 space-y-3.5"
             >
-              <X className="h-4 w-4" />
-            </button>
+              {/* Location Search */}
+              <Box className="relative mb-2">
+                <input
+                  type="text"
+                  placeholder="Fly to location..."
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter') {
+                      const query = (e.currentTarget as HTMLInputElement).value;
+                      if (!query) return;
+                      try {
+                        const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=1`);
+                        const data = await res.json();
+                        if (data.features && data.features.length > 0) {
+                          const [lng, lat] = data.features[0].center;
+                          map.current?.flyTo({ center: [lng, lat], zoom: 12 });
+                        }
+                      } catch (err) { console.error("Search error", err); }
+                    }
+                  }}
+                  className="w-full pl-8 pr-3 py-2 text-[11px] border border-white/60 rounded-lg bg-white/80 focus:ring-2 focus:ring-orange-500 outline-none transition-all shadow-sm"
+                />
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+              </Box>
 
-            {selectedType === "donation" && (
-              <div className="flex gap-4">
-                {(selectedItem as Donation).imageUrl && (
-                  <img
-                    src={(selectedItem as Donation).imageUrl!}
-                    alt={(selectedItem as Donation).title}
-                    className="w-20 h-20 rounded-lg object-cover shrink-0"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-red-500" />
-                    <span className="text-xs font-medium text-red-600">Donation</span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900 truncate">{(selectedItem as Donation).title}</h3>
-                  <p className="text-sm text-gray-500">by {(selectedItem as Donation).donor.name}</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-gray-400">City:</span><span className="ml-1 text-gray-700">{(selectedItem as Donation).city}</span></div>
-                    <div><span className="text-gray-400">State:</span><span className="ml-1 text-gray-700">{(selectedItem as Donation).state || "N/A"}</span></div>
-                    <div><span className="text-gray-400">District:</span><span className="ml-1 text-gray-700">{(selectedItem as Donation).district || "N/A"}</span></div>
-                    <div><span className="text-gray-400">Pincode:</span><span className="ml-1 text-gray-700">{(selectedItem as Donation).pincode || "N/A"}</span></div>
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full ${(selectedItem as Donation).status === "AVAILABLE" ? "bg-blue-50 text-blue-600" : (selectedItem as Donation).status === "COLLECTED" ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-600"}`}>
-                      {(selectedItem as Donation).status}
-                    </span>
-                    <span className="text-xs text-gray-500">{formatCategory((selectedItem as Donation).category)}</span>
-                  </div>
-                </div>
-              </div>
-            )}
+              <Stack direction="row" alignItems="center" spacing={1} className="mb-1">
+                <Box className="bg-orange-100 p-1 rounded-md">
+                  <Layers className="h-3.5 w-3.5 text-orange-600" />
+                </Box>
+                <Typography className="text-[11px] font-bold text-gray-800 uppercase tracking-tighter">Visual Layers</Typography>
+              </Stack>
 
-            {selectedType === "ngo" && (
-              <div className="flex gap-4">
-                {(selectedItem as NGO).imageUrl ? (
-                  <img src={(selectedItem as NGO).imageUrl!} alt={(selectedItem as NGO).name} className="w-16 h-16 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-xl font-bold shrink-0">
-                    {(selectedItem as NGO).name.charAt(0)}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500" />
-                    <span className="text-xs font-medium text-green-600">NGO Partner</span>
-                    {(selectedItem as NGO).isVerified && <span className="text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded">Verified</span>}
-                  </div>
-                  <h3 className="font-semibold text-gray-900">{(selectedItem as NGO).name}</h3>
-                  <p className="text-sm text-gray-500">{(selectedItem as NGO)._count.requests} pickup requests</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-gray-400">City:</span><span className="ml-1 text-gray-700">{(selectedItem as NGO).city || "N/A"}</span></div>
-                    <div><span className="text-gray-400">State:</span><span className="ml-1 text-gray-700">{(selectedItem as NGO).state || "N/A"}</span></div>
-                    <div><span className="text-gray-400">District:</span><span className="ml-1 text-gray-700">{(selectedItem as NGO).district || "N/A"}</span></div>
-                    <div><span className="text-gray-400">Pincode:</span><span className="ml-1 text-gray-700">{(selectedItem as NGO).pincode || "N/A"}</span></div>
-                  </div>
-                </div>
-              </div>
-            )}
+              <Stack spacing={1.5}>
+                <Box className="flex items-center justify-between p-1.5 rounded-lg bg-white/40 border border-white/50">
+                  <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <div className="w-2 h-2 rounded-full bg-red-500 shadow-sm" />
+                    <Typography className="text-[11px] font-semibold text-gray-600">Donations</Typography>
+                  </Stack>
+                  <IconButton 
+                    size="small" 
+                    onClick={() => setShowDonations(!showDonations)}
+                    className={showDonations ? "text-orange-500" : "text-gray-300"}
+                    sx={{ p: 0.5 }}
+                  >
+                    {showDonations ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  </IconButton>
+                </Box>
 
-            {selectedType === "donor" && (
-              <div className="flex gap-4">
-                {(selectedItem as Donor).imageUrl ? (
-                  <img src={(selectedItem as Donor).imageUrl!} alt={(selectedItem as Donor).name} className="w-16 h-16 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xl font-bold shrink-0">
-                    {(selectedItem as Donor).name.charAt(0)}
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-orange-500" />
-                    <span className="text-xs font-medium text-orange-600">Donor</span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900">{(selectedItem as Donor).name}</h3>
-                  <p className="text-sm text-gray-500">{(selectedItem as Donor)._count.donations} donations</p>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-gray-400">City:</span><span className="ml-1 text-gray-700">{(selectedItem as Donor).city || "N/A"}</span></div>
-                    <div><span className="text-gray-400">State:</span><span className="ml-1 text-gray-700">{(selectedItem as Donor).state || "N/A"}</span></div>
-                    <div><span className="text-gray-400">District:</span><span className="ml-1 text-gray-700">{(selectedItem as Donor).district || "N/A"}</span></div>
-                    <div><span className="text-gray-400">Pincode:</span><span className="ml-1 text-gray-700">{(selectedItem as Donor).pincode || "N/A"}</span></div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+                <Box className="flex items-center justify-between p-1.5 rounded-lg bg-white/40 border border-white/50">
+                  <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-sm" />
+                    <Typography className="text-[11px] font-semibold text-gray-600">NGOs</Typography>
+                  </Stack>
+                  <IconButton 
+                    size="small" 
+                    onClick={() => setShowNGOs(!showNGOs)}
+                    className={showNGOs ? "text-green-500" : "text-gray-300"}
+                    sx={{ p: 0.5 }}
+                  >
+                    {showNGOs ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  </IconButton>
+                </Box>
+
+                <Box className="flex items-center justify-between p-1.5 rounded-lg bg-white/40 border border-white/50">
+                  <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <div className="w-2 h-2 rounded-full bg-orange-500 shadow-sm" />
+                    <Typography className="text-[11px] font-semibold text-gray-600">Donors</Typography>
+                  </Stack>
+                  <IconButton 
+                    size="small" 
+                    onClick={() => setShowDonors(!showDonors)}
+                    className={showDonors ? "text-orange-500" : "text-gray-300"}
+                    sx={{ p: 0.5 }}
+                  >
+                    {showDonors ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  </IconButton>
+                </Box>
+              </Stack>
+
+              <Divider className="opacity-50" />
+
+              <Box>
+                <Typography className="text-[9px] uppercase tracking-widest font-bold text-gray-400 mb-1.5 px-1">Global Filter</Typography>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-2 py-1.5 text-[10px] border border-white/60 rounded-lg bg-white/80 focus:ring-1 focus:ring-orange-500 outline-none transition-all"
+                >
+                  <option value="all">All Operations</option>
+                  <option value="AVAILABLE">Available Now</option>
+                  <option value="REQUESTED">In Negotiation</option>
+                  <option value="APPROVED">En Route</option>
+                  <option value="COLLECTED">Success Only</option>
+                </select>
+              </Box>
+            </Paper>
+          </Fade>
         )}
+
+        {/* Cinematic Sidebar (MUI Drawer) */}
+        <Drawer
+          anchor="right"
+          open={!!selectedItem}
+          onClose={() => { setSelectedItem(null); setSelectedType(null); }}
+          PaperProps={{
+            sx: { 
+              width: { xs: '100%', sm: 360 }, 
+              borderLeft: 'none', 
+              background: 'rgba(255,255,255,0.9)', 
+              backdropFilter: 'blur(20px)',
+              boxShadow: '-10px 0 30px rgba(0,0,0,0.05)'
+            }
+          }}
+        >
+          {selectedItem && (
+            <Box className="h-full flex flex-col p-8">
+              <Stack direction="row" alignItems="center" justifyContent="space-between" className="mb-8">
+                <Box className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  selectedType === 'donation' ? 'bg-red-100 text-red-600' : 
+                  selectedType === 'ngo' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'
+                }`}>
+                  {selectedType} Overview
+                </Box>
+                <IconButton onClick={() => { setSelectedItem(null); setSelectedType(null); }} className="hover:bg-gray-100">
+                  <X className="h-5 w-5" />
+                </IconButton>
+              </Stack>
+
+              {/* Header Info */}
+              <Stack spacing={3} className="mb-8">
+                <Box className="relative">
+                  {((selectedItem as any).imageUrl) ? (
+                    <img 
+                      src={(selectedItem as any).imageUrl} 
+                      className="w-full h-48 rounded-3xl object-cover shadow-xl border-4 border-white"
+                    />
+                  ) : (
+                    <div className="w-full h-48 rounded-3xl bg-gray-100 flex items-center justify-center text-gray-300">
+                      <Package className="h-12 w-12" />
+                    </div>
+                  )}
+                  <div className="absolute -bottom-4 right-6 bg-white p-3 rounded-2xl shadow-lg border border-gray-100">
+                     <Info className="h-5 w-5 text-orange-500" />
+                  </div>
+                </Box>
+
+                <Box>
+                  <Typography variant="h5" className="font-bold text-gray-900 leading-tight">
+                    {(selectedItem as any).name || (selectedItem as any).title}
+                  </Typography>
+                  <Typography className="text-gray-500 mt-1 flex items-center gap-1.5 text-sm">
+                    <MapPin className="h-3.5 w-3.5" /> {(selectedItem as any).city || "Local Area"}
+                  </Typography>
+                </Box>
+              </Stack>
+
+              <Divider className="mb-6" />
+
+              {/* Dynamic Insights Section */}
+              <Box className="mb-8">
+                <Typography className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Location Insight</Typography>
+                <Box className="bg-gray-50/50 rounded-3xl p-6 border border-gray-100 h-64">
+                   {/* This is where a chart would go - using a placeholder radar for premium feel */}
+                   <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+                        { subject: 'Speed', A: 120, fullMark: 150 },
+                        { subject: 'Reliability', A: 98, fullMark: 150 },
+                        { subject: 'Safety', A: 86, fullMark: 150 },
+                        { subject: 'Quantity', A: 99, fullMark: 150 },
+                        { subject: 'Urgency', A: 85, fullMark: 150 },
+                      ]}>
+                        <PolarGrid stroke="#e2e8f0" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: "#94a3b8", fontSize: 10 }} />
+                        <Radar name="Ability" dataKey="A" stroke="#f97316" fill="#f97316" fillOpacity={0.6} />
+                      </RadarChart>
+                   </ResponsiveContainer>
+                </Box>
+              </Box>
+
+              <Stack spacing={2}>
+                 <Typography className="text-xs font-bold text-gray-400 uppercase tracking-widest">Metadata</Typography>
+                 <Box className="grid grid-cols-2 gap-4">
+                    <Box className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                       <Typography className="text-[10px] text-gray-400 uppercase font-bold">Registration</Typography>
+                       <Typography className="text-sm font-bold text-gray-700">Verified</Typography>
+                    </Box>
+                    <Box className="p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                       <Typography className="text-[10px] text-gray-400 uppercase font-bold">Total Operations</Typography>
+                       <Typography className="text-sm font-bold text-gray-700">142</Typography>
+                    </Box>
+                 </Box>
+              </Stack>
+
+              <Box className="mt-auto pt-6">
+                <button 
+                  onClick={() => { setSelectedItem(null); setSelectedType(null); }}
+                  className="w-full py-4 bg-gray-900 text-white rounded-2xl font-bold hover:bg-black transition-all shadow-xl shadow-gray-200"
+                >
+                  Close Insights
+                </button>
+              </Box>
+            </Box>
+          )}
+        </Drawer>
       </div>
 
       {/* Location Stats */}

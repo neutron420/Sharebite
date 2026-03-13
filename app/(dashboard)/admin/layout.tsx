@@ -16,7 +16,6 @@ import {
   FileText,
   ChevronDown,
   ChevronLeft,
-  Menu,
   X,
   Star,
   Search,
@@ -24,8 +23,25 @@ import {
   ClipboardList,
   Settings,
   Map,
+  Info,
+  CheckCircle,
+  AlertTriangle,
   type LucideIcon,
 } from "lucide-react";
+import { 
+  Badge, 
+  Menu, 
+  MenuItem, 
+  IconButton, 
+  Typography, 
+  Box, 
+  Divider,
+  Avatar,
+  Fade,
+  CircularProgress,
+  Stack,
+  Chip
+} from "@mui/material";
 
 interface AdminUser {
   id: string;
@@ -84,6 +100,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["users"]);
+  
+  // Header state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notifAnchor, setNotifAnchor] = useState<null | HTMLElement>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   // Skip layout for login/register pages
   const isAuthPage = pathname?.includes("/login") || pathname?.includes("/register");
@@ -114,10 +137,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [router, isAuthPage]);
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setNotifLoading(true);
+      const res = await fetch("/api/notifications", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+        setUnreadCount(data.filter((n: any) => !n.isRead).length);
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications", err);
+    } finally {
+      setNotifLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    if (!isAuthPage) fetchUser();
-    else setLoading(false);
-  }, [fetchUser, isAuthPage]);
+    if (!isAuthPage) {
+      fetchUser();
+      fetchNotifications();
+    } else {
+      setLoading(false);
+    }
+  }, [fetchUser, fetchNotifications, isAuthPage]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
@@ -281,18 +324,94 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100">
-                <Menu className="h-5 w-5" />
+                <Menu className="h-5 w-5" open={false} />
               </button>
-              <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 w-64 border border-gray-200">
+              <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 w-64 border border-gray-200 focus-within:ring-2 focus-within:ring-orange-500 transition-all">
                 <Search className="h-4 w-4 text-gray-400" />
-                <input type="text" placeholder="Search..." className="bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none w-full" readOnly />
+                <input 
+                  type="text" 
+                  placeholder="Universal Search..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery) {
+                      router.push(`/admin/search?q=${encodeURIComponent(searchQuery)}`);
+                    }
+                  }}
+                  className="bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none w-full" 
+                />
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button className="relative p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900">
-                <Bell className="h-4 w-4" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-orange-500" />
-              </button>
+              <IconButton 
+                onClick={(e) => setNotifAnchor(e.currentTarget)}
+                className="hover:bg-gray-100 text-gray-500 hover:text-orange-600 transition-colors"
+              >
+                <Badge badgeContent={unreadCount} color="error" overlap="circular">
+                  <Bell className="h-4.5 w-4.5" />
+                </Badge>
+              </IconButton>
+
+              <Menu
+                anchorEl={notifAnchor}
+                open={Boolean(notifAnchor)}
+                onClose={() => setNotifAnchor(null)}
+                TransitionComponent={Fade}
+                PaperProps={{
+                  sx: { 
+                    width: 320, 
+                    maxHeight: 400, 
+                    borderRadius: '16px', 
+                    mt: 1.5, 
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                    border: '1px solid #f3f4f6'
+                  }
+                }}
+              >
+                <Box className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <Typography className="font-bold text-gray-900">Notifications</Typography>
+                  <Chip label={`${unreadCount} New`} size="small" className="bg-orange-50 text-orange-600 font-bold text-[10px]" />
+                </Box>
+                
+                <Box className="overflow-y-auto max-h-[300px]">
+                  {notifLoading ? (
+                    <Box className="flex items-center justify-center p-8">
+                       <CircularProgress size={20} className="text-orange-500" />
+                    </Box>
+                  ) : notifications.length > 0 ? (
+                    notifications.map((n) => (
+                      <MenuItem 
+                        key={n.id} 
+                        onClick={() => setNotifAnchor(null)}
+                        className="py-3 px-4 hover:bg-orange-50 transition-colors whitespace-normal"
+                      >
+                         <Stack direction="row" spacing={2} alignItems="flex-start">
+                            <Box className={`mt-1 p-1.5 rounded-full ${n.type === 'ALERT' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
+                               {n.type === 'ALERT' ? <AlertTriangle className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
+                            </Box>
+                            <Box>
+                               <Typography className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">{n.title}</Typography>
+                               <Typography className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</Typography>
+                            </Box>
+                         </Stack>
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <Box className="p-8 text-center text-gray-400">
+                       <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                       <Typography className="text-xs">No notifications yet</Typography>
+                    </Box>
+                  )}
+                </Box>
+                
+                <Divider />
+                <MenuItem 
+                  onClick={() => router.push('/admin/notifications')}
+                  className="py-3 justify-center text-xs font-bold text-orange-600 hover:bg-orange-50"
+                >
+                  View All Activity
+                </MenuItem>
+              </Menu>
               {user && (
                 <div className="flex items-center gap-3 ml-2 pl-3 border-l border-gray-200">
                   <div className="hidden sm:block text-right">
