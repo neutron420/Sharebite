@@ -127,6 +127,11 @@ model PickupRequest {
   id      String        @id @default(uuid())
   message String?
   status  RequestStatus @default(PENDING)
+  
+  // Real-time tracking & security
+  step             Int     @default(1) // 1: Requested, 2: Approved, 3: Out for Pickup, 4: Delivered
+  handoverPin      String? // Secure 4-digit pin generated on approval
+  deliveryImageUrl String? // Proof of delivery photo uploaded by NGO
 
   ngoId      String
   ngo        User         @relation("NGORequests", fields: [ngoId], references: [id], onDelete: Cascade)

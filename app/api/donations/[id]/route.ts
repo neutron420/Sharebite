@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import redis from "@/lib/redis";
 
 export async function GET(
   request: Request,
@@ -31,6 +32,7 @@ export async function GET(
                 id: true,
                 name: true,
                 city: true,
+                imageUrl: true,
               },
             },
           },
@@ -43,19 +45,23 @@ export async function GET(
     }
 
     // Check if user is authorized to see sensitive info
-    // Authorized: The Donor, an Admin, or a Verified NGO who has an APPROVED request for this donation
     const isOwner = session?.userId === donation.donorId;
     const isAdmin = session?.role === "ADMIN";
     
+    // Process requests to hide/show PIN and other data
+    donation.requests = donation.requests.map((req: any) => {
+      // Only donor/admin sees the PIN
+      if (!isOwner && !isAdmin) {
+        req.handoverPin = undefined;
+      }
+      return req;
+    });
+
     let isApprovedNGO = false;
     if (session?.role === "NGO") {
-      const approvedRequest = await prisma.pickupRequest.findFirst({
-        where: {
-          donationId: id,
-          ngoId: session.userId as string,
-          status: "APPROVED"
-        }
-      });
+      const approvedRequest = donation.requests.find(
+        (req: any) => req.ngoId === session.userId && req.status === "APPROVED"
+      );
       if (approvedRequest) isApprovedNGO = true;
     }
 
@@ -112,6 +118,11 @@ export async function PATCH(
       data: { status },
     });
 
+    // If no longer available, remove from Redis GEO index
+    if (status !== "AVAILABLE") {
+       await redis.zrem("donations:geo", id);
+    }
+
     return NextResponse.json(updatedDonation);
   } catch (error) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -145,6 +156,9 @@ export async function DELETE(
     await prisma.foodDonation.delete({
       where: { id },
     });
+
+    // Remove from Redis GEO index
+    await redis.zrem("donations:geo", id);
 
     return NextResponse.json({ message: "Donation deleted successfully" });
   } catch (error) {

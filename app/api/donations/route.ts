@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { donationSchema } from "@/lib/validations/donation";
 import { getSession } from "@/lib/auth";
 import { NotificationType } from "@/app/generated/prisma";
+import redis from "@/lib/redis";
+import { checkRateLimit } from "@/lib/ratelimit";
 
 export async function POST(request: Request) {
   try {
@@ -11,6 +13,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "Unauthorized. Only donors can create donations." },
         { status: 401 }
+      );
+    }
+
+    // Rate Limiting: Limit to 10 donations per minute
+    const rateLimit = await checkRateLimit(session.userId as string, 10, 60);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: "Slow down! You can only post 10 donations per minute." },
+        { status: 429 }
       );
     }
 
@@ -66,6 +77,16 @@ export async function POST(request: Request) {
       });
     }
 
+    // 3. Add to Redis GEO for fast proximity searching
+    if (donation.latitude && donation.longitude) {
+      await redis.geoadd(
+        "donations:geo",
+        donation.longitude,
+        donation.latitude,
+        donation.id
+      );
+    }
+
     return NextResponse.json(donation, { status: 201 });
   } catch (error: any) {
     if (error.name === "ZodError") {
@@ -118,6 +139,27 @@ export async function GET(request: Request) {
         createdAt: "desc",
       },
     });
+
+    // 2. If lat/lng and radius are provided, filter by proximity using Redis
+    const lat = searchParams.get("lat");
+    const lng = searchParams.get("lng");
+    const radius = searchParams.get("radius"); // in km
+
+    if (lat && lng && radius) {
+      const nearbyIds = await redis.geosearch(
+        "donations:geo",
+        "FROMLONLAT",
+        parseFloat(lng),
+        parseFloat(lat),
+        "BYRADIUS",
+        parseFloat(radius),
+        "km"
+      );
+      
+      return NextResponse.json(
+        donations.filter((d) => nearbyIds.includes(d.id))
+      );
+    }
 
     return NextResponse.json(donations);
   } catch (error) {
