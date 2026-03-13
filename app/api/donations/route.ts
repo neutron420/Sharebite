@@ -140,6 +140,15 @@ export async function GET(request: Request) {
       },
     });
 
+    // Add 'isUrgent' flag for food expiring in less than 3 hours
+    const now = new Date();
+    const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+
+    const donationsWithUrgency = donations.map((donation: any) => ({
+      ...donation,
+      isUrgent: new Date(donation.expiryTime) <= threeHoursFromNow,
+    }));
+
     // 2. If lat/lng and radius are provided, filter by proximity using Redis
     const lat = searchParams.get("lat");
     const lng = searchParams.get("lng");
@@ -157,11 +166,11 @@ export async function GET(request: Request) {
       );
       
       return NextResponse.json(
-        donations.filter((d) => nearbyIds.includes(d.id))
+        donationsWithUrgency.filter((d) => nearbyIds.includes(d.id))
       );
     }
 
-    return NextResponse.json(donations);
+    return NextResponse.json(donationsWithUrgency);
   } catch (error) {
     console.error("Fetch donations error:", error);
     return NextResponse.json(
