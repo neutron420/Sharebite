@@ -51,7 +51,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^3.0.0",
     "@types/formidable": "^3.5.0",
     "@types/mapbox-gl": "^3.5.0",
@@ -59,10 +58,12 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/ws": "^8.18.1",
+    "autoprefixer": "^10.4.27",
     "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4",
+    "postcss": "^8.5.8",
+    "tailwindcss": "3",
     "typescript": "^5"
   },
   "ignoreScripts": [

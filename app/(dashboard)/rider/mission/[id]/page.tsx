@@ -185,9 +185,9 @@ export default function MissionDetailPage() {
 
   if (!request) return (
     <div className="text-center p-20 italic">
-       <h2 className="text-2xl font-black uppercase">Mission Classified</h2>
-       <p className="text-white/40 mt-2 font-bold">You do not have clearance for this sector.</p>
-       <button onClick={() => router.push('/rider')} className="mt-8 px-6 py-3 bg-white/5 border border-white/10 rounded-2xl uppercase font-black text-[10px] tracking-widest hover:bg-white hover:text-black transition-all">Return to Ops</button>
+       <h2 className="text-2xl font-black uppercase text-black">Mission Classified</h2>
+       <p className="text-gray-400 mt-2 font-bold">You do not have clearance for this sector.</p>
+       <button onClick={() => router.push('/rider')} className="mt-8 px-6 py-3 bg-gray-100 border border-gray-200 rounded-2xl uppercase font-black text-[10px] tracking-widest hover:bg-gray-200 text-black transition-all">Return to Ops</button>
     </div>
   );
 
@@ -196,19 +196,19 @@ export default function MissionDetailPage() {
   const isOnWay = request.status === "ON_THE_WAY";
 
   return (
-    <div className="space-y-10 italic">
+    <div className="space-y-10 italic text-black">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <button onClick={() => router.push('/rider')} className="p-4 bg-white/5 border border-white/5 rounded-2xl text-white/40 hover:text-white transition-all">
+          <button onClick={() => router.push('/rider')} className="p-4 bg-gray-100 border border-gray-200 rounded-2xl text-gray-400 hover:text-black transition-all">
             <ArrowLeft className="w-6 h-6" />
           </button>
           <div>
             <div className="flex items-center gap-2 mb-1">
                <Badge className={`bg-orange-500/10 text-orange-500 border-none font-black text-[9px] uppercase tracking-widest`}>{request.status}</Badge>
-               <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">{request.id.split('-')[0]}</span>
+               <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">{request.id.split('-')[0]}</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none uppercase">{request.donation.title}</h1>
+            <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-none uppercase text-black">{request.donation.title}</h1>
           </div>
         </div>
 
@@ -231,7 +231,7 @@ export default function MissionDetailPage() {
         <div className="lg:col-span-2 space-y-10">
           
           {/* Map Area */}
-          <div className="h-[400px] md:h-[500px] w-full rounded-[3.5rem] bg-zinc-900 border border-white/5 overflow-hidden relative group">
+          <div className="h-[400px] md:h-[500px] w-full rounded-[3.5rem] bg-gray-100 border border-gray-200 overflow-hidden relative group">
              <LiveRiderMap 
                 riderId={request.riderId}
                 riderName="YOU"
@@ -239,44 +239,44 @@ export default function MissionDetailPage() {
                 ngoCoords={[request.ngo.longitude, request.ngo.latitude]}
                 status={request.status}
              />
-             <div className="absolute top-6 left-6 p-4 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-3">
+             <div className="absolute top-6 left-6 p-4 bg-white/80 backdrop-blur-xl border border-gray-200 rounded-2xl flex items-center gap-3 shadow-lg">
                 <Navigation className="w-4 h-4 text-orange-500" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Tactical HUD Active</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Tactical HUD Active</span>
              </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="p-8 rounded-[2.5rem] bg-zinc-900/30 border border-white/5 space-y-6">
+             <div className="p-8 rounded-[2.5rem] bg-gray-50 border border-gray-100 space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
+                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100">
                       <MapPin className="w-5 h-5 text-orange-600" />
                    </div>
-                   <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/40">Extraction Point</h3>
+                   <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Extraction Point</h3>
                 </div>
                 <div className="space-y-4">
                    <div>
-                      <p className="text-xl font-black">{request.donation.donor.name}</p>
-                      <p className="text-xs font-bold text-white/30 mt-1">{request.donation.donor.address}, {request.donation.donor.city}</p>
+                      <p className="text-xl font-black text-black">{request.donation.donor.name}</p>
+                      <p className="text-xs font-bold text-gray-500 mt-1">{request.donation.donor.address}, {request.donation.donor.city}</p>
                    </div>
-                   <button className="flex items-center gap-2 text-xs font-black text-white hover:text-orange-500 transition-colors">
+                   <button className="flex items-center gap-2 text-xs font-black text-black hover:text-orange-500 transition-colors">
                       <Phone className="w-4 h-4" /> Secure Comms
                    </button>
                 </div>
              </div>
 
-             <div className="p-8 rounded-[2.5rem] bg-zinc-900/30 border border-white/5 space-y-6">
+             <div className="p-8 rounded-[2.5rem] bg-gray-50 border border-gray-100 space-y-6">
                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
+                   <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center border border-gray-100">
                       <Truck className="w-5 h-5 text-green-600" />
                    </div>
-                   <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/40">Drop-Off Sector</h3>
+                   <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400">Drop-Off Sector</h3>
                 </div>
                 <div className="space-y-4">
                    <div>
-                      <p className="text-xl font-black">{request.ngo.name}</p>
-                      <p className="text-xs font-bold text-white/30 mt-1">{request.ngo.address}, {request.ngo.city}</p>
+                      <p className="text-xl font-black text-black">{request.ngo.name}</p>
+                      <p className="text-xs font-bold text-gray-500 mt-1">{request.ngo.address}, {request.ngo.city}</p>
                    </div>
-                   <button className="flex items-center gap-2 text-xs font-black text-white hover:text-orange-500 transition-colors">
+                   <button className="flex items-center gap-2 text-xs font-black text-black hover:text-orange-500 transition-colors">
                       <Phone className="w-4 h-4" /> Secure Comms
                    </button>
                 </div>
@@ -290,7 +290,7 @@ export default function MissionDetailPage() {
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-orange-600/10 blur-[100px] group-hover:bg-orange-600/20 transition-all duration-1000" />
               
               <div className="space-y-2">
-                 <h2 className="text-2xl font-black uppercase tracking-tighter italic">Mission Steps</h2>
+                 <h2 className="text-2xl font-black uppercase tracking-tighter italic text-black">Mission Steps</h2>
                  <p className="text-[10px] font-bold text-orange-500/60 uppercase tracking-widest">Protocol Execution</p>
               </div>
 
@@ -312,13 +312,13 @@ export default function MissionDetailPage() {
 
               {isOnWay && (
                  <div className="space-y-6">
-                    <div className="relative h-40 w-full rounded-3xl bg-black/40 border-2 border-dashed border-white/10 flex flex-col items-center justify-center overflow-hidden group/upload">
+                    <div className="relative h-40 w-full rounded-3xl bg-gray-100 border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden group/upload">
                        {proofImage ? (
                           <img src={proofImage} className="w-full h-full object-cover" alt="Proof" />
                        ) : (
                           <>
-                             <Upload className="w-8 h-8 text-white/20 mb-2 group-hover/upload:text-orange-500 transition-colors" />
-                             <p className="text-[10px] font-black uppercase tracking-widest text-white/20">Upload Proof of Delivery</p>
+                             <Upload className="w-8 h-8 text-gray-300 mb-2 group-hover/upload:text-orange-500 transition-colors" />
+                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 text-center px-4">Upload Proof of Delivery</p>
                              <input 
                                 type="file" 
                                 className="absolute inset-0 opacity-0 cursor-pointer" 
@@ -328,7 +328,7 @@ export default function MissionDetailPage() {
                           </>
                        )}
                        {uploading && (
-                          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center">
                              <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
                           </div>
                        )}
@@ -345,12 +345,12 @@ export default function MissionDetailPage() {
               )}
            </div>
 
-           <div className="p-8 rounded-[2.5rem] bg-zinc-900/30 border border-white/5">
+           <div className="p-8 rounded-[2.5rem] bg-gray-50 border border-gray-100">
               <div className="flex items-center gap-3 mb-4">
                  <AlertCircle className="w-5 h-5 text-orange-500" />
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">Field Rules</h4>
+                 <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Field Rules</h4>
               </div>
-              <ul className="space-y-3 text-[10px] font-bold text-white/60">
+              <ul className="space-y-3 text-[10px] font-bold text-gray-500">
                  <li className="flex gap-2"><span>1.</span> Visual proof is mandatory for karma points.</li>
                  <li className="flex gap-2"><span>2.</span> Keep your secure comms active during pursuit.</li>
                  <li className="flex gap-2"><span>3.</span> Any deviation from extraction route must be logged.</li>
@@ -367,7 +367,7 @@ export default function MissionDetailPage() {
                   <div className="w-24 h-24 bg-orange-600 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-orange-950">
                      <ShieldCheck className="w-12 h-12 text-white" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-white">
                      <h2 className="text-3xl font-black tracking-tight uppercase">Enter Extraction PIN</h2>
                      <p className="text-white/40 font-bold text-sm">Retrieve the 4-digit code from the donor to verify supply collection.</p>
                   </div>
@@ -378,7 +378,7 @@ export default function MissionDetailPage() {
                         maxLength={4}
                         placeholder="----"
                         autoFocus
-                        className="w-full text-center text-6xl font-black tracking-[0.5em] py-10 rounded-[2.5rem] bg-black border-2 border-white/5 focus:border-orange-600 focus:outline-none transition-all placeholder:text-zinc-800 uppercase shadow-inner"
+                        className="w-full text-center text-6xl font-black tracking-[0.5em] py-10 rounded-[2.5rem] bg-black border-2 border-white/5 focus:border-orange-600 focus:outline-none transition-all placeholder:text-zinc-800 uppercase shadow-inner text-white"
                         value={pin}
                         onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                      />
@@ -405,13 +405,13 @@ export default function MissionDetailPage() {
 
 function StepItem({ label, description, active = false, complete = false }: { label: string, description: string, active?: boolean, complete?: boolean }) {
    return (
-      <div className={`p-5 rounded-2xl border flex items-center gap-4 transition-all ${complete ? 'bg-green-500/5 border-green-500/20' : active ? 'bg-orange-500/5 border-orange-600/40 shadow-lg shadow-orange-950/20' : 'bg-white/5 border-white/5 opacity-30'}`}>
-         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${complete ? 'bg-green-600/20 text-green-500' : active ? 'bg-orange-600 text-white' : 'bg-white/5 text-white/20'}`}>
+      <div className={`p-5 rounded-2xl border flex items-center gap-4 transition-all ${complete ? 'bg-green-500/5 border-green-500/20' : active ? 'bg-orange-500/5 border-orange-600/40 shadow-lg shadow-orange-950/20' : 'bg-gray-100 border-gray-200 opacity-50'}`}>
+         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${complete ? 'bg-green-600/20 text-green-500' : active ? 'bg-orange-600 text-white' : 'bg-white text-gray-300 border border-gray-100'}`}>
             {complete ? <CheckCircle2 className="w-5 h-5" /> : active ? <Clock className="w-5 h-5 animate-pulse" /> : <ShieldCheck className="w-5 h-5" />}
          </div>
          <div className="flex-1 min-w-0">
-            <p className={`text-[11px] font-black uppercase tracking-widest ${complete ? 'text-green-500' : active ? 'text-white' : 'text-white/20'}`}>{label}</p>
-            <p className="text-[9px] font-bold text-white/40 truncate">{description}</p>
+            <p className={`text-[11px] font-black uppercase tracking-widest ${complete ? 'text-green-500' : active ? 'text-black' : 'text-gray-300'}`}>{label}</p>
+            <p className={`text-[9px] font-bold truncate ${active ? 'text-gray-500' : 'text-gray-400'}`}>{description}</p>
          </div>
       </div>
    );

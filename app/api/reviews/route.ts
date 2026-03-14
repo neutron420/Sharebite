@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@/app/generated/prisma";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { z } from "zod";
@@ -27,30 +28,42 @@ async function postReviewHandler(request: Request) {
       return NextResponse.json({ error: "Donation not found" }, { status: 404 });
     }
 
-    if (donation.status !== "COLLECTED") {
-        console.error("Review Error: Donation status is not COLLECTED", donation.status);
-        return NextResponse.json({ error: "Can only review after food is collected" }, { status: 400 });
-    }
-
     const completedRequest = await prisma.pickupRequest.findFirst({
-        where: {
-            donationId: validatedData.donationId,
-            status: "COMPLETED"
-        }
+      where: {
+        donationId: validatedData.donationId,
+        status: "COMPLETED",
+      },
     });
+
+    // More lenient check - allow review if donation is collected OR request is completed
+    if (donation.status !== "COLLECTED" && !completedRequest) {
+      console.error("Review Error: Donation not ready for review", {
+        donationStatus: donation.status,
+        hasCompletedRequest: Boolean(completedRequest),
+      });
+      return NextResponse.json({ error: "Can only review after food is collected" }, { status: 400 });
+    }
 
     const isDonor = donation.donorId === session.userId;
     const isNGO = completedRequest?.ngoId === session.userId;
 
     if (!isDonor && !isNGO) {
-        console.error("Review Error: User not involved in donation", session.userId);
-        return NextResponse.json({ error: "You were not involved in this donation" }, { status: 403 });
+      console.error("Review Error: User not involved in donation", session.userId);
+      return NextResponse.json({ error: "You were not involved in this donation" }, { status: 403 });
     }
 
-    const targetId = isDonor ? completedRequest?.ngoId : donation.donorId;
-    if (validatedData.revieweeId !== targetId) {
-        console.error("Review Error: Invalid reviewee", { targetId, revieweeId: validatedData.revieweeId });
-        return NextResponse.json({ error: "Invalid reviewee" }, { status: 400 });
+    const validReviewees = [donation.donorId, completedRequest?.ngoId].filter(
+      (revieweeId): revieweeId is string => Boolean(revieweeId)
+    );
+
+    if (!validReviewees.includes(validatedData.revieweeId)) {
+      console.error("Review Error: Invalid reviewee", { validReviewees, revieweeId: validatedData.revieweeId });
+      return NextResponse.json({ error: "Invalid reviewee" }, { status: 400 });
+    }
+
+    // Prevent self-review
+    if (validatedData.revieweeId === session.userId) {
+      return NextResponse.json({ error: "Cannot review yourself" }, { status: 400 });
     }
 
     const review = await prisma.review.create({
@@ -58,50 +71,50 @@ async function postReviewHandler(request: Request) {
         rating: validatedData.rating,
         comment: validatedData.comment,
         donationId: validatedData.donationId,
-        reviewerId: session.userId as string,
+        reviewerId: session.userId,
         revieweeId: validatedData.revieweeId,
-      }
+      },
     });
 
     return NextResponse.json(review, { status: 201 });
-  } catch (error: any) {
-    if (error.name === "ZodError") {
-        console.error("Review Validation Error:", error.errors);
-        return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Review Validation Error:", error.flatten());
+      return NextResponse.json({ error: "Validation failed", details: error.flatten() }, { status: 400 });
     }
-    if (error.code === 'P2002') {
-        console.error("Review Duplicate Error:", error.meta);
-        return NextResponse.json({ error: "You have already reviewed this donation" }, { status: 400 });
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      console.error("Review Duplicate Error:", error.meta);
+      return NextResponse.json({ error: "You have already reviewed this donation" }, { status: 400 });
     }
+
     console.error("Review creation error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 async function getReviewsHandler(request: Request) {
-    try {
-        const { searchParams } = new URL(request.url);
-        const revieweeId = searchParams.get("userId");
+  try {
+    const { searchParams } = new URL(request.url);
+    const revieweeId = searchParams.get("userId");
 
-        if (!revieweeId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
+    if (!revieweeId) return NextResponse.json({ error: "User ID required" }, { status: 400 });
 
-        const reviews = await prisma.review.findMany({
-            where: { revieweeId },
-            include: {
-                reviewer: { select: { name: true, imageUrl: true } },
-                donation: { select: { title: true } }
-            },
-            orderBy: { createdAt: "desc" }
-        });
+    const reviews = await prisma.review.findMany({
+      where: { revieweeId },
+      include: {
+        reviewer: { select: { name: true, imageUrl: true } },
+        donation: { select: { title: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
-        const avg = reviews.length > 0 
-            ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
-            : 0;
+    const avg = reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 0;
 
-        return NextResponse.json({ reviews, averageRating: avg });
-    } catch (error) {
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-    }
+    return NextResponse.json({ reviews, averageRating: avg });
+  } catch {
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }
 
 export const POST = withSecurity(postReviewHandler, { limit: 20 });

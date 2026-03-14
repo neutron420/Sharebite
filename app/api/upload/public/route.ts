@@ -50,4 +50,4 @@ async function publicUploadHandler(request: Request) {
   }
 }
 
-export const POST = withSecurity(publicUploadHandler, { limit: 10 }); // Rate limit for abuse prevention
+export const POST = withSecurity(publicUploadHandler, { limit: 50 }); // Increased for file uploads

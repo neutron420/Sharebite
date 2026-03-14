@@ -47,10 +47,10 @@ async function getLocationHandler(request: Request) {
     const data = await redis.get(`rider:pos:${riderId}`);
     
     if (!data) {
-      return NextResponse.json({ error: "Rider is offline or not tracking" }, { status: 404 });
+      return NextResponse.json({ lat: null, lng: null, offline: true });
     }
 
-    return NextResponse.json(JSON.parse(data));
+    return NextResponse.json({ ...JSON.parse(data as string), offline: false });
   } catch (error) {
     console.error("Rider location fetch error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

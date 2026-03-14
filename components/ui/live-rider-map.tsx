@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Truck, MapPin, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -14,6 +14,33 @@ interface LiveRiderMapProps {
   ngoCoords?: [number, number];   // [lng, lat]
   status?: string;
 }
+
+interface DirectionsResponse {
+  routes?: Array<{
+    distance: number;
+    duration: number;
+    geometry: {
+      coordinates: [number, number][];
+    };
+  }>;
+}
+
+interface RiderLocationResponse {
+  lat?: number | null;
+  lng?: number | null;
+  offline?: boolean;
+}
+
+type RouteGeoJson = {
+  type: "Feature";
+  properties: Record<string, never>;
+  geometry: {
+    type: "LineString";
+    coordinates: [number, number][];
+  };
+};
+
+const DEFAULT_CENTER: [number, number] = [77.209, 28.613];
 
 export default function LiveRiderMap({ 
   riderId, 
@@ -28,72 +55,86 @@ export default function LiveRiderMap({
   const [loading, setLoading] = useState(true);
   const [routeStats, setRouteStats] = useState<{ distance: string, duration: string } | null>(null);
 
-  const fetchRoute = async (m: mapboxgl.Map) => {
-    if (!donorCoords || !ngoCoords) return;
+  const fetchRoute = useCallback(async (m: mapboxgl.Map) => {
+    if (!donorCoords || !ngoCoords || !mapboxgl.accessToken) {
+      setRouteStats(null);
+      return;
+    }
     
     try {
       const query = await fetch(
         `https://api.mapbox.com/directions/v5/mapbox/driving/${donorCoords[0]},${donorCoords[1]};${ngoCoords[0]},${ngoCoords[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
-        { method: 'GET' }
+        { method: "GET" }
       );
-      const json = await query.json();
-      const data = json.routes[0];
-      const route = data.geometry.coordinates;
+      const json: DirectionsResponse = await query.json();
+      const data = json.routes?.[0];
 
-      const geojson: any = {
-        type: 'Feature',
+      if (!data) {
+        setRouteStats(null);
+        return;
+      }
+
+      const geojson: RouteGeoJson = {
+        type: "Feature",
         properties: {},
         geometry: {
-          type: 'LineString',
-          coordinates: route
-        }
+          type: "LineString",
+          coordinates: data.geometry.coordinates,
+        },
       };
 
-      if (m.getSource('route')) {
-        (m.getSource('route') as mapboxgl.GeoJSONSource).setData(geojson);
+      if (m.getSource("route")) {
+        (m.getSource("route") as mapboxgl.GeoJSONSource).setData(geojson);
       } else {
         m.addLayer({
-          id: 'route',
-          type: 'line',
+          id: "route",
+          type: "line",
           source: {
-            type: 'geojson',
-            data: geojson
+            type: "geojson",
+            data: geojson,
           },
           layout: {
-            'line-join': 'round',
-            'line-cap': 'round'
+            "line-join": "round",
+            "line-cap": "round",
           },
           paint: {
-            'line-color': '#ea580c',
-            'line-width': 5,
-            'line-opacity': 0.75
-          }
+            "line-color": "#ea580c",
+            "line-width": 5,
+            "line-opacity": 0.75,
+          },
         });
       }
 
       setRouteStats({
         distance: (data.distance / 1000).toFixed(1) + " km",
-        duration: Math.floor(data.duration / 60) + " min"
+        duration: Math.floor(data.duration / 60) + " min",
       });
     } catch (err) {
       console.error("Failed to fetch route:", err);
     }
-  };
+  }, [donorCoords, ngoCoords]);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || !mapboxgl.accessToken) {
+      setLoading(false);
+      return;
+    }
 
-    map.current = new mapboxgl.Map({
+    setLoading(true);
+
+    const nextMap = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/dark-v11",
       zoom: 12,
-      center: donorCoords || [77.209, 28.613],
+      center: donorCoords || DEFAULT_CENTER,
       attributionControl: false
     });
 
-    map.current.on('load', () => {
+    map.current = nextMap;
+
+    nextMap.on('load', () => {
       setLoading(false);
-      const m = map.current!;
+      const m = nextMap;
 
       // Add Donor Marker
       if (donorCoords) {
@@ -110,7 +151,7 @@ export default function LiveRiderMap({
       }
 
       // Initial Route
-      fetchRoute(m);
+      void fetchRoute(m);
 
       // Rider Marker setup
       const riderEl = document.createElement('div');
@@ -124,33 +165,57 @@ export default function LiveRiderMap({
           </div>
         </div>
       `;
-      riderMarker.current = new mapboxgl.Marker(riderEl).setLngLat([0, 0]).addTo(m);
+      riderMarker.current = new mapboxgl.Marker(riderEl)
+        .setLngLat(donorCoords ?? ngoCoords ?? DEFAULT_CENTER)
+        .addTo(m);
     });
 
-    return () => map.current?.remove();
-  }, [donorCoords, ngoCoords]);
+    return () => {
+      riderMarker.current = null;
+      nextMap.remove();
+      if (map.current === nextMap) {
+        map.current = null;
+      }
+    };
+  }, [donorCoords, fetchRoute, ngoCoords, riderName]);
 
   // Poll for Rider Location
   useEffect(() => {
-    if (!riderId) return;
+    if (!riderId || status === "COLLECTED" || status === "COMPLETED") return;
+
+    let cancelled = false;
+
     const pollLocation = async () => {
       try {
         const res = await fetch(`/api/rider/location?riderId=${riderId}`);
         if (res.ok) {
-          const data = await res.json();
-          if (data.lng && data.lat) {
+          const data: RiderLocationResponse = await res.json();
+          if (
+            !cancelled &&
+            !data.offline &&
+            typeof data.lng === "number" &&
+            typeof data.lat === "number"
+          ) {
             riderMarker.current?.setLngLat([data.lng, data.lat]);
             if (map.current) {
               map.current.easeTo({ center: [data.lng, data.lat], duration: 1000 });
             }
           }
         }
-      } catch (err) {}
+      } catch {}
     };
-    const interval = setInterval(pollLocation, 3000);
-    pollLocation();
-    return () => clearInterval(interval);
-  }, [riderId]);
+
+    const interval = window.setInterval(() => {
+      void pollLocation();
+    }, 10000);
+
+    void pollLocation();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [riderId, status]);
 
   return (
     <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/5 bg-zinc-900 group">

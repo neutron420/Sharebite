@@ -44,7 +44,7 @@ async function deliveryHandler(
     }
 
     // 2. Complete the Request and Update Donation Status
-    const [updatedRequest] = await prisma.$transaction([
+    const [] = await prisma.$transaction([
       prisma.pickupRequest.update({
         where: { id },
         data: {
@@ -105,4 +105,4 @@ async function deliveryHandler(
   }
 }
 
-export const PATCH = withSecurity(deliveryHandler, { limit: 20 });
+export const PATCH = withSecurity(deliveryHandler, { limit: 100 });

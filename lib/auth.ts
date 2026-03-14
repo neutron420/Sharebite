@@ -1,19 +1,55 @@
-import { SignJWT, jwtVerify } from "jose";
-import { cookies } from "next/headers";
-import { headers } from "next/headers";
+import { JWTPayload, SignJWT, jwtVerify } from "jose";
+import { cookies, headers } from "next/headers";
 
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable is not set");
 }
 
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
+const sessionRoles = ["ADMIN", "DONOR", "NGO", "RIDER"] as const;
+
+export type SessionRole = (typeof sessionRoles)[number];
+
+export interface SessionPayload extends JWTPayload {
+  userId: string;
+  email: string;
+  role: SessionRole;
+}
+
+interface GetSessionOptions {
+  preferredRole?: SessionRole;
+  request?: Request;
+}
 
 export function getCookieName(role: string): string {
   if (role === "ADMIN") return "admin_session";
+  if (role === "DONOR") return "donor_session";
+  if (role === "NGO") return "ngo_session";
+  if (role === "RIDER") return "rider_session";
   return "session";
 }
 
-export async function signToken(payload: any) {
+function isSessionRole(value: unknown): value is SessionRole {
+  return typeof value === "string" && sessionRoles.includes(value as SessionRole);
+}
+
+function isSessionPayload(payload: JWTPayload): payload is SessionPayload {
+  return (
+    typeof payload.userId === "string" &&
+    typeof payload.email === "string" &&
+    isSessionRole(payload.role)
+  );
+}
+
+function inferPreferredRole(currentPath: string): SessionRole | undefined {
+  if (currentPath.includes("/admin")) return "ADMIN";
+  if (currentPath.includes("/donor")) return "DONOR";
+  if (currentPath.includes("/ngo")) return "NGO";
+  if (currentPath.includes("/rider")) return "RIDER";
+  return undefined;
+}
+
+export async function signToken(payload: SessionPayload) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -21,11 +57,11 @@ export async function signToken(payload: any) {
     .sign(secretKey);
 }
 
-export async function verifyToken(token: string) {
+export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secretKey);
-    return payload;
-  } catch (error) {
+    return isSessionPayload(payload) ? payload : null;
+  } catch {
     return null;
   }
 }
@@ -33,68 +69,75 @@ export async function verifyToken(token: string) {
 /**
  * getSession() — Smart session resolver.
  * 
- * For /api/admin/* routes → checks admin_session cookie
- * For /api/donor/*, /api/ngo/*, etc. → checks session cookie
- * For everything else → checks session cookie first, then admin_session
+ * It can prefer a role explicitly or infer the route context from the request.
+ * This keeps multi-role sign-ins from stepping on each other.
  * 
- * This ensures Admin and Donor/NGO can be logged in at the same time
- * without conflicting with each other.
+ * For everything else it falls back to the general session first, then role cookies.
  */
-export async function getSession() {
+export async function getSession(options?: GetSessionOptions): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   
-  // 1. Detect if we are in an admin context to prioritize the right cookie
-  let isAdminPath = false;
-  try {
-    const headersList = await headers();
-    const referer = headersList.get("referer") || "";
-    const nextUrl = headersList.get("x-invoke-path") || headersList.get("x-matched-path") || "";
-    
-    // Check if the URL contains admin keywords
-    const pathString = (nextUrl + "|" + referer).toLowerCase();
-    isAdminPath = pathString.includes("/admin") || pathString.includes("/api/admin");
-  } catch (err) {
-    // Fail silently, default to false
+  // 1. Detect current path context
+  let currentPath = "";
+  if (options?.request) {
+    currentPath = new URL(options.request.url).pathname.toLowerCase();
   }
 
-  const sessionToken = cookieStore.get("session")?.value;
-  const adminToken = cookieStore.get("admin_session")?.value;
+  if (!currentPath) {
+    try {
+      const headersList = await headers();
+      const referer = headersList.get("referer") || "";
+      const refererPath = referer ? new URL(referer).pathname : "";
+      const nextUrl =
+        headersList.get("x-invoke-path") ||
+        headersList.get("x-matched-path") ||
+        headersList.get("next-url") ||
+        "";
 
-  // 2. Priority check based on path
-  if (isAdminPath) {
-    if (adminToken) {
-      const payload = await verifyToken(adminToken);
-      if (payload) {
-        return payload;
-      }
+      currentPath = `${nextUrl}|${refererPath}`.toLowerCase();
+    } catch {
+      // Fail silently and fall back to the default cookie order below.
     }
-    // Fallback to regular session
-    if (sessionToken) {
-      const payload = await verifyToken(sessionToken);
-      if (payload) {
-        return payload;
+  }
+
+  // 2. Get all session tokens
+  const adminToken = cookieStore.get("admin_session")?.value;
+  const donorToken = cookieStore.get("donor_session")?.value;
+  const ngoToken = cookieStore.get("ngo_session")?.value;
+  const riderToken = cookieStore.get("rider_session")?.value;
+  const generalToken = cookieStore.get("session")?.value;
+
+  // 3. Priority check based on path context
+  const tokenByRole: Record<SessionRole, string | undefined> = {
+    ADMIN: adminToken,
+    DONOR: donorToken,
+    NGO: ngoToken,
+    RIDER: riderToken,
+  };
+  const tokenChecks: Array<string | undefined> = [];
+  const preferredRole = options?.preferredRole ?? inferPreferredRole(currentPath);
+
+  if (preferredRole) {
+    tokenChecks.push(tokenByRole[preferredRole], generalToken);
+
+    for (const role of sessionRoles) {
+      if (role !== preferredRole) {
+        tokenChecks.push(tokenByRole[role]);
       }
     }
   } else {
-    // Default: Check regular session first
-    if (sessionToken) {
-      const payload = await verifyToken(sessionToken);
-      if (payload) {
-        return payload;
-      }
-    }
-    // Fallback to admin session
-    if (adminToken) {
-      const payload = await verifyToken(adminToken);
-      if (payload) {
-        return payload;
-      }
-    }
+    // Default order: check all tokens
+    tokenChecks.push(generalToken, adminToken, donorToken, ngoToken, riderToken);
   }
 
-  // Debug logging for missing sessions to help find issues
-  if (sessionToken || adminToken) {
-    console.warn("Session tokens found but failed verification (possibly expired or invalid secret)");
+  // 4. Verify tokens in priority order
+  for (const token of tokenChecks) {
+    if (token) {
+      const payload = await verifyToken(token);
+      if (payload) {
+        return payload;
+      }
+    }
   }
 
   return null;
