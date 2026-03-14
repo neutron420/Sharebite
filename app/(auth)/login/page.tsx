@@ -81,10 +81,10 @@ export default function LoginPage() {
               <span className="text-3xl font-black tracking-tighter text-slate-900">ShareBite</span>
            </Link>
            <h1 className="text-4xl font-black tracking-tight text-center mb-2">
-              {loginRole === "DONOR" ? "Welcome Back" : "Ops Command"}
+              {loginRole === "DONOR" ? "Welcome Back" : loginRole === "NGO" ? "Ops Command" : "Rider Dispatch"}
            </h1>
            <p className="text-slate-500 font-medium text-sm">
-              {loginRole === "DONOR" ? "Securely access your donor portal." : "Securely access your NGO logistics."}
+              {loginRole === "DONOR" ? "Securely access your donor portal." : loginRole === "NGO" ? "Securely access your NGO logistics." : "Securely access your delivery missions."}
            </p>
         </div>
 
@@ -108,6 +108,13 @@ export default function LoginPage() {
                   className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all ${loginRole === "NGO" ? "bg-white text-orange-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
                >
                   NGO Hub
+               </button>
+               <button
+                  type="button"
+                  onClick={() => setLoginRole("RIDER")}
+                  className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all ${loginRole === "RIDER" ? "bg-white text-orange-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+               >
+                  Rider
                </button>
             </div>
             <AnimatePresence>

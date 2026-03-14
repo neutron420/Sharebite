@@ -41,11 +41,15 @@ export default function RiderDashboard() {
     try {
       setLoading(true);
       const res = await fetch("/api/requests");
+      if (res.status === 403) {
+         const errData = await res.json();
+         throw new Error(errData.error || "Access Denied. Riders only.");
+      }
       if (!res.ok) throw new Error("Ops grid offline.");
       const data = await res.json();
       setTasks(Array.isArray(data) ? data : []);
-    } catch (error) {
-      toast.error("Could not load mission grid.");
+    } catch (error: any) {
+      toast.error(error.message || "Could not load mission grid.");
     } finally {
       setLoading(false);
     }
@@ -78,55 +82,21 @@ export default function RiderDashboard() {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-    } catch (e) {
-      router.push("/login");
-    }
-  };
+
 
   const activeMission = tasks.find(t => t.riderId && (t.status === "ASSIGNED" || t.status === "ON_THE_WAY"));
   const availableBounties = tasks.filter(t => !t.riderId && t.status === "APPROVED");
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6">
-        <Zap className="w-12 h-12 text-orange-500 animate-pulse" />
-        <p className="font-black text-[10px] uppercase tracking-[0.4em] text-orange-500/50 animate-pulse">Initializing Tactical Grid...</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center p-20 gap-4">
+      <Zap className="w-12 h-12 text-orange-500 animate-pulse" />
+      <span className="font-black text-[10px] uppercase tracking-[0.5em] text-orange-500 animate-pulse">Scanning Sector...</span>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex selection:bg-orange-600/30 italic">
-      
-      {/* Sidebar - Dark Tactical */}
-      <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 border-r border-white/5 bg-black/40 backdrop-blur-xl z-50 flex flex-col items-center md:items-stretch py-10 px-4">
-        <div className="px-2 mb-16">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-2xl shadow-orange-950/50 italic font-black text-white text-xl">R</div>
-            <span className="hidden md:block text-xl font-black tracking-tighter uppercase whitespace-nowrap">Rider Stealth</span>
-          </div>
-        </div>
-
-        <nav className="flex-grow space-y-2">
-           <SidebarItem icon={<LayoutDashboard />} label="Ops Grid" active />
-           <SidebarItem icon={<Truck />} label="Active Missions" />
-           <SidebarItem icon={<Zap />} label="Bounties" />
-           <SidebarItem icon={<Bell />} label="Comms" />
-        </nav>
-
-        <button onClick={handleSignOut} className="flex items-center gap-4 px-4 py-4 text-white/40 hover:text-orange-500 transition-colors font-black text-xs uppercase tracking-widest">
-           <LogOut className="w-5 h-5" />
-           <span className="hidden md:block">Abort Session</span>
-        </button>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-grow pl-20 md:pl-64 pt-12 pb-24 px-6 md:px-12">
-        <div className="max-w-6xl mx-auto space-y-12">
+    <>
+      <div className="max-w-6xl mx-auto space-y-12">
           
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
@@ -257,8 +227,8 @@ export default function RiderDashboard() {
                 ))}
              </div>
           </section>
-        </div>
-      </main>
+
+      </div>
 
       {/* Handover PIN Modal */}
       <AnimatePresence>
@@ -300,25 +270,11 @@ export default function RiderDashboard() {
             </motion.div>
          )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }
 
-function SidebarItem({ icon, label, active = false, link = "#" }: { icon: React.ReactNode, label: string, active?: boolean, link?: string }) {
-  return (
-    <Link 
-      href={link}
-      className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all group ${
-        active ? 'bg-orange-600 text-white shadow-2xl shadow-orange-950' : 'text-white/30 hover:text-white hover:bg-white/5'
-      }`}
-    >
-      <div className={`flex justify-center items-center [&>svg]:w-5 [&>svg]:h-5 ${active ? 'text-white' : 'text-white/30 group-hover:text-orange-500'}`}>
-        {icon}
-      </div>
-      <span className={`font-black text-[11px] tracking-[0.1em] uppercase hidden md:block ${active ? 'text-white' : 'group-hover:text-white'}`}>{label}</span>
-    </Link>
-  );
-}
+
 
 function MissionWayPoint({ label, value, active = false }: { label: string, value: string, active?: boolean }) {
    return (

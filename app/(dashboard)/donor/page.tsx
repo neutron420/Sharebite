@@ -20,7 +20,8 @@ import {
   Bell,
   ShieldCheck,
   MapPin,
-  Truck
+  Truck,
+  Navigation
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -28,6 +29,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { useRouter } from "next/navigation";
 import DonationList from "@/components/ui/donation-list";
 import { Badge } from "@/components/ui/badge";
+import LiveRiderMap from "@/components/ui/live-rider-map";
 
 interface DonorStats {
   totalDonations: number;
@@ -54,6 +56,10 @@ export default function DonorDashboard() {
         setLoading(true);
         // Fetch stats
         const statsRes = await fetch("/api/donor/stats");
+        if (statsRes.status === 403) {
+            const errData = await statsRes.json();
+            throw new Error(errData.error || "Access Denied. Donors only.");
+        }
         if (!statsRes.ok) throw new Error("Failed to fetch stats");
         const statsData = await statsRes.json();
         setStats(statsData);
@@ -75,9 +81,9 @@ export default function DonorDashboard() {
             setLiveOps(active);
         }
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Dashboard load error:", error);
-        toast.error("HQ connection unstable. Data may be stale.");
+        toast.error(error.message || "HQ connection unstable. Data may be stale.");
       } finally {
         setLoading(false);
       }
@@ -172,44 +178,80 @@ export default function DonorDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {liveOps.map((donation, i) => {
                     const approvedReq = donation.requests.find((r: any) => 
-                      r.status === "APPROVED" || r.status === "ON_THE_WAY" || r.status === "COLLECTED"
+                      r.status === "APPROVED" || r.status === "ASSIGNED" || r.status === "ON_THE_WAY" || r.status === "COLLECTED"
                     );
+                    const isTracking = approvedReq && approvedReq.riderId && (approvedReq.status === "ASSIGNED" || approvedReq.status === "ON_THE_WAY");
+
                     return (
                       <motion.div 
                         key={donation.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: i * 0.1 }}
-                        className="p-8 rounded-[3rem] bg-slate-950 text-white relative overflow-hidden group shadow-2xl border border-white/10"
-                        onClick={() => router.push(`/donor/donations/${donation.id}`)}
+                        className="flex flex-col gap-4"
                       >
-                         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/20 blur-3xl" />
-                         <div className="relative z-10 flex flex-col gap-6">
-                            <div className="flex items-center justify-between">
-                               <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-                                     <Truck className="w-5 h-5 text-orange-400" />
-                                  </div>
-                                  <div>
-                                     <h3 className="font-black text-lg tracking-tight leading-none truncate max-w-[150px]">{donation.title}</h3>
-                                     <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-1">{approvedReq?.ngo?.name || "Verified NGO"}</p>
-                                  </div>
-                               </div>
-                               <div className="text-right">
-                                  <p className="text-[10px] uppercase font-black tracking-widest text-orange-400 mb-1">Handover PIN</p>
-                                  <p className="text-4xl font-black tracking-[0.2em]">{approvedReq?.handoverPin || "----"}</p>
-                               </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em]">
-                               <Badge className="bg-orange-600 text-white border-none py-1 px-3">
-                                  {approvedReq?.status}
-                               </Badge>
-                               <span className="text-slate-500 flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" /> {donation.city}
-                               </span>
-                            </div>
-                         </div>
+                        <div 
+                          className="p-8 rounded-[3rem] bg-slate-950 text-white relative overflow-hidden group shadow-2xl border border-white/10 cursor-pointer"
+                          onClick={() => router.push(`/donor/donations/${donation.id}`)}
+                        >
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/20 blur-3xl" />
+                           <div className="relative z-10 flex flex-col gap-6">
+                              <div className="flex items-center justify-between">
+                                 <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+                                       <Truck className="w-5 h-5 text-orange-400" />
+                                    </div>
+                                    <div>
+                                       <h3 className="font-black text-lg tracking-tight leading-none truncate max-w-[150px]">{donation.title}</h3>
+                                       <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-1">{approvedReq?.ngo?.name || "Verified NGO"}</p>
+                                    </div>
+                                 </div>
+                                 <div className="text-right">
+                                    <p className="text-[10px] uppercase font-black tracking-widest text-orange-400 mb-1">Status</p>
+                                    <div className="flex items-center gap-2 justify-end">
+                                       <ShieldCheck className="w-4 h-4 text-green-500" />
+                                       <p className="text-xl font-black tracking-tight uppercase">
+                                          {approvedReq?.status === 'ON_THE_WAY' ? 'En Route' : 'Assigned'}
+                                       </p>
+                                    </div>
+                                 </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em]">
+                                 <Badge className="bg-orange-600 text-white border-none py-1 px-3">
+                                    {approvedReq?.status}
+                                 </Badge>
+                                 <span className="text-slate-500 flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" /> {donation.city}
+                                 </span>
+                                 <span className="text-orange-400 animate-pulse ml-auto flex items-center gap-2">
+                                    <Navigation className="w-3 h-3" /> Click for details & PIN
+                                 </span>
+                              </div>
+                           </div>
+                        </div>
+
+                        {/* Direct Map Preview if tracking is active */}
+                        {isTracking && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }} 
+                            animate={{ opacity: 1, y: 0 }}
+                            className="h-[250px] w-full rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-lg relative bg-slate-50"
+                          >
+                             <LiveRiderMap 
+                                riderId={approvedReq.riderId}
+                                riderName={approvedReq.rider?.name || "Rider"}
+                                donorCoords={[donation.donor.longitude, donation.donor.latitude]}
+                                ngoCoords={[approvedReq.ngo.longitude, approvedReq.ngo.latitude]}
+                                status={approvedReq.status}
+                             />
+                             <div className="absolute bottom-4 left-6 z-10">
+                                <Badge className="bg-black/80 text-white backdrop-blur-md border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">
+                                   Live Pursuit Grid
+                                </Badge>
+                             </div>
+                          </motion.div>
+                        )}
                       </motion.div>
                     );
                   })}

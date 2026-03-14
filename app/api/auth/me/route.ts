@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized. No active session found." }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -32,7 +32,7 @@ export async function PATCH(request: Request) {
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized. No active session found." }, { status: 401 });
     }
 
     const body = await request.json();

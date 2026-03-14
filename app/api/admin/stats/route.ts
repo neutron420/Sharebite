@@ -6,8 +6,16 @@ import { withSecurity } from "@/lib/api-handler";
 async function getAdminStatsHandler() {
   try {
     const session = await getSession();
-    if (!session || session.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Admin session required." }, { status: 401 });
+    }
+
+    if (session.role !== "ADMIN") {
+      console.warn(`Unauthorized Admin API access attempt by ${session.role}: ${session.userId}`);
+      return NextResponse.json({ 
+        error: `Access Denied. Elevated privileges required. Your current role is ${session.role}.`,
+        currentRole: session.role
+      }, { status: 403 });
     }
 
     const [

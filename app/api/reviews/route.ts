@@ -28,6 +28,7 @@ async function postReviewHandler(request: Request) {
     }
 
     if (donation.status !== "COLLECTED") {
+        console.error("Review Error: Donation status is not COLLECTED", donation.status);
         return NextResponse.json({ error: "Can only review after food is collected" }, { status: 400 });
     }
 
@@ -42,11 +43,13 @@ async function postReviewHandler(request: Request) {
     const isNGO = completedRequest?.ngoId === session.userId;
 
     if (!isDonor && !isNGO) {
+        console.error("Review Error: User not involved in donation", session.userId);
         return NextResponse.json({ error: "You were not involved in this donation" }, { status: 403 });
     }
 
     const targetId = isDonor ? completedRequest?.ngoId : donation.donorId;
     if (validatedData.revieweeId !== targetId) {
+        console.error("Review Error: Invalid reviewee", { targetId, revieweeId: validatedData.revieweeId });
         return NextResponse.json({ error: "Invalid reviewee" }, { status: 400 });
     }
 
@@ -63,9 +66,11 @@ async function postReviewHandler(request: Request) {
     return NextResponse.json(review, { status: 201 });
   } catch (error: any) {
     if (error.name === "ZodError") {
+        console.error("Review Validation Error:", error.errors);
         return NextResponse.json({ error: "Validation failed", details: error.errors }, { status: 400 });
     }
     if (error.code === 'P2002') {
+        console.error("Review Duplicate Error:", error.meta);
         return NextResponse.json({ error: "You have already reviewed this donation" }, { status: 400 });
     }
     console.error("Review creation error:", error);

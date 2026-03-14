@@ -40,7 +40,7 @@ async function handoverHandler(
 
     // 2. PIN Validation
     if (pickupRequest.handoverPin !== pin) {
-      return NextResponse.json({ error: "Invalid Handover PIN. Please check with the donor." }, { status: 400 });
+      return NextResponse.json({ error: "Invalid Handover PIN. Please check with your NGO coordinator." }, { status: 400 });
     }
 
     // 3. Update the transaction

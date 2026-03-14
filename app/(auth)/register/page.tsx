@@ -142,7 +142,7 @@ export default function RegisterPage() {
            pincode: formData.pincode,
            latitude: formData.latitude,
            longitude: formData.longitude,
-           ...(formData.role === "NGO" && formData.verificationDoc && { verificationDoc: formData.verificationDoc }),
+           ...((formData.role === "NGO" || formData.role === "RIDER") && formData.verificationDoc && { verificationDoc: formData.verificationDoc }),
         }),
       });
 
@@ -172,7 +172,7 @@ export default function RegisterPage() {
       case 1:
         return formData.name.trim() !== "" && formData.email.trim() !== "" && formData.password.trim() !== "";
       case 2:
-        if (formData.role === "NGO") {
+        if (formData.role === "NGO" || formData.role === "RIDER") {
            return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.verificationDoc.trim() !== "";
         }
         return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "";
@@ -451,9 +451,9 @@ export default function RegisterPage() {
                             </div>
 
                             <div className="pt-2">
-                               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-3 block">
-                                  {formData.role === "DONOR" ? "Identity Photo" : "Registration Proof"}
-                               </Label>
+                                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-3 block">
+                                   {formData.role === "DONOR" ? "Identity Photo" : formData.role === "RIDER" ? "Driver License / ID" : "Registration Proof"}
+                                </Label>
                                
                                <div 
                                   onClick={() => !uploadingImage && (formData.role === "DONOR" ? fileInputRef.current?.click() : verifyInputRef.current?.click())}

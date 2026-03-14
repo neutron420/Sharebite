@@ -14,26 +14,32 @@ async function assignRiderHandler(
 ) {
   try {
     const session = await getSession();
-    if (!session || session.role !== "NGO") {
-      return NextResponse.json({ error: "Unauthorized. NGO only." }, { status: 401 });
+    if (!session || (session.role !== "NGO" && session.role !== "RIDER")) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
     }
 
     const userId = session.userId as string;
-
     const { id } = await params;
-    const { riderId } = await request.json();
-    if (!riderId) {
+    const body = await request.json();
+    const targetRiderId = session.role === "RIDER" ? userId : body.riderId;
+
+    if (!targetRiderId) {
       return NextResponse.json({ error: "Rider ID is required" }, { status: 400 });
     }
 
-    // 1. Verify the request belongs to this NGO and is in a valid state
+    // 1. Verify the request is in a valid state
     const pickupRequest = await prisma.pickupRequest.findUnique({
       where: { id },
       include: { donation: true }
     });
 
-    if (!pickupRequest || pickupRequest.ngoId !== userId) {
-      return NextResponse.json({ error: "Request not found or access denied" }, { status: 404 });
+    if (!pickupRequest) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    // Role specific access checks
+    if (session.role === "NGO" && pickupRequest.ngoId !== userId) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     if (pickupRequest.status !== "APPROVED") {
@@ -50,7 +56,7 @@ async function assignRiderHandler(
     const updatedRequest = await prisma.pickupRequest.update({
       where: { id },
       data: {
-        riderId,
+        riderId: targetRiderId,
         status: "ASSIGNED",
         handoverPin: pin,
         step: 2 // Move to 'Assigned' step
@@ -59,18 +65,31 @@ async function assignRiderHandler(
 
     // 4. Update Rider availability
     await prisma.user.update({
-      where: { id: riderId },
+      where: { id: targetRiderId },
       data: { isAvailable: false }
     });
 
-    // 5. Notify the Rider
-    await createNotification({
-      userId: riderId,
-      type: "REQUEST_STATUS",
-      title: "New Delivery Assigned! 🛵",
-      message: `You have been assigned to pick up food for ${updatedRequest.id.split('-')[0]}. Drive safe!`,
-      link: `/rider/tasks/${updatedRequest.id}`
-    });
+    // 5. Notify the Rider (if assigned by NGO)
+    if (session.role === "NGO") {
+      await createNotification({
+        userId: targetRiderId,
+        type: "REQUEST_STATUS",
+        title: "New Delivery Assigned! 🛵",
+        message: `You have been assigned to pick up food for "${pickupRequest.donation.title}".`,
+        link: `/rider/mission/${updatedRequest.id}`
+      });
+    }
+
+    // 6. Notify the NGO (if claimed by Rider)
+    if (session.role === "RIDER") {
+        await createNotification({
+            userId: pickupRequest.ngoId,
+            type: "REQUEST_STATUS",
+            title: "Rider Claimed Bounty! 🛵",
+            message: `An Elite Operative has claimed your pickup request for "${pickupRequest.donation.title}".`,
+            link: `/ngo/requests`
+        });
+    }
 
     return NextResponse.json({
       message: "Rider assigned successfully",

@@ -18,12 +18,13 @@ import {
   Clock,
   ExternalLink,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface User {
   id: string;
   name: string;
   email: string;
-  role: "DONOR" | "NGO" | "ADMIN";
+  role: "DONOR" | "NGO" | "RIDER" | "ADMIN";
   isVerified: boolean;
   verificationDoc: string | null;
   city: string | null;
@@ -55,8 +56,8 @@ export default function VerificationPage() {
       const data = await res.json();
       // API returns { users: [...], pagination: {...} }
       const allUsers = Array.isArray(data) ? data : (data.users || []);
-      // Filter only NGOs for verification
-      setUsers(allUsers.filter((u: User) => u.role === "NGO"));
+      // Filter NGOs and RIDERS for verification
+      setUsers(allUsers.filter((u: User) => u.role === "NGO" || u.role === "RIDER"));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -138,7 +139,7 @@ export default function VerificationPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">NGO Verification</h1>
-          <p className="text-gray-500 text-sm mt-1">Review and verify NGO accounts</p>
+          <p className="text-gray-500 text-sm mt-1">Review and verify NGO and Rider accounts</p>
         </div>
         <button onClick={fetchUsers} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50">
           <RefreshCw className="h-4 w-4" /> Refresh
@@ -154,7 +155,7 @@ export default function VerificationPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-sm text-gray-500">Total NGOs</p>
+              <p className="text-sm text-gray-500">Total Entities</p>
             </div>
           </div>
         </div>
@@ -217,7 +218,10 @@ export default function VerificationPage() {
                   {u.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{u.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-gray-900">{u.name}</p>
+                    <Badge className={`text-[8px] uppercase font-black px-1.5 py-0.5 rounded ${u.role === 'RIDER' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>{u.role}</Badge>
+                  </div>
                   <p className="text-xs text-gray-500">{u.email}</p>
                 </div>
               </div>
@@ -310,7 +314,10 @@ export default function VerificationPage() {
                   {selectedUser.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-xl font-semibold text-gray-900">{selectedUser.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xl font-semibold text-gray-900">{selectedUser.name}</p>
+                    <Badge className="bg-slate-100 text-slate-600 font-black text-[10px] uppercase">{selectedUser.role}</Badge>
+                  </div>
                   <p className="text-sm text-gray-500">{selectedUser.email}</p>
                   {selectedUser.isVerified ? (
                     <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full bg-green-50 text-green-600 mt-1">

@@ -6,8 +6,17 @@ import { withSecurity } from "@/lib/api-handler";
 async function getDonorStatsHandler() {
   try {
     const session = await getSession();
-    if (!session || session.role !== "DONOR") {
-      return NextResponse.json({ error: "Unauthorized. Donor only." }, { status: 401 });
+    
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });
+    }
+
+    if (session.role !== "DONOR") {
+      console.warn(`Unauthorized access attempt to Donor stats by ${session.role}: ${session.userId}`);
+      return NextResponse.json({ 
+        error: `Access Denied. Your account is registered as ${session.role}. This portal is for Donors only.`,
+        currentRole: session.role 
+      }, { status: 403 }); 
     }
 
     const userId = session.userId as string;

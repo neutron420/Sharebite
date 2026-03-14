@@ -43,44 +43,58 @@ export async function verifyToken(token: string) {
 export async function getSession() {
   const cookieStore = await cookies();
   
-  // Try to detect the request path from headers
-  let pathname = "";
+  // 1. Detect if we are in an admin context to prioritize the right cookie
+  let isAdminPath = false;
   try {
     const headersList = await headers();
     const referer = headersList.get("referer") || "";
     const nextUrl = headersList.get("x-invoke-path") || headersList.get("x-matched-path") || "";
-    pathname = nextUrl || new URL(referer || "http://localhost").pathname;
-  } catch {
-    pathname = "";
+    
+    // Check if the URL contains admin keywords
+    const pathString = (nextUrl + "|" + referer).toLowerCase();
+    isAdminPath = pathString.includes("/admin") || pathString.includes("/api/admin");
+  } catch (err) {
+    // Fail silently, default to false
   }
 
-  const isAdminRoute = pathname.includes("/admin") || pathname.includes("/api/admin");
+  const sessionToken = cookieStore.get("session")?.value;
+  const adminToken = cookieStore.get("admin_session")?.value;
 
-  if (isAdminRoute) {
-    // For admin routes, prioritize admin_session
-    const adminToken = cookieStore.get("admin_session")?.value;
+  // 2. Priority check based on path
+  if (isAdminPath) {
     if (adminToken) {
       const payload = await verifyToken(adminToken);
-      if (payload) return payload;
+      if (payload) {
+        return payload;
+      }
     }
-    // Fallback to regular session (backwards compatibility)
-    const token = cookieStore.get("session")?.value;
-    if (token) return await verifyToken(token);
-    return null;
+    // Fallback to regular session
+    if (sessionToken) {
+      const payload = await verifyToken(sessionToken);
+      if (payload) {
+        return payload;
+      }
+    }
+  } else {
+    // Default: Check regular session first
+    if (sessionToken) {
+      const payload = await verifyToken(sessionToken);
+      if (payload) {
+        return payload;
+      }
+    }
+    // Fallback to admin session
+    if (adminToken) {
+      const payload = await verifyToken(adminToken);
+      if (payload) {
+        return payload;
+      }
+    }
   }
 
-  // For non-admin routes, prioritize regular session
-  const token = cookieStore.get("session")?.value;
-  if (token) {
-    const payload = await verifyToken(token);
-    if (payload) return payload;
-  }
-
-  // Fallback to admin_session (for shared APIs like /api/donations)
-  const adminToken = cookieStore.get("admin_session")?.value;
-  if (adminToken) {
-    const payload = await verifyToken(adminToken);
-    if (payload) return payload;
+  // Debug logging for missing sessions to help find issues
+  if (sessionToken || adminToken) {
+    console.warn("Session tokens found but failed verification (possibly expired or invalid secret)");
   }
 
   return null;

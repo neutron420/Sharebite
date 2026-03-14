@@ -43,16 +43,22 @@ async function deliveryHandler(
       );
     }
 
-    // 2. Complete the Request
-    const updatedRequest = await prisma.pickupRequest.update({
-      where: { id },
-      data: {
-        status: "COMPLETED",
-        deliveryImageUrl: deliveryProofUrl,
-        step: 5, // Fully delivered
-        completedAt: new Date()
-      }
-    });
+    // 2. Complete the Request and Update Donation Status
+    const [updatedRequest] = await prisma.$transaction([
+      prisma.pickupRequest.update({
+        where: { id },
+        data: {
+          status: "COMPLETED",
+          deliveryImageUrl: deliveryProofUrl,
+          step: 5, // Fully delivered
+          completedAt: new Date()
+        }
+      }),
+      prisma.foodDonation.update({
+        where: { id: pickupRequest.donationId },
+        data: { status: "COLLECTED" }
+      })
+    ]);
 
     // 3. Update Rider Stats & Availability
     await prisma.user.update({

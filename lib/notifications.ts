@@ -27,7 +27,8 @@ export async function createNotification({
 
     // Trigger real-time delivery via internal WS server
     try {
-      fetch('http://localhost:8081/notify', {
+      const internalWsUrl = process.env.INTERNAL_WS_URL || 'http://localhost:8081';
+      fetch(`${internalWsUrl}/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, notification })
