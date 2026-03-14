@@ -68,6 +68,26 @@ async function getWeeklyStatsHandler() {
       });
 
       stats = processStats(allCompleted, "updatedAt");
+    } else if (role === "RIDER") {
+      // Get Rider's completed deliveries for the last 7 days
+      const tasks = await prisma.pickupRequest.findMany({
+        where: {
+          riderId: userId,
+          status: "COMPLETED",
+          updatedAt: { gte: sevenDaysAgo }
+        },
+        include: {
+          donation: { select: { weight: true } }
+        }
+      });
+
+      // Format for processing
+      const formattedTasks = tasks.map(t => ({
+        weight: t.donation.weight || 0,
+        updatedAt: t.updatedAt
+      }));
+
+      stats = processStats(formattedTasks, "updatedAt");
     }
 
     return NextResponse.json(stats);

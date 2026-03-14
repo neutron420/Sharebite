@@ -18,6 +18,7 @@ enum UserRole {
   DONOR
   NGO
   ADMIN
+  RIDER
 }
 
 enum DonationStatus {
@@ -33,6 +34,8 @@ enum RequestStatus {
   APPROVED
   REJECTED
   COMPLETED
+  ASSIGNED
+  ON_THE_WAY
 }
 
 enum FoodCategory {
@@ -88,6 +91,12 @@ model User {
   conversationsAsA Conversation[] @relation("ParticipantA")
   conversationsAsB Conversation[] @relation("ParticipantB")
 
+  // Rider relations & stats
+  isAvailable     Boolean         @default(true)
+  rating          Float           @default(5.0)
+  totalDeliveries Int             @default(0)
+  tasks           PickupRequest[] @relation("RiderTasks")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -140,6 +149,13 @@ model PickupRequest {
   step             Int     @default(1) // 1: Requested, 2: Approved, 3: Out for Pickup, 4: Delivered
   handoverPin      String? // Secure 4-digit pin generated on approval
   deliveryImageUrl String? // Proof of delivery photo uploaded by NGO
+
+  // Rider assignment
+  riderId String?
+  rider   User?   @relation("RiderTasks", fields: [riderId], references: [id])
+
+  pickedUpAt  DateTime?
+  completedAt DateTime?
 
   ngoId      String
   ngo        User         @relation("NGORequests", fields: [ngoId], references: [id], onDelete: Cascade)

@@ -9,7 +9,15 @@ async function getUsersHandler(request: Request) {
     const limit = 20;
     const skip = (page - 1) * limit;
 
+    const roleFilter = searchParams.get("role") as any;
+    
+    const where: any = {};
+    if (roleFilter) {
+      where.role = roleFilter;
+    }
+
     const users = await prisma.user.findMany({
+      where,
       orderBy: { createdAt: "desc" },
       take: limit,
       skip: skip,
@@ -20,11 +28,14 @@ async function getUsersHandler(request: Request) {
         role: true,
         isVerified: true,
         city: true,
+        isAvailable: true,
+        rating: true,
+        totalDeliveries: true,
         createdAt: true
       }
     });
 
-    const total = await prisma.user.count();
+    const total = await prisma.user.count({ where });
 
     return NextResponse.json({
       users,

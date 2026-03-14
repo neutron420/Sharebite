@@ -74,5 +74,5 @@ async function createConversationHandler(request: Request) {
   }
 }
 
-export const GET = withSecurity(getConversationsHandler);
+export const GET = withSecurity(getConversationsHandler, { limit: 30 });
 export const POST = withSecurity(createConversationHandler, { limit: 20 });

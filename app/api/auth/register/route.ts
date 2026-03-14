@@ -26,13 +26,19 @@ async function registerHandler(request: Request) {
     // Hash password with high work factor
     const hashedPassword = await bcrypt.hash(validatedData.password, 12);
 
+    // SECURITY: Prevent unauthorized ADMIN registration
+    let assignedRole = validatedData.role;
+    if (assignedRole === "ADMIN") {
+      assignedRole = "DONOR"; // Silent fail-safe
+    }
+
     // Create user
     const user = await prisma.user.create({
       data: {
         email: validatedData.email,
         password: hashedPassword,
         name: validatedData.name,
-        role: validatedData.role,
+        role: assignedRole,
         phoneNumber: validatedData.phoneNumber,
         address: validatedData.address,
         city: validatedData.city,

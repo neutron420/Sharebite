@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { z } from "zod";
+import { withSecurity } from "@/lib/api-handler";
 
 const reviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -10,7 +11,7 @@ const reviewSchema = z.object({
   revieweeId: z.string(),
 });
 
-export async function POST(request: Request) {
+async function postReviewHandler(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,7 +19,6 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = reviewSchema.parse(body);
 
-    // Check if donation exists and is finished (COLLECTED)
     const donation = await prisma.foodDonation.findUnique({
       where: { id: validatedData.donationId }
     });
@@ -27,12 +27,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Donation not found" }, { status: 404 });
     }
 
-    // Usually, review happens after it's been collected
     if (donation.status !== "COLLECTED") {
         return NextResponse.json({ error: "Can only review after food is collected" }, { status: 400 });
     }
 
-    // Ensure the reviewer was actually part of this donation
     const completedRequest = await prisma.pickupRequest.findFirst({
         where: {
             donationId: validatedData.donationId,
@@ -47,7 +45,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "You were not involved in this donation" }, { status: 403 });
     }
 
-    // Ensure they are reviewing the OTHER party
     const targetId = isDonor ? completedRequest?.ngoId : donation.donorId;
     if (validatedData.revieweeId !== targetId) {
         return NextResponse.json({ error: "Invalid reviewee" }, { status: 400 });
@@ -76,7 +73,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+async function getReviewsHandler(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
         const revieweeId = searchParams.get("userId");
@@ -92,7 +89,6 @@ export async function GET(request: Request) {
             orderBy: { createdAt: "desc" }
         });
 
-        // Calculate average rating
         const avg = reviews.length > 0 
             ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length 
             : 0;
@@ -102,3 +98,6 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export const POST = withSecurity(postReviewHandler, { limit: 5 });
+export const GET = withSecurity(getReviewsHandler, { limit: 60 });
