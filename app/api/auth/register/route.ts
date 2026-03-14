@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/auth";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function POST(request: Request) {
+async function registerHandler(request: Request) {
   try {
     const body = await request.json();
     
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash password
+    // Hash password with high work factor
     const hashedPassword = await bcrypt.hash(validatedData.password, 12);
 
     // Create user
@@ -60,9 +61,12 @@ export async function POST(request: Request) {
     }
 
     console.error("Registration error:", error);
+    // Remove 'debug' info to prevent leakage in production
     return NextResponse.json(
-      { error: "Internal Server Error", debug: error?.message || String(error) },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
 }
+
+export const POST = withSecurity(registerHandler, { limit: 3 }); // Prevent spam registrations

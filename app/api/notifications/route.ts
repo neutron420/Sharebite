@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getNotificationsHandler() {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,7 +21,7 @@ export async function GET() {
 }
 
 // Mark all as read
-export async function PATCH() {
+async function markAllAsReadHandler() {
     try {
       const session = await getSession();
       if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -34,4 +35,7 @@ export async function PATCH() {
     } catch (error) {
       return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
-  }
+}
+
+export const GET = withSecurity(getNotificationsHandler);
+export const PATCH = withSecurity(markAllAsReadHandler);

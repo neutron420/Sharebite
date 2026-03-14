@@ -9,11 +9,15 @@ if (!redisUrl) {
 const redis = new Redis(redisUrl);
 
 redis.on("error", (error) => {
-  console.error("Redis connection error:", error);
+  if (error.message.includes("WRONGPASS")) {
+    console.error("❌ Redis Authentication Failed: Invalid password in REDIS_URL");
+  } else {
+    console.error("❌ Redis Error:", error.message);
+  }
 });
 
-redis.on("connect", () => {
-  console.log("Connected to Redis successfully");
+redis.on("ready", () => {
+  console.log("✅ Redis connection established and authenticated.");
 });
 
 export default redis;

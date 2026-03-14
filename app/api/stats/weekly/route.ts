@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getWeeklyStatsHandler() {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -101,3 +102,5 @@ function processStats(data: any[], dateKey: string) {
 
   return last7Days;
 }
+
+export const GET = withSecurity(getWeeklyStatsHandler);

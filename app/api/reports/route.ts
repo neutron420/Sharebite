@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function POST(request: Request) {
+async function postReportHandler(request: Request) {
   try {
     const session = await getSession();
+    // RBAC check (Donors/Admins only)
     if (!session || (session.role !== "DONOR" && session.role !== "ADMIN")) {
       return NextResponse.json(
         { error: "Unauthorized. Only donors can report NGOs." },
@@ -61,7 +63,7 @@ export async function POST(request: Request) {
       data: notificationData
     });
 
-    // Trigger real-time WebSocket broadcast for each admin
+    // Trigger real-time WebSocket broadcast (Internal logic)
     try {
       await Promise.all(admins.map(admin => 
         fetch('http://localhost:8081/notify', {
@@ -94,18 +96,14 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+async function getReportsHandler(request: Request) {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "PENDING";
 
     const reports = await prisma.report.findMany({
       where: { status },
+      take: 20, // Added pagination
       include: {
         reporter: { select: { name: true, email: true } },
         ngo: { select: { id: true, name: true, email: true } }
@@ -118,3 +116,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const POST = withSecurity(postReportHandler, { limit: 5 });
+export const GET = withSecurity(getReportsHandler);

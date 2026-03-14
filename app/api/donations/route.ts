@@ -71,12 +71,17 @@ async function postDonationHandler(request: Request) {
 
     // 3. Add to Redis GEO for fast proximity searching
     if (donation.latitude && donation.longitude) {
-      await redis.geoadd(
-        "donations:geo",
-        donation.longitude,
-        donation.latitude,
-        donation.id
-      );
+      try {
+        await redis.geoadd(
+          "donations:geo",
+          donation.longitude,
+          donation.latitude,
+          donation.id
+        );
+      } catch (e) {
+        // Log but don't fail the request - database part is done
+        console.error("Redis geoadd error:", e);
+      }
     }
 
     return NextResponse.json(donation, { status: 201 });
@@ -147,19 +152,25 @@ async function getDonationsHandler(request: Request) {
     const radius = searchParams.get("radius"); // in km
 
     if (lat && lng && radius) {
-      const nearbyIds = await redis.geosearch(
-        "donations:geo",
-        "FROMLONLAT",
-        parseFloat(lng),
-        parseFloat(lat),
-        "BYRADIUS",
-        parseFloat(radius),
-        "km"
-      );
-      
-      return NextResponse.json(
-        donationsWithUrgency.filter((d) => nearbyIds.includes(d.id))
-      );
+      try {
+        const nearbyIds = await redis.geosearch(
+          "donations:geo",
+          "FROMLONLAT",
+          parseFloat(lng),
+          parseFloat(lat),
+          "BYRADIUS",
+          parseFloat(radius),
+          "km"
+        );
+        
+        return NextResponse.json(
+          donationsWithUrgency.filter((d) => nearbyIds.includes(d.id))
+        );
+      } catch (e) {
+        console.error("Redis geosearch error:", e);
+        // Fallback: Return unsorted results if Redis is down
+        return NextResponse.json(donationsWithUrgency);
+      }
     }
 
     return NextResponse.json(donationsWithUrgency);

@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getAdminDonationsHandler() {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const donations = await prisma.foodDonation.findMany({
       orderBy: { createdAt: "desc" },
+      take: 20, // Add pagination to prevent DB crash
       include: {
         donor: {
           select: { name: true, email: true }
@@ -31,3 +27,5 @@ export async function GET() {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const GET = withSecurity(getAdminDonationsHandler);

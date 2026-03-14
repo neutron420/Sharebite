@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSession } from "@/lib/auth";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getAdminNgosHandler() {
   try {
-    const session = await getSession();
-    if (!session || session.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const ngos = await prisma.user.findMany({
       where: { role: "NGO" },
       orderBy: { createdAt: "desc" },
+      take: 20, // Added pagination to prevent DB crash
       select: {
         id: true,
         name: true,
@@ -45,3 +41,5 @@ export async function GET() {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const GET = withSecurity(getAdminNgosHandler);

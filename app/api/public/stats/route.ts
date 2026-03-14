@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getPublicStatsHandler() {
   try {
     const [totalDonations, totalWeightResult, totalNGOs] = await Promise.all([
       prisma.foodDonation.count({ where: { status: "COLLECTED" } }),
@@ -31,3 +32,5 @@ export async function GET() {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const GET = withSecurity(getPublicStatsHandler, { limit: 30 });

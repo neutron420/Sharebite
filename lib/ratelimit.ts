@@ -6,27 +6,38 @@ export async function checkRateLimit(
 ) {
   const key = `ratelimit:${identifier}`;
   
-  const [incrResult, ttlResult] = await redis
-    .multi()
-    .incr(key)
-    .ttl(key)
-    .exec() || [];
+  try {
+    const [incrResult, ttlResult] = await redis
+      .multi()
+      .incr(key)
+      .ttl(key)
+      .exec() || [];
 
-  const count = (incrResult?.[1] as number) || 0;
-  let ttl = (ttlResult?.[1] as number) || -1;
+    const count = (incrResult?.[1] as number) || 0;
+    let ttl = (ttlResult?.[1] as number) || -1;
 
-  // Set expiry on first request
-  if (count === 1 || ttl === -1) {
-    await redis.expire(key, windowSeconds);
-    ttl = windowSeconds;
+    // Set expiry on first request
+    if (count === 1 || ttl === -1) {
+      await redis.expire(key, windowSeconds);
+      ttl = windowSeconds;
+    }
+
+    const reset = Math.floor(Date.now() / 1000) + ttl;
+
+    return {
+      success: count <= limit,
+      limit,
+      remaining: Math.max(0, limit - count),
+      reset,
+    };
+  } catch (error) {
+    // Fail-Safe: If Redis is down, allow the request but log the error
+    console.error("Rate Limiter Redis Error:", error);
+    return {
+      success: true,
+      limit,
+      remaining: limit,
+      reset: Math.floor(Date.now() / 1000) + windowSeconds,
+    };
   }
-
-  const reset = Math.floor(Date.now() / 1000) + ttl;
-
-  return {
-    success: count <= limit,
-    limit,
-    remaining: Math.max(0, limit - count),
-    reset,
-  };
 }

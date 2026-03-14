@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import redis from "@/lib/redis";
 import prisma from "@/lib/prisma";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getLeaderboardHandler() {
   try {
     // Get Top 10 users by Karma points
-    const topUsers = await redis.zrevrange("leaderboard:karma", 0, 9, "WITHSCORES");
+    let topUsers: string[] = [];
+    try {
+      topUsers = await redis.zrevrange("leaderboard:karma", 0, 9, "WITHSCORES");
+    } catch (redisError) {
+      console.error("Redis Leaderboard Error:", redisError);
+      return NextResponse.json([]); // Return empty list to prevent crash
+    }
     
     // Redis returns [id1, score1, id2, score2, ...]
     const formatted = [];
@@ -39,3 +46,5 @@ export async function GET() {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const GET = withSecurity(getLeaderboardHandler, { limit: 10 });

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getAdminStatsHandler() {
   try {
     const session = await getSession();
     if (!session || session.role !== "ADMIN") {
@@ -119,3 +120,5 @@ export async function GET() {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const GET = withSecurity(getAdminStatsHandler);

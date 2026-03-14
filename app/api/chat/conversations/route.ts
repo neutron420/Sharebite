@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getConversationsHandler() {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,7 +37,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+async function createConversationHandler(request: Request) {
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,7 +50,6 @@ export async function POST(request: Request) {
 
     const userId = session.userId as string;
 
-    // Check both directions — conversation may have been started by either participant
     const existing = await prisma.conversation.findFirst({
       where: {
         donationId,
@@ -73,3 +73,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const GET = withSecurity(getConversationsHandler);
+export const POST = withSecurity(createConversationHandler, { limit: 20 });

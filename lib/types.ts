@@ -1,4 +1,4 @@
-import { User, FoodDonation, PickupRequest, Violation, Report } from "@/app/generated/prisma";
+import { User, FoodDonation, PickupRequest, Violation, Report, AuditLog } from "@/app/generated/prisma";
 
 export type SafeUser = Omit<User, "password">;
 
@@ -26,7 +26,7 @@ export interface AdminStatsResponse {
   monthlyDonations: { month: string; count: number }[];
   categoryBreakdown: { category: string; count: number }[];
   recentDonations: (FoodDonation & { donor: { name: string } })[];
-  recentLogs: any[]; // Define AuditLog type if needed
+  recentLogs: (AuditLog & { admin?: { name: string } })[]; 
 }
 
 export interface NGOWithMetrics extends SafeUser {
