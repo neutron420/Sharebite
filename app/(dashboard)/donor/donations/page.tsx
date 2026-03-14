@@ -12,7 +12,8 @@ import {
   Calendar,
   MapPin,
   Clock,
-  Badge
+  Badge,
+  Bell
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -81,6 +82,7 @@ export default function DonorHistory() {
            <SidebarItem icon={<LayoutDashboard />} label="Overview" link="/donor" />
            <SidebarItem icon={<History />} label="My History" active link="/donor/donations" />
            <SidebarItem icon={<Plus />} label="New Post" link="/donor/donate" />
+           <SidebarItem icon={<Bell />} label="Alerts" link="/donor/notifications" />
         </nav>
 
         <button 

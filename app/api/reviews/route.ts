@@ -99,5 +99,5 @@ async function getReviewsHandler(request: Request) {
     }
 }
 
-export const POST = withSecurity(postReviewHandler, { limit: 5 });
+export const POST = withSecurity(postReviewHandler, { limit: 20 });
 export const GET = withSecurity(getReviewsHandler, { limit: 60 });

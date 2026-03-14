@@ -3,6 +3,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { ContactRound } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { clsx, type ClassValue } from 'clsx';
@@ -93,10 +94,13 @@ interface DonationLineProps {
 function DonationLine({ donation }: DonationLineProps) {
    const statusInfo = statusColors[donation.status] || statusColors['AVAILABLE'];
    const StatusIcon = statusInfo.icon;
+   const router = useRouter();
 
    return (
-      <div className="w-full flex items-center py-4 px-6 border-b hover:bg-slate-50 border-slate-100 text-sm last:border-b-0 cursor-pointer transition-colors bg-white">
-         <div className="flex-grow flex items-center gap-4 overflow-hidden">
+      <div 
+         onClick={() => router.push(`/donor/donations/${donation.id}`)}
+         className="w-full flex items-center py-4 px-6 border-b hover:bg-slate-50 border-slate-100 text-sm last:border-b-0 cursor-pointer transition-colors bg-white"
+      >         <div className="flex-grow flex items-center gap-4 overflow-hidden">
             <div className="relative">
                <Avatar>
                   {donation.imageUrl ? (

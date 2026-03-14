@@ -19,10 +19,12 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [isOtpMode, setIsOtpMode] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [loginRole, setLoginRole] = useState<"DONOR" | "NGO">("DONOR");
+  const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER">("DONOR");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,8 +125,8 @@ export default function LoginPage() {
             </AnimatePresence>
 
             <InputGroup 
-              label="Professional Email" 
-              placeholder="name@organization.com" 
+              label="Verified Email / Identification" 
+              placeholder="e.g. hero@sharebite.org" 
               type="email" 
               icon={<Mail className="w-4 h-4" />} 
               value={email}
@@ -133,37 +135,91 @@ export default function LoginPage() {
               required
             />
             
-            <div className="space-y-2">
-               <div className="flex justify-between items-center pr-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Secure Password</label>
-                  <Link href="#" className="text-[10px] font-black uppercase tracking-widest text-orange-600 hover:underline">Forgot?</Link>
-               </div>
-               <div className="relative group">
-                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-600 transition-colors">
-                   <Lock className="w-4 h-4" />
-                 </div>
-                 <input 
-                   type="password"
-                   placeholder="••••••••"
-                   className="w-full pl-11 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-orange-200 focus:ring-4 focus:ring-orange-50 focus:bg-white transition-all shadow-inner disabled:opacity-50"
-                   value={password}
-                   onChange={(e) => setPassword(e.target.value)}
-                   disabled={loading}
-                   required
-                 />
-               </div>
+            <div className="flex bg-orange-50/50 p-1.5 rounded-2xl mb-2">
+               <button
+                  type="button"
+                  onClick={() => setIsOtpMode(false)}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${!isOtpMode ? "bg-white text-orange-600 shadow-sm" : "text-slate-400"}`}
+               >
+                  Password
+               </button>
+               <button
+                  type="button"
+                  onClick={() => setIsOtpMode(true)}
+                  className={`flex-1 py-1.5 px-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${isOtpMode ? "bg-white text-orange-600 shadow-sm" : "text-slate-400"}`}
+               >
+                  Tactical OTP
+               </button>
             </div>
+
+            <AnimatePresence mode="wait">
+              {!isOtpMode ? (
+                <motion.div 
+                  key="password"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="space-y-2"
+                >
+                   <div className="flex justify-between items-center pr-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Access Protocol</label>
+                   </div>
+                   <div className="relative group">
+                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-orange-600 transition-colors">
+                       <Lock className="w-4 h-4" />
+                     </div>
+                     <input 
+                       type="password"
+                       placeholder="••••••••"
+                       className="w-full pl-11 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-orange-200 focus:ring-4 focus:ring-orange-50 focus:bg-white transition-all shadow-inner disabled:opacity-50"
+                       value={password}
+                       onChange={(e) => setPassword(e.target.value)}
+                       disabled={loading}
+                       required
+                     />
+                   </div>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="otp"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="space-y-2"
+                >
+                   <div className="flex justify-between items-center pr-1">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-orange-600 ml-1">6-Digit Verification</label>
+                      <button type="button" className="text-[9px] font-black uppercase text-slate-400 hover:text-orange-600">Send Code</button>
+                   </div>
+                   <div className="relative group">
+                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-600">
+                       <ShieldCheck className="w-4 h-4" />
+                     </div>
+                     <input 
+                       type="text"
+                       maxLength={6}
+                       placeholder="0 0 0 0 0 0"
+                       className="w-full pl-11 pr-6 py-4 bg-white border-2 border-orange-100 rounded-2xl text-center text-lg font-black tracking-[0.5em] focus:outline-none focus:border-orange-600 focus:ring-4 focus:ring-orange-50 transition-all shadow-xl shadow-orange-50 placeholder:text-slate-200"
+                       value={otp}
+                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                       disabled={loading}
+                       required
+                     />
+                   </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="pt-4">
                <button 
                 type="submit" 
                 disabled={loading}
-                className="w-full py-4 bg-slate-950 text-white font-black rounded-2xl hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 disabled:active:scale-100"
+                className="w-full py-4 bg-slate-950 text-white font-black rounded-3xl hover:bg-orange-600 transition-all shadow-2xl shadow-orange-100 active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 disabled:active:scale-100 uppercase text-xs tracking-[0.2em]"
                >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <>Sign In to Dashboard <ArrowRight className="w-5 h-5" /></>
+                    <>{isOtpMode ? "Verify & Decrypt" : "Execute Login"} <ArrowRight className="w-5 h-5" /></>
                   )}
                </button>
             </div>

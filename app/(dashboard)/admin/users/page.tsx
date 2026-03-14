@@ -65,7 +65,9 @@ export default function UsersPage() {
       setLoading(true);
       const res = await fetch("/api/admin/users", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch users");
-      setUsers(await res.json());
+      const data = await res.json();
+      // API returns { users: [...], pagination: {...} }
+      setUsers(Array.isArray(data) ? data : (data.users || []));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

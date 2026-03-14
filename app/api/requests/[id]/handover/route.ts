@@ -88,4 +88,4 @@ async function handoverHandler(
   }
 }
 
-export const PATCH = withSecurity(handoverHandler, { limit: 5 });
+export const PATCH = withSecurity(handoverHandler, { limit: 20 });

@@ -80,4 +80,4 @@ async function registerHandler(request: Request) {
   }
 }
 
-export const POST = withSecurity(registerHandler, { limit: 3 }); // Prevent spam registrations
+export const POST = withSecurity(registerHandler, { limit: 10 }); // Prevent spam registrations

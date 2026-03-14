@@ -52,6 +52,7 @@ export default function DonatePage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -81,6 +82,7 @@ export default function DonatePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setPreviewUrl(URL.createObjectURL(file));
     setUploadingImage(true);
     try {
       const res = await fetch("/api/upload", {
@@ -354,7 +356,7 @@ export default function DonatePage() {
                                        </div>
                                     ) : formData.imageUrl ? (
                                        <>
-                                          <img src={formData.imageUrl} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Food" />
+                                          <img src={(previewUrl || formData.imageUrl) as string} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Food" />
                                           <div className="relative z-10 flex flex-col items-center gap-1">
                                              <div className="p-2 bg-white rounded-full shadow-lg">
                                                 <Check className="w-5 h-5 text-green-600" strokeWidth={4} />

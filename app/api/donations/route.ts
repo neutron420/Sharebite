@@ -110,12 +110,16 @@ async function getDonationsHandler(request: Request) {
     const donorId = searchParams.get("donorId");
     const city = searchParams.get("city");
     const search = searchParams.get("search");
+    const session = await getSession();
+    
+    // If donorId is provided or if user is a DONOR, we might want to show all their items (not just available ones)
+    const effectiveStatus = (status === "AVAILABLE" && (donorId || session?.role === "DONOR")) ? undefined : status;
 
     const donations = await prisma.foodDonation.findMany({
       where: {
-        status: status as any,
+        ...(effectiveStatus && { status: effectiveStatus as any }),
         ...(category && { category: category as any }),
-        ...(donorId && { donorId }),
+        ...((donorId || (session?.role === "DONOR" && !search)) && { donorId: donorId || (session?.userId as string) }),
         ...(city && { city }),
         ...(search && {
           title: {

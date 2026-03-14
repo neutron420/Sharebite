@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
-import { signToken } from "@/lib/auth";
+import { signToken, getCookieName } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { withSecurity } from "@/lib/api-handler";
 
@@ -42,9 +42,10 @@ async function loginHandler(request: Request) {
       role: user.role,
     });
 
-    // Set cookie
+    // Set role-specific cookie (admin_session for Admin, session for others)
     const cookieStore = await cookies();
-    cookieStore.set("session", token, {
+    const cookieName = getCookieName(user.role);
+    cookieStore.set(cookieName, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

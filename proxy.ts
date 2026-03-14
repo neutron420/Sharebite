@@ -34,7 +34,8 @@ export default async function proxy(request: NextRequest) {
 
   // 2. Global Auth Protection for /api/admin
   if (pathname.startsWith("/api/admin")) {
-    const session = request.cookies.get("session")?.value;
+    // Admin routes check admin_session cookie first, then fallback to session
+    const session = request.cookies.get("admin_session")?.value || request.cookies.get("session")?.value;
 
     if (!session) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
@@ -57,7 +58,8 @@ export default async function proxy(request: NextRequest) {
   const isProtected = protectedPaths.some(p => pathname.startsWith(p));
 
   if (isProtected) {
-    const session = request.cookies.get("session")?.value;
+    // Check both cookies for non-admin protected routes
+    const session = request.cookies.get("session")?.value || request.cookies.get("admin_session")?.value;
     if (!session) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
     }

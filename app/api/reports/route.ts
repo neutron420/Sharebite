@@ -117,5 +117,5 @@ async function getReportsHandler(request: Request) {
   }
 }
 
-export const POST = withSecurity(postReportHandler, { limit: 5 });
+export const POST = withSecurity(postReportHandler, { limit: 15 });
 export const GET = withSecurity(getReportsHandler);

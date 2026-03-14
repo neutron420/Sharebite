@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Check, Loader2, Heart, Building2, UploadCloud, CheckCircle2, Image as ImageIcon, MapPin, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Loader2, Heart, Building2, UploadCloud, CheckCircle2, Image as ImageIcon, MapPin, Search, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LocationPicker from "@/components/map/LocationPicker";
 
-type Role = "DONOR" | "NGO" | null;
+type Role = "DONOR" | "NGO" | "RIDER" | null;
 
 const steps = [
   { id: "role", title: "Role" },
@@ -290,6 +290,7 @@ export default function RegisterPage() {
                           {[
                             { value: "DONOR", label: "I'm a Donor", desc: "For restaurants, individuals, and businesses.", icon: <Heart className="w-6 h-6" /> },
                             { value: "NGO", label: "I'm an NGO", desc: "For organizations distributing food.", icon: <Building2 className="w-6 h-6" /> },
+                            { value: "RIDER", label: "I'm a Rider", desc: "For heroes delivering surplus food.", icon: <Truck className="w-6 h-6" /> },
                           ].map((role, index) => (
                             <motion.div
                               key={role.value}

@@ -71,6 +71,26 @@ export async function PATCH(
         message: `Your request for "${pickupRequest.donation.title}" is approved. Check your dashboard for the Handover PIN.`,
         link: `/dashboard/requests/${id}`
       });
+
+      // Broadcast to Riders that a "Bounty" is available
+      const riders = await prisma.user.findMany({
+        where: { role: "RIDER", isVerified: true, isAvailable: true },
+        select: { id: true }
+      });
+
+      const riderNotifications = riders.map(rider => ({
+        userId: rider.id,
+        type: "SYSTEM" as const,
+        title: "New Bounty Available! 📦",
+        message: `A new pickup for "${pickupRequest.donation.title}" in ${pickupRequest.donation.city} needs a rider.`,
+        link: `/rider`
+      }));
+
+      if (riderNotifications.length > 0) {
+        await prisma.notification.createMany({
+          data: riderNotifications
+        });
+      }
     }
 
     // 2. NGO marks as "Out for Pickup" (NGO only)

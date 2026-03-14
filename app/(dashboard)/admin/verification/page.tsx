@@ -53,8 +53,10 @@ export default function VerificationPage() {
       const res = await fetch("/api/admin/users", { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
+      // API returns { users: [...], pagination: {...} }
+      const allUsers = Array.isArray(data) ? data : (data.users || []);
       // Filter only NGOs for verification
-      setUsers(data.filter((u: User) => u.role === "NGO"));
+      setUsers(allUsers.filter((u: User) => u.role === "NGO"));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

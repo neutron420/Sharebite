@@ -18,7 +18,9 @@ import {
   MapPin,
   Heart,
   Soup,
-  Plus
+  Plus,
+  Bell,
+  Package
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -102,10 +104,10 @@ export default function NgoDashboard() {
         </div>
 
         <nav className="flex-grow space-y-2">
-           <SidebarItem icon={<LayoutDashboard />} label="Dashboard" active />
+           <SidebarItem icon={<LayoutDashboard />} label="Dashboard" active link="/ngo" />
+           <SidebarItem icon={<Package />} label="My Pickups" link="/ngo/requests" />
            <SidebarItem icon={<Search />} label="Find Food" link="/donations" />
-           <SidebarItem icon={<History />} label="My Requests" link="/ngo/requests" />
-           <SidebarItem icon={<MapPin />} label="Ops Map" link="/ngo/map" />
+           <SidebarItem icon={<Bell />} label="Alerts" link="/ngo/notifications" />
         </nav>
 
         <button 
@@ -176,7 +178,7 @@ export default function NgoDashboard() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
                       className="group p-6 rounded-[2rem] bg-white border border-slate-100 hover:border-orange-200/50 flex items-center justify-between transition-all cursor-pointer hover:shadow-lg hover:shadow-orange-50/50"
-                      onClick={() => router.push(`/donations/${item.id}`)}
+                      onClick={() => router.push(`/ngo/donations/${item.id}`)}
                     >
                       <div className="flex items-center gap-6">
                         <div className="w-14 h-14 bg-slate-50 group-hover:bg-orange-50 rounded-3xl flex items-center justify-center text-2xl grayscale group-hover:grayscale-0 transition-all border border-slate-50 group-hover:border-orange-100 relative overflow-hidden">

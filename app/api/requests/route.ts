@@ -115,9 +115,15 @@ async function getRequestsHandler() {
           donation: {
             include: {
               donor: {
-                select: { name: true, city: true }
+                select: { name: true, city: true, latitude: true, longitude: true, address: true }
               }
             }
+          },
+          ngo: {
+            select: { name: true, city: true, latitude: true, longitude: true, address: true }
+          },
+          rider: {
+            select: { id: true, name: true }
           }
         }
       });
@@ -139,6 +145,29 @@ async function getRequestsHandler() {
             select: { name: true, city: true, phoneNumber: true }
           },
           donation: true
+        }
+      });
+    } else if (session.role === "RIDER") {
+      // Rider views their assigned requests OR unassigned requests that need a rider
+      requests = await prisma.pickupRequest.findMany({
+        where: {
+          OR: [
+            { riderId: session.userId as string },
+            { 
+              riderId: null, 
+              status: "APPROVED", // Ready for a rider to pick up
+            }
+          ]
+        },
+        include: {
+          donation: {
+            include: {
+              donor: { select: { name: true, city: true, address: true, latitude: true, longitude: true } }
+            }
+          },
+          ngo: {
+             select: { name: true, city: true, address: true, latitude: true, longitude: true }
+          }
         }
       });
     }

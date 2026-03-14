@@ -99,4 +99,4 @@ async function deliveryHandler(
   }
 }
 
-export const PATCH = withSecurity(deliveryHandler, { limit: 5 });
+export const PATCH = withSecurity(deliveryHandler, { limit: 20 });

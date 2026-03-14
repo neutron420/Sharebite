@@ -23,6 +23,8 @@ export async function GET(
             address: true,
             city: true,
             imageUrl: true,
+            latitude: true,
+            longitude: true,
           },
         },
         requests: {
@@ -33,6 +35,14 @@ export async function GET(
                 name: true,
                 city: true,
                 imageUrl: true,
+                latitude: true,
+                longitude: true,
+              },
+            },
+            rider: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
