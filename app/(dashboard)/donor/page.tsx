@@ -75,9 +75,7 @@ export default function DonorDashboard() {
         if (!statsRes.ok) {
           const errText = await statsRes.text();
           console.error("[DONOR DASHBOARD] Stats fetch failed:", statsRes.status, errText);
-          toast.error("Failed to load stats. Logging out...");
-          await fetch("/api/auth/logout", { method: "POST" });
-          setTimeout(() => router.push("/login"), 1500);
+          toast.error("Stats service is temporarily unavailable. Please retry.");
           return;
         }
         const statsData = await statsRes.json();
@@ -154,6 +152,7 @@ export default function DonorDashboard() {
         <nav className="flex-grow space-y-2">
            <SidebarItem icon={<LayoutDashboard />} label="Overview" active link="/donor" />
            <SidebarItem icon={<History />} label="My History" link="/donor/donations" />
+            <SidebarItem icon={<MapPin />} label="NGO Map" link="/donor/ngos" />
            <SidebarItem icon={<Plus />} label="New Post" link="/donor/donate" />
            <SidebarItem icon={<Bell />} label="Alerts" link="/donor/notifications" />
         </nav>

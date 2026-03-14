@@ -81,6 +81,7 @@ export default function DonorHistory() {
         <nav className="flex-grow space-y-2">
            <SidebarItem icon={<LayoutDashboard />} label="Overview" link="/donor" />
            <SidebarItem icon={<History />} label="My History" active link="/donor/donations" />
+            <SidebarItem icon={<MapPin />} label="NGO Map" link="/donor/ngos" />
            <SidebarItem icon={<Plus />} label="New Post" link="/donor/donate" />
            <SidebarItem icon={<Bell />} label="Alerts" link="/donor/notifications" />
         </nav>

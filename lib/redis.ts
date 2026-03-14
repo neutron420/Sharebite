@@ -2,13 +2,29 @@ import Redis from "ioredis";
 
 const redisUrl = process.env.REDIS_URL;
 const fallbackRedisUrl = "redis://127.0.0.1:6379";
+let lastErrorMessage = "";
+let lastErrorLogAt = 0;
+
+function shouldLogRedisError(message: string) {
+  const now = Date.now();
+  const isRepeat = message === lastErrorMessage;
+  const isRecent = now - lastErrorLogAt < 10000;
+
+  if (isRepeat && isRecent) {
+    return false;
+  }
+
+  lastErrorMessage = message;
+  lastErrorLogAt = now;
+  return true;
+}
 
 const redis = new Redis(redisUrl ?? fallbackRedisUrl, {
   lazyConnect: true,
   enableOfflineQueue: false,
   maxRetriesPerRequest: 1,
   connectTimeout: 1000,
-  retryStrategy: (attempts) => (attempts > 1 ? null : 200),
+  retryStrategy: (attempts) => Math.min(attempts * 500, 5000),
 });
 
 if (!redisUrl) {
@@ -23,6 +39,10 @@ try {
 }
 
 redis.on("error", (error) => {
+  if (!shouldLogRedisError(error.message)) {
+    return;
+  }
+
   if (error.message.includes("WRONGPASS")) {
     console.error("❌ Redis Authentication Failed: Invalid password in REDIS_URL");
   } else {
@@ -33,5 +53,19 @@ redis.on("error", (error) => {
 redis.on("ready", () => {
   console.log("✅ Redis connection established and authenticated.");
 });
+
+export async function ensureRedisConnection() {
+  if (redis.status === "ready" || redis.status === "connecting") {
+    return;
+  }
+
+  try {
+    await redis.connect();
+  } catch {
+    // Allow API handlers to fail open when Redis is unavailable.
+  }
+}
+
+void ensureRedisConnection();
 
 export default redis;

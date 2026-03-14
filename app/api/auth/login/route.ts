@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
-import { signToken, getCookieName, SESSION_COOKIE_NAMES } from "@/lib/auth";
+import { signToken, getCookieName } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { withSecurity } from "@/lib/api-handler";
 
@@ -53,12 +53,7 @@ async function loginHandler(request: Request) {
       path: "/",
     } as const;
 
-    for (const name of SESSION_COOKIE_NAMES) {
-      cookieStore.set(name, "", {
-        maxAge: 0,
-        path: "/",
-      });
-    }
+    // Keep other role cookies so users can switch dashboards without losing prior role sessions.
 
     cookieStore.set("session", token, cookieOptions);
     cookieStore.set(cookieName, token, cookieOptions);

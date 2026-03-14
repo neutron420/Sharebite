@@ -13,7 +13,8 @@ import {
   CheckCheck,
   Trash2,
   Package,
-  MessageSquare
+  MessageSquare,
+  MapPin
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -97,6 +98,7 @@ export default function DonorNotificationsPage() {
         <nav className="flex-grow space-y-2">
            <SidebarItem icon={<LayoutDashboard />} label="Overview" link="/donor" />
            <SidebarItem icon={<History />} label="My History" link="/donor/donations" />
+            <SidebarItem icon={<MapPin />} label="NGO Map" link="/donor/ngos" />
            <SidebarItem icon={<Plus />} label="New Post" link="/donor/donate" />
            <SidebarItem icon={<Bell />} label="Alerts" active link="/donor/notifications" />
         </nav>
