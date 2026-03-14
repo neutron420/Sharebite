@@ -8,6 +8,13 @@ if (!redisUrl) {
 
 const redis = new Redis(redisUrl);
 
+try {
+  const url = new URL(redisUrl);
+  console.log(`📡 Attempting Redis connection to: ${url.hostname}`);
+} catch (e) {
+  console.error("❌ Malformed REDIS_URL in .env");
+}
+
 redis.on("error", (error) => {
   if (error.message.includes("WRONGPASS")) {
     console.error("❌ Redis Authentication Failed: Invalid password in REDIS_URL");
