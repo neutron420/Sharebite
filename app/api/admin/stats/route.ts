@@ -28,6 +28,10 @@ async function getAdminStatsHandler() {
       recentLogs,
       pendingReports,
       pendingVerifications,
+      riderCount,
+      activeRiderCount,
+      assignedTaskCount,
+      onTheWayTaskCount,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.foodDonation.count(),
@@ -64,6 +68,10 @@ async function getAdminStatsHandler() {
       }),
       prisma.report.count({ where: { status: "PENDING" } }),
       prisma.user.count({ where: { role: "NGO", isVerified: false } }),
+      prisma.user.count({ where: { role: "RIDER" } }),
+      prisma.user.count({ where: { role: "RIDER", isAvailable: true } }),
+      prisma.pickupRequest.count({ where: { status: "ASSIGNED" } }),
+      prisma.pickupRequest.count({ where: { status: "ON_THE_WAY" } }),
     ]);
 
     // Build monthly donation counts for the last 12 months
@@ -102,7 +110,17 @@ async function getAdminStatsHandler() {
         pendingReports,
         pendingVerifications,
       },
-      userRoles: { donors: donorCount, ngos: ngoCount, admins: adminCount },
+      userRoles: { 
+        donors: donorCount, 
+        ngos: ngoCount, 
+        admins: adminCount,
+        riders: riderCount 
+      },
+      deliveryStats: {
+        activeRiders: activeRiderCount,
+        assignedTasks: assignedTaskCount,
+        onTheWayTasks: onTheWayTaskCount
+      },
       donationStatuses: {
         available: availableCount,
         requested: requestedCount,
