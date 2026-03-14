@@ -4,24 +4,16 @@ import { donationSchema } from "@/lib/validations/donation";
 import { getSession } from "@/lib/auth";
 import { NotificationType } from "@/app/generated/prisma";
 import redis from "@/lib/redis";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function POST(request: Request) {
+async function postDonationHandler(request: Request) {
   try {
     const session = await getSession();
+    // RBAC check (Donors/Admins only)
     if (!session || (session.role !== "DONOR" && session.role !== "ADMIN")) {
       return NextResponse.json(
         { error: "Unauthorized. Only donors can create donations." },
         { status: 401 }
-      );
-    }
-
-    // Rate Limiting: Limit to 10 donations per minute
-    const rateLimit = await checkRateLimit(session.userId as string, 10, 60);
-    if (!rateLimit.success) {
-      return NextResponse.json(
-        { error: "Slow down! You can only post 10 donations per minute." },
-        { status: 429 }
       );
     }
 
@@ -104,7 +96,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+async function getDonationsHandler(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category");
@@ -179,3 +171,6 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export const POST = withSecurity(postDonationHandler, { limit: 10 });
+export const GET = withSecurity(getDonationsHandler, { limit: 60 });

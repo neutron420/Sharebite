@@ -4,8 +4,9 @@ import prisma from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
 import { signToken } from "@/lib/auth";
 import { cookies } from "next/headers";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function POST(request: Request) {
+async function loginHandler(request: Request) {
   try {
     const body = await request.json();
     
@@ -77,3 +78,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withSecurity(loginHandler, { limit: 10 }); // Brute force protection: 10 attempts per min

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function GET() {
+async function getSummaryHandler() {
   try {
-    // 1. Get totals from database
+
     const totalDonors = await prisma.user.count({ where: { role: "DONOR" } });
     const totalNGOs = await prisma.user.count({ where: { role: "NGO", isVerified: true } });
     
@@ -50,3 +51,5 @@ export async function GET() {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const GET = withSecurity(getSummaryHandler, { limit: 30 }); // 30 requests per minute
