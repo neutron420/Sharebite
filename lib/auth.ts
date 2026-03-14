@@ -7,6 +7,13 @@ if (!process.env.JWT_SECRET) {
 
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 const sessionRoles = ["ADMIN", "DONOR", "NGO", "RIDER"] as const;
+export const SESSION_COOKIE_NAMES = [
+  "session",
+  "admin_session",
+  "donor_session",
+  "ngo_session",
+  "rider_session",
+] as const;
 
 export type SessionRole = (typeof sessionRoles)[number];
 
@@ -70,7 +77,8 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
  * getSession() — Smart session resolver.
  * 
  * It can prefer a role explicitly or infer the route context from the request.
- * This keeps multi-role sign-ins from stepping on each other.
+ * This keeps shared APIs like /api/auth/me and /api/requests aligned with the
+ * dashboard that initiated the request.
  * 
  * For everything else it falls back to the general session first, then role cookies.
  */
@@ -80,7 +88,17 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
   // 1. Detect current path context
   let currentPath = "";
   if (options?.request) {
-    currentPath = new URL(options.request.url).pathname.toLowerCase();
+    const requestPath = new URL(options.request.url).pathname.toLowerCase();
+    let refererPath = "";
+
+    try {
+      const referer = options.request.headers.get("referer") || "";
+      refererPath = referer ? new URL(referer).pathname.toLowerCase() : "";
+    } catch {
+      refererPath = "";
+    }
+
+    currentPath = `${requestPath}|${refererPath}`;
   }
 
   if (!currentPath) {
@@ -131,7 +149,11 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
   }
 
   // 4. Verify tokens in priority order
-  for (const token of tokenChecks) {
+  const uniqueTokenChecks = Array.from(
+    new Set(tokenChecks.filter((token): token is string => Boolean(token)))
+  );
+
+  for (const token of uniqueTokenChecks) {
     if (token) {
       const payload = await verifyToken(token);
       if (payload) {

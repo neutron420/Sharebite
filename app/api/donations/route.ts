@@ -8,7 +8,7 @@ import { withSecurity } from "@/lib/api-handler";
 
 async function postDonationHandler(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ request });
     // RBAC check (Donors/Admins only)
     if (!session || (session.role !== "DONOR" && session.role !== "ADMIN")) {
       return NextResponse.json(
@@ -110,8 +110,10 @@ async function getDonationsHandler(request: Request) {
     const donorId = searchParams.get("donorId");
     const city = searchParams.get("city");
     const search = searchParams.get("search");
-    const session = await getSession();
-    
+    const session = await getSession({ request });
+
+    console.log("[DONATIONS] Session:", { hasSession: !!session, role: session?.role, userId: session?.userId });
+
     // If donorId is provided or if user is a DONOR, we might want to show all their items (not just available ones)
     const effectiveStatus = (status === "AVAILABLE" && (donorId || session?.role === "DONOR")) ? undefined : status;
 
@@ -134,6 +136,25 @@ async function getDonationsHandler(request: Request) {
             name: true,
             city: true,
             imageUrl: true,
+            latitude: true,
+            longitude: true,
+          },
+        },
+        requests: {
+          include: {
+            ngo: {
+              select: {
+                name: true,
+                city: true,
+                latitude: true,
+                longitude: true,
+              },
+            },
+            rider: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
@@ -167,7 +188,7 @@ async function getDonationsHandler(request: Request) {
           parseFloat(radius),
           "km"
         );
-        
+
         return NextResponse.json(
           donationsWithUrgency.filter((d) => nearbyIds.includes(d.id))
         );
@@ -188,5 +209,5 @@ async function getDonationsHandler(request: Request) {
   }
 }
 
-export const POST = withSecurity(postDonationHandler, { limit: 10 });
-export const GET = withSecurity(getDonationsHandler, { limit: 60 });
+export const POST = withSecurity(postDonationHandler, { limit: 20 });
+export const GET = withSecurity(getDonationsHandler, { limit: 120 });

@@ -5,7 +5,7 @@ import { withSecurity } from "@/lib/api-handler";
 
 async function postRequestHandler(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ preferredRole: "NGO", request });
     if (!session || session.role !== "NGO") {
       return NextResponse.json(
         { error: "Unauthorized. Only NGOs can make pickup requests." },
@@ -98,9 +98,9 @@ async function postRequestHandler(request: Request) {
   }
 }
 
-async function getRequestsHandler() {
+async function getRequestsHandler(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ request });
     if (!session) {
       return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });
     }

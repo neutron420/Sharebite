@@ -1,17 +1,24 @@
 import Redis from "ioredis";
 
 const redisUrl = process.env.REDIS_URL;
+const fallbackRedisUrl = "redis://127.0.0.1:6379";
+
+const redis = new Redis(redisUrl ?? fallbackRedisUrl, {
+  lazyConnect: true,
+  enableOfflineQueue: false,
+  maxRetriesPerRequest: 1,
+  connectTimeout: 1000,
+  retryStrategy: (attempts) => (attempts > 1 ? null : 200),
+});
 
 if (!redisUrl) {
-  throw new Error("REDIS_URL is not defined in environment variables");
+  console.warn("REDIS_URL is not defined. Redis-backed features will fail open.");
 }
 
-const redis = new Redis(redisUrl);
-
 try {
-  const url = new URL(redisUrl);
+  const url = new URL(redisUrl ?? fallbackRedisUrl);
   console.log(`📡 Attempting Redis connection to: ${url.hostname}`);
-} catch (e) {
+} catch {
   console.error("❌ Malformed REDIS_URL in .env");
 }
 

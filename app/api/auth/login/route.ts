@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations/auth";
-import { signToken, getCookieName } from "@/lib/auth";
+import { signToken, getCookieName, SESSION_COOKIE_NAMES } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { withSecurity } from "@/lib/api-handler";
 
@@ -42,16 +42,26 @@ async function loginHandler(request: Request) {
       role: user.role,
     });
 
-    // Set role-specific cookie (admin_session for Admin, session for others)
+    // Keep the generic and role cookie aligned so shared APIs resolve the active user reliably.
     const cookieStore = await cookies();
     const cookieName = getCookieName(user.role);
-    cookieStore.set(cookieName, token, {
+    const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
-    });
+    } as const;
+
+    for (const name of SESSION_COOKIE_NAMES) {
+      cookieStore.set(name, "", {
+        maxAge: 0,
+        path: "/",
+      });
+    }
+
+    cookieStore.set("session", token, cookieOptions);
+    cookieStore.set(cookieName, token, cookieOptions);
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;

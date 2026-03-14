@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
 
-async function getAdminStatsHandler() {
+async function getAdminStatsHandler(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ preferredRole: "ADMIN", request });
     if (!session) {
       return NextResponse.json({ error: "Unauthorized. Admin session required." }, { status: 401 });
     }

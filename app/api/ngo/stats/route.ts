@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
 
-async function getNgoStatsHandler() {
+async function getNgoStatsHandler(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ preferredRole: "NGO", request });
     
     if (!session) {
       return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });

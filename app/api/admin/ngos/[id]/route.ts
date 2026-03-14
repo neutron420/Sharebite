@@ -23,7 +23,7 @@ const NGO_SELECT = {
 
 async function getNgoHandler(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+	{ params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -61,8 +61,8 @@ async function getNgoHandler(
 }
 
 async function updateNgoHandler(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+	request: Request,
+	{ params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -113,7 +113,7 @@ async function updateNgoHandler(
       }
 
       const strikeLevel = level ? Number(level) : ngo.strikeCount + 1;
-      let updateData: any = { strikeCount: strikeLevel };
+      const updateData: any = { strikeCount: strikeLevel };
       let notificationTitle = "";
       let notificationMessage = "";
 
@@ -232,8 +232,8 @@ async function updateNgoHandler(
 }
 
 async function deleteNgoHandler(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+	request: Request,
+	{ params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;

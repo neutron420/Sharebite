@@ -56,11 +56,30 @@ export default function DonorDashboard() {
         setLoading(true);
         // Fetch stats
         const statsRes = await fetch("/api/donor/stats");
+        console.log("[DONOR DASHBOARD] Stats response:", statsRes.status);
+        
+        if (statsRes.status === 401) {
+            toast.error("Session expired. Redirecting to login...");
+            setTimeout(() => router.push("/login"), 1500);
+            return;
+        }
+        
         if (statsRes.status === 403) {
             const errData = await statsRes.json();
-            throw new Error(errData.error || "Access Denied. Donors only.");
+            console.error("[DONOR DASHBOARD] Access denied:", errData);
+            toast.error("Access denied. Please log in as a donor.");
+            setTimeout(() => router.push("/login"), 2000);
+            return;
         }
-        if (!statsRes.ok) throw new Error("Failed to fetch stats");
+        
+        if (!statsRes.ok) {
+          const errText = await statsRes.text();
+          console.error("[DONOR DASHBOARD] Stats fetch failed:", statsRes.status, errText);
+          toast.error("Failed to load stats. Logging out...");
+          await fetch("/api/auth/logout", { method: "POST" });
+          setTimeout(() => router.push("/login"), 1500);
+          return;
+        }
         const statsData = await statsRes.json();
         setStats(statsData);
         if (statsData.userName) setUserName(statsData.userName);
@@ -83,7 +102,11 @@ export default function DonorDashboard() {
 
       } catch (error: any) {
         console.error("Dashboard load error:", error);
-        toast.error(error.message || "HQ connection unstable. Data may be stale.");
+        if (error.message?.includes("Session expired")) {
+          // Already handled with redirect
+        } else {
+          toast.error("Failed to load dashboard. Please log out and log back in.");
+        }
       } finally {
         setLoading(false);
       }

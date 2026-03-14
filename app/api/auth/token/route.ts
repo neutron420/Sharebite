@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { SESSION_COOKIE_NAMES } from "@/lib/auth";
 
 export async function GET() {
   try {
     const cookieStore = await cookies();
 
-    // Check admin_session first, then regular session
-    const token = cookieStore.get("admin_session")?.value || cookieStore.get("session")?.value;
+    const token = SESSION_COOKIE_NAMES
+      .map((name) => cookieStore.get(name)?.value)
+      .find((value): value is string => Boolean(value));
 
     if (!token) {
       return NextResponse.json({ error: "No token found" }, { status: 401 });

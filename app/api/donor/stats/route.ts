@@ -3,23 +3,31 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
 
-async function getDonorStatsHandler() {
+async function getDonorStatsHandler(request: Request) {
   try {
-    const session = await getSession();
-    
+    const session = await getSession({ preferredRole: "DONOR", request });
+
+    console.log("[DONOR STATS] Session check:", {
+      hasSession: !!session,
+      role: session?.role,
+      userId: session?.userId
+    });
+
     if (!session) {
       return NextResponse.json({ error: "Unauthorized. Please log in." }, { status: 401 });
     }
 
     if (session.role !== "DONOR") {
-      console.warn(`Unauthorized access attempt to Donor stats by ${session.role}: ${session.userId}`);
-      return NextResponse.json({ 
-        error: `Access Denied. Your account is registered as ${session.role}. This portal is for Donors only.`,
-        currentRole: session.role 
-      }, { status: 403 }); 
+      console.warn(`[DONOR STATS] Wrong role: ${session.role} (userId: ${session.userId})`);
+      return NextResponse.json({
+        error: `Access Denied. This is for Donors only. Your role: ${session.role}`,
+        currentRole: session.role
+      }, { status: 403 });
     }
 
     const userId = session.userId as string;
+    console.log("[DONOR STATS] Fetching stats for donor:", userId);
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { name: true }
@@ -64,4 +72,4 @@ async function getDonorStatsHandler() {
   }
 }
 
-export const GET = withSecurity(getDonorStatsHandler);
+export const GET = withSecurity(getDonorStatsHandler, { limit: 120 });
