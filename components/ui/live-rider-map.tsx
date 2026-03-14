@@ -26,44 +26,93 @@ export default function LiveRiderMap({
   const map = useRef<mapboxgl.Map | null>(null);
   const riderMarker = useRef<mapboxgl.Marker | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [routeStats, setRouteStats] = useState<{ distance: string, duration: string } | null>(null);
+
+  const fetchRoute = async (m: mapboxgl.Map) => {
+    if (!donorCoords || !ngoCoords) return;
+    
+    try {
+      const query = await fetch(
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${donorCoords[0]},${donorCoords[1]};${ngoCoords[0]},${ngoCoords[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
+        { method: 'GET' }
+      );
+      const json = await query.json();
+      const data = json.routes[0];
+      const route = data.geometry.coordinates;
+
+      const geojson: any = {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: route
+        }
+      };
+
+      if (m.getSource('route')) {
+        (m.getSource('route') as mapboxgl.GeoJSONSource).setData(geojson);
+      } else {
+        m.addLayer({
+          id: 'route',
+          type: 'line',
+          source: {
+            type: 'geojson',
+            data: geojson
+          },
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#ea580c',
+            'line-width': 5,
+            'line-opacity': 0.75
+          }
+        });
+      }
+
+      setRouteStats({
+        distance: (data.distance / 1000).toFixed(1) + " km",
+        duration: Math.floor(data.duration / 60) + " min"
+      });
+    } catch (err) {
+      console.error("Failed to fetch route:", err);
+    }
+  };
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize Map
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11", // Tactical dark theme
-      zoom: 13,
-      center: donorCoords || [77.209, 28.613], // Default to Delhi if no coords
+      style: "mapbox://styles/mapbox/dark-v11",
+      zoom: 12,
+      center: donorCoords || [77.209, 28.613],
       attributionControl: false
     });
 
     map.current.on('load', () => {
       setLoading(false);
+      const m = map.current!;
 
       // Add Donor Marker
       if (donorCoords) {
         const el = document.createElement('div');
         el.innerHTML = '<div class="p-2 bg-orange-600 rounded-full border-2 border-white shadow-lg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>';
-        new mapboxgl.Marker(el)
-          .setLngLat(donorCoords)
-          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML('<h3>Donor Location</h3>'))
-          .addTo(map.current!);
+        new mapboxgl.Marker(el).setLngLat(donorCoords).addTo(m);
       }
 
       // Add NGO Marker
       if (ngoCoords) {
         const el = document.createElement('div');
         el.innerHTML = '<div class="p-2 bg-blue-600 rounded-full border-2 border-white shadow-lg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><path d="m9 22 3-6 3 6"/><path d="m9 2 3 6 3-6"/></svg></div>';
-        new mapboxgl.Marker(el)
-          .setLngLat(ngoCoords)
-          .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML('<h3>NGO Hub</h3>'))
-          .addTo(map.current!);
+        new mapboxgl.Marker(el).setLngLat(ngoCoords).addTo(m);
       }
 
-      // Create Initial Rider Marker (Hidden until data arrives)
+      // Initial Route
+      fetchRoute(m);
+
+      // Rider Marker setup
       const riderEl = document.createElement('div');
       riderEl.innerHTML = `
         <div class="relative">
@@ -75,18 +124,15 @@ export default function LiveRiderMap({
           </div>
         </div>
       `;
-      riderMarker.current = new mapboxgl.Marker(riderEl)
-        .setLngLat([0, 0])
-        .addTo(map.current!);
+      riderMarker.current = new mapboxgl.Marker(riderEl).setLngLat([0, 0]).addTo(m);
     });
 
     return () => map.current?.remove();
-  }, []);
+  }, [donorCoords, ngoCoords]);
 
   // Poll for Rider Location
   useEffect(() => {
     if (!riderId) return;
-
     const pollLocation = async () => {
       try {
         const res = await fetch(`/api/rider/location?riderId=${riderId}`);
@@ -94,24 +140,15 @@ export default function LiveRiderMap({
           const data = await res.json();
           if (data.lng && data.lat) {
             riderMarker.current?.setLngLat([data.lng, data.lat]);
-            
-            // Auto-center on rider if map is ready
             if (map.current) {
-              map.current.easeTo({
-                center: [data.lng, data.lat],
-                duration: 1000
-              });
+              map.current.easeTo({ center: [data.lng, data.lat], duration: 1000 });
             }
           }
         }
-      } catch (err) {
-        console.error("Map tracking poll error:", err);
-      }
+      } catch (err) {}
     };
-
-    const interval = setInterval(pollLocation, 3000); // 3s polling
+    const interval = setInterval(pollLocation, 3000);
     pollLocation();
-
     return () => clearInterval(interval);
   }, [riderId]);
 
@@ -120,17 +157,32 @@ export default function LiveRiderMap({
       {loading && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
           <Loader2 className="w-8 h-8 text-orange-600 animate-spin mb-3" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Acquiring Sat-Link...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Linking Logistics...</p>
         </div>
       )}
       
-      <div ref={mapContainer} className="w-full h-full grayscale-[0.5] contrast-[1.2] brightness-[0.8]" />
+      <div ref={mapContainer} className="w-full h-full grayscale-[0.2] contrast-[1.1]" />
       
-      {/* Overlay Status */}
-      <div className="absolute top-6 left-6 z-10">
-         <div className="bg-black/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-white/80">Active Tracking: {status}</span>
+      {/* Strategic Stat Overlays */}
+      <div className="absolute top-6 left-6 right-6 z-10 flex flex-col gap-3">
+         <div className="flex justify-between items-start">
+            <div className="bg-black/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 flex items-center gap-3">
+               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+               <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{status} Activity</span>
+            </div>
+
+            {routeStats && (
+               <div className="flex gap-2">
+                  <div className="bg-orange-600 px-4 py-2 rounded-xl shadow-xl flex flex-col items-center">
+                     <span className="text-[8px] font-black uppercase text-orange-100 tracking-tighter">Distance</span>
+                     <span className="text-sm font-black text-white leading-none">{routeStats.distance}</span>
+                  </div>
+                  <div className="bg-slate-950 px-4 py-2 rounded-xl shadow-xl flex flex-col items-center border border-white/10">
+                     <span className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">ETA</span>
+                     <span className="text-sm font-black text-orange-500 leading-none">{routeStats.duration}</span>
+                  </div>
+               </div>
+            )}
          </div>
       </div>
     </div>
