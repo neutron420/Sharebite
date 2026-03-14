@@ -11,6 +11,10 @@ async function getNgoStatsHandler() {
     }
 
     const userId = session.userId as string;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true }
+    });
 
     const [
       totalRequests,
@@ -37,6 +41,7 @@ async function getNgoStatsHandler() {
     ]);
 
     return NextResponse.json({
+      userName: user?.name || "NGO Hub",
       totalRequests,
       pendingRequests,
       approvedRequests,

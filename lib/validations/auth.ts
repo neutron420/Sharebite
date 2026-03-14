@@ -8,6 +8,11 @@ export const registerSchema = z.object({
   phoneNumber: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
+  state: z.string().optional(),
+  district: z.string().optional(),
+  pincode: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   imageUrl: z.string().optional(),
   verificationDoc: z.string().optional(),
 });

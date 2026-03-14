@@ -23,6 +23,7 @@ async function postDonationHandler(request: Request) {
     const donation = await prisma.foodDonation.create({
       data: {
         ...validatedData,
+        description: validatedData.description || "",
         weight: validatedData.weight || 0,
         expiryTime: new Date(validatedData.expiryTime),
         pickupStartTime: new Date(validatedData.pickupStartTime),

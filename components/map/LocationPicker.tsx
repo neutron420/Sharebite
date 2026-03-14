@@ -3,7 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MapPin, Search } from 'lucide-react';
+import { MapPin, Search, ChevronRight } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 
 interface LocationPickerProps {
   onLocationSelect: (data: {
@@ -46,13 +47,14 @@ export default function LocationPicker({ onLocationSelect, initialCoords }: Loca
       zoom: 12,
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
     map.current.addControl(
       new mapboxgl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
         showUserHeading: true
-      })
+      }),
+      'bottom-right'
     );
 
     // Click handler for geocoding
@@ -62,7 +64,16 @@ export default function LocationPicker({ onLocationSelect, initialCoords }: Loca
       await reverseGeocode(lng, lat);
     });
 
-    return () => map.current?.remove();
+    // Fix for map rendering at half width in flex/grid containers
+    const resizeObserver = new ResizeObserver(() => {
+      map.current?.resize();
+    });
+    resizeObserver.observe(mapContainer.current);
+
+    return () => {
+      resizeObserver.disconnect();
+      map.current?.remove();
+    };
   }, []);
 
   const updateMarker = (lng: number, lat: number) => {
@@ -142,40 +153,60 @@ export default function LocationPicker({ onLocationSelect, initialCoords }: Loca
   };
 
   return (
-    <div className="location-picker-container w-full h-[500px] relative rounded-xl overflow-hidden shadow-2xl border border-white/20">
-      {/* Search Bar Overlay */}
-      <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
+    <div className="location-picker-container w-full h-full relative rounded-xl overflow-hidden shadow-2xl border border-white/20 min-h-[400px]">
+      {/* Search Bar Overlay - Fixed Top Right with High Presence */}
+      <div className="absolute top-8 right-8 z-30 flex flex-col gap-2 w-full max-w-[320px] sm:max-w-[400px]">
+        <div className="relative group/search">
+          <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none z-10">
+            <Search className="h-5 w-5 text-slate-400 group-focus-within/search:text-orange-600 transition-all group-focus-within/search:scale-110" strokeWidth={3} />
           </div>
           <input
             type="text"
-            className="w-full bg-white/90 backdrop-blur-md border border-white/30 rounded-full py-3 pl-10 pr-4 text-sm font-medium shadow-lg outline-none focus:ring-2 focus:ring-orange-500/50 transition-all text-gray-800"
+            className="w-full bg-white/95 backdrop-blur-2xl border-2 border-slate-100/50 rounded-[1.5rem] py-4.5 pl-14 pr-12 text-[13px] font-black shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] outline-none focus:border-orange-600/20 focus:ring-8 focus:ring-orange-600/5 transition-all text-slate-900 uppercase tracking-tighter placeholder:text-slate-300 placeholder:font-bold h-14"
             placeholder="Search address or landmark..."
             value={searchQuery}
             onChange={handleSearchChange}
           />
+          <AnimatePresence>
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-600 transition-colors z-10"
+              >
+                <div className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-100 transition-all">
+                   <span className="text-xl font-light leading-none">×</span>
+                </div>
+              </button>
+            )}
+          </AnimatePresence>
           {loading && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              <div className="animate-spin h-4 w-4 border-2 border-orange-500 border-t-transparent rounded-full" />
+            <div className="absolute right-14 top-1/2 -translate-y-1/2 z-10">
+              <div className="animate-spin h-4 w-4 border-3 border-orange-600 border-t-transparent rounded-full" />
             </div>
           )}
         </div>
 
         {/* Suggestions List */}
         {suggestions.length > 0 && (
-          <div className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl p-2 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="bg-white/95 backdrop-blur-xl border-2 border-slate-100/50 rounded-[2rem] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.2)] p-2.5 overflow-y-auto max-h-[350px] animate-in fade-in slide-in-from-top-2 duration-300 mt-2 scrollbar-hide z-50">
+            <div className="px-5 py-2 mb-1 border-b border-slate-50">
+               <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Quick Results</span>
+            </div>
             {suggestions.map((s) => (
               <button
                 key={s.id}
                 onClick={() => selectSuggestion(s)}
-                className="w-full text-left px-4 py-3 hover:bg-orange-50 rounded-xl flex items-start gap-3 transition-colors group"
+                className="w-full text-left px-5 py-4 hover:bg-orange-50/50 rounded-2xl flex items-start gap-4 transition-all group mb-1 border border-transparent hover:border-orange-100"
               >
-                <MapPin className="h-5 w-5 text-gray-400 group-hover:text-orange-500 mt-0.5" />
-                <div>
-                  <div className="text-sm font-semibold text-gray-900 line-clamp-1">{s.text}</div>
-                  <div className="text-xs text-gray-500 line-clamp-1">{s.place_name}</div>
+                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-white transition-colors shadow-sm">
+                  <MapPin className="h-5 w-5 text-slate-400 group-hover:text-orange-600" strokeWidth={2.5} />
+                </div>
+                <div className="min-w-0 flex-grow py-1">
+                  <div className="text-[12px] font-black text-slate-900 line-clamp-1 uppercase tracking-tight group-hover:text-orange-950 transition-colors">{s.text}</div>
+                  <div className="text-[9px] font-bold text-slate-400 line-clamp-1 truncate uppercase tracking-widest opacity-70 group-hover:opacity-100 transition-opacity">{s.place_name}</div>
+                </div>
+                <div className="self-center opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+                   <ChevronRight className="w-4 h-4 text-orange-600" />
                 </div>
               </button>
             ))}
@@ -185,10 +216,10 @@ export default function LocationPicker({ onLocationSelect, initialCoords }: Loca
 
       <div ref={mapContainer} className="w-full h-full" />
       
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-white/20">
-        <p className="text-xs font-semibold text-gray-600 flex items-center gap-2">
-          <MapPin className="h-3 w-3 text-orange-500" />
-          Click on map to pin exact location
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-2xl px-6 py-3 rounded-full shadow-[0_15px_40px_-5px_rgba(0,0,0,0.1)] border border-white/50 z-20 animate-bounce duration-[2000ms]">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+          <div className="w-2 h-2 bg-orange-600 rounded-full animate-pulse" />
+          Click range to pin exact base
         </p>
       </div>
     </div>

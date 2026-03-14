@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Check, Loader2, Heart, Building2, UploadCloud, CheckCircle2, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Loader2, Heart, Building2, UploadCloud, CheckCircle2, Image as ImageIcon, MapPin, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import LocationPicker from "@/components/map/LocationPicker";
 
 type Role = "DONOR" | "NGO" | null;
 
@@ -57,6 +58,11 @@ export default function RegisterPage() {
     phoneNumber: "",
     city: "",
     address: "",
+    state: "",
+    district: "",
+    pincode: "",
+    latitude: 0,
+    longitude: 0,
     imageUrl: "",
     verificationDoc: ""
   });
@@ -129,8 +135,13 @@ export default function RegisterPage() {
            password: formData.password,
            ...(formData.phoneNumber && { phoneNumber: formData.phoneNumber }),
            ...(formData.imageUrl && { imageUrl: formData.imageUrl }),
-           ...(formData.role === "NGO" && formData.city && { city: formData.city }),
-           ...(formData.role === "NGO" && formData.address && { address: formData.address }),
+           city: formData.city,
+           address: formData.address,
+           state: formData.state,
+           district: formData.district,
+           pincode: formData.pincode,
+           latitude: formData.latitude,
+           longitude: formData.longitude,
            ...(formData.role === "NGO" && formData.verificationDoc && { verificationDoc: formData.verificationDoc }),
         }),
       });
@@ -162,9 +173,9 @@ export default function RegisterPage() {
         return formData.name.trim() !== "" && formData.email.trim() !== "" && formData.password.trim() !== "";
       case 2:
         if (formData.role === "NGO") {
-           return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.verificationDoc.trim() !== "";
+           return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.verificationDoc.trim() !== "";
         }
-        return true; // Donor Verification is completely optional
+        return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "";
       default:
         return true;
     }
@@ -178,25 +189,27 @@ export default function RegisterPage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px:32px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-lg mx-auto py-8">
+      <div className={cn("relative z-10 w-full transition-all duration-500 mx-auto py-8", currentStep === 2 ? "max-w-5xl" : "max-w-lg")}>
         
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-8 text-center text-slate-950 font-black">
            <Link href="/" className="flex items-center gap-3 group mb-4">
               <div className="w-12 h-12 bg-orange-600 rounded-2xl shadow-xl shadow-orange-100 flex items-center justify-center group-hover:rotate-12 transition-all duration-300">
                 <Heart className="w-6 h-6 text-white" fill="white" />
               </div>
            </Link>
-           <h1 className="text-3xl font-black tracking-tight text-center">Join ShareBite</h1>
+           <h1 className="text-3xl tracking-tight">Join ShareBite</h1>
+           <p className="text-slate-400 font-bold mt-2 text-sm italic">Connecting surplus food to those who need it most.</p>
         </div>
 
         {/* Progress indicator */}
         <motion.div
-          className="mb-8"
+           layout
+          className="mb-12 relative"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="flex justify-between mb-2 px-4">
+          <div className="flex justify-between mb-2 px-10 relative z-10">
             {steps.map((step, index) => (
               <motion.div
                 key={index}
@@ -205,20 +218,22 @@ export default function RegisterPage() {
               >
                 <div
                   className={cn(
-                    "w-4 h-4 rounded-full transition-colors duration-300",
+                    "w-6 h-6 rounded-full transition-all duration-500 flex items-center justify-center text-[10px] font-black z-20",
                     index < currentStep
-                      ? "bg-orange-600"
+                      ? "bg-orange-600 text-white shadow-lg shadow-orange-100"
                       : index === currentStep
-                        ? "bg-orange-500 ring-4 ring-orange-600/20 shadow-lg"
-                        : "bg-slate-200",
+                        ? "bg-slate-900 text-white ring-4 ring-orange-600/20 shadow-xl"
+                        : "bg-white border-2 border-slate-100 text-slate-300",
                   )}
-                />
+                >
+                    {index < currentStep ? <Check className="w-3 h-3" strokeWidth={5} /> : index + 1}
+                </div>
                 <span
                   className={cn(
-                    "text-[10px] mt-2 font-black uppercase tracking-widest hidden sm:block",
+                    "text-[10px] mt-2 font-black uppercase tracking-[0.2em] hidden sm:block transition-colors duration-300",
                     index <= currentStep
                       ? "text-orange-600"
-                      : "text-slate-400",
+                      : "text-slate-300",
                   )}
                 >
                   {step.title}
@@ -226,24 +241,27 @@ export default function RegisterPage() {
               </motion.div>
             ))}
           </div>
-          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden mt-3">
-            <motion.div
-              className="h-full bg-orange-600 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
+          
+          {/* Progress bar line */}
+          <div className="absolute top-3 left-[15%] right-[15%] h-0.5 bg-slate-100 -z-0 rounded-full overflow-hidden">
+            <motion.div 
+               className="h-full bg-orange-600"
+               initial={{ width: 0 }}
+               animate={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
+               transition={{ duration: 0.6, ease: "anticipate" }}
             />
           </div>
         </motion.div>
 
         {/* Form card */}
         <motion.div
+          layout
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card className="border-0 shadow-[0_20px_50px_rgba(0,0,0,0.03)] rounded-[2.5rem] overflow-hidden bg-white">
-            <div>
+          <Card className="border-0 shadow-[0_30px_70px_rgba(0,0,0,0.05)] rounded-[3.5rem] overflow-hidden bg-white">
+            <div className="flex flex-col">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentStep}
@@ -251,286 +269,298 @@ export default function RegisterPage() {
                   animate="visible"
                   exit="exit"
                   variants={contentVariants}
+                  className="w-full"
                 >
                   
                   {/* Step 1: Role */}
                   {currentStep === 0 && (
-                    <>
-                      <CardHeader className="p-8 pb-4">
-                        <CardTitle className="text-2xl font-black italic tracking-tight">Select your role</CardTitle>
-                        <CardDescription className="font-medium text-slate-500">
+                    <div className="py-2">
+                      <CardHeader className="p-10 pb-4">
+                        <CardTitle className="text-3xl font-black italic tracking-tight underline decoration-orange-600/10">Select your role</CardTitle>
+                        <CardDescription className="font-bold text-slate-500 text-lg">
                           How will you use the platform?
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-4 px-8">
+                      <CardContent className="space-y-4 px-10 pb-6">
                          <RadioGroup
                           value={formData.role ?? ""}
                           onValueChange={(value) => updateFormData("role", value as Role)}
-                          className="space-y-3"
+                          className="grid grid-cols-1 gap-4"
                         >
                           {[
-                            { value: "DONOR", label: "I'm a Donor", desc: "I want to share surplus food." },
-                            { value: "NGO", label: "I'm an NGO", desc: "I distribute food to communities." },
+                            { value: "DONOR", label: "I'm a Donor", desc: "For restaurants, individuals, and businesses.", icon: <Heart className="w-6 h-6" /> },
+                            { value: "NGO", label: "I'm an NGO", desc: "For organizations distributing food.", icon: <Building2 className="w-6 h-6" /> },
                           ].map((role, index) => (
                             <motion.div
                               key={role.value}
-                              className={cn("flex items-center space-x-3 rounded-2xl border-2 p-5 cursor-pointer transition-all", formData.role === role.value ? "border-orange-600 bg-orange-50/50 shadow-sm" : "border-slate-100 hover:border-orange-200")}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
+                              className={cn("flex items-center space-x-5 rounded-[2.5rem] border-2 p-8 cursor-pointer transition-all", formData.role === role.value ? "border-orange-600 bg-orange-50/20 shadow-2xl shadow-orange-100/30" : "border-slate-50 hover:border-orange-200 bg-slate-50/20")}
+                              whileHover={{ scale: 1.01 }}
+                              whileTap={{ scale: 0.99 }}
                               transition={{ duration: 0.2 }}
                               onClick={() => updateFormData("role", role.value as Role)}
                             >
-                              <RadioGroupItem
-                                value={role.value}
-                                id={`role-${index}`}
-                                className="text-orange-600 border-slate-300"
-                              />
-                              <div className="flex flex-col w-full">
+                              <div className={cn("w-16 h-16 rounded-3xl flex items-center justify-center transition-all shadow-sm", formData.role === role.value ? "bg-orange-600 text-white rotate-6" : "bg-white text-slate-300")}>
+                                {role.icon}
+                              </div>
+                              <div className="flex flex-col flex-grow">
                                   <Label
                                     htmlFor={`role-${index}`}
-                                    className="cursor-pointer font-black text-lg"
+                                    className="cursor-pointer font-black text-2xl tracking-tighter"
                                   >
                                     {role.label}
                                   </Label>
-                                  <span className="text-xs text-slate-500 font-medium mt-1">{role.desc}</span>
+                                  <span className="text-sm text-slate-400 font-bold mt-1 uppercase tracking-tight">{role.desc}</span>
                               </div>
+                              <RadioGroupItem
+                                value={role.value}
+                                id={`role-${index}`}
+                                className="text-orange-600 border-slate-200 scale-150"
+                              />
                             </motion.div>
                           ))}
                         </RadioGroup>
                       </CardContent>
-                    </>
+                    </div>
                   )}
 
                   {/* Step 2: Details */}
                   {currentStep === 1 && (
-                    <>
-                      <CardHeader className="p-8 pb-4">
-                        <CardTitle className="text-2xl font-black italic tracking-tight">Primary Details</CardTitle>
-                        <CardDescription className="font-medium text-slate-500">
+                    <div className="py-2">
+                       <CardHeader className="p-10 pb-4 text-slate-900 font-black">
+                        <CardTitle className="text-3xl italic tracking-tighter underline decoration-orange-600/10">Base Credentials</CardTitle>
+                        <CardDescription className="text-slate-400 text-lg font-bold">
                           Let&apos;s get you setup securely.
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="space-y-5 px-8">
-                        <motion.div variants={fadeInUp} className="space-y-2">
-                          <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                             {formData.role === "DONOR" ? "Full Name" : "Organization Name"} <span className="text-orange-500">*</span>
+                      <CardContent className="space-y-6 px-10 pb-6">
+                        <motion.div variants={fadeInUp} className="space-y-3">
+                          <Label htmlFor="name" className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">
+                             {formData.role === "DONOR" ? "Full Name" : "Organization Name"}
                           </Label>
                           <Input
                             id="name"
-                            placeholder={formData.role === "DONOR" ? "Jane Doe" : "Hope Foundation"}
+                            placeholder={formData.role === "DONOR" ? "e.g. Rahul Singh" : "e.g. Feeding India"}
                             value={formData.name}
                             onChange={(e) => updateFormData("name", e.target.value)}
-                            className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500/20 font-medium transition-all"
+                            className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-500 focus:ring-orange-500/10 font-black px-6 text-lg transition-all"
                           />
                         </motion.div>
-                        <motion.div variants={fadeInUp} className="space-y-2">
-                          <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider text-slate-400">Email Address <span className="text-orange-500">*</span></Label>
+                        <motion.div variants={fadeInUp} className="space-y-3">
+                          <Label htmlFor="email" className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Email Address</Label>
                           <Input
                             id="email"
                             type="email"
-                            placeholder="hello@example.com"
+                            placeholder="hello@sharebite.org"
                             value={formData.email}
                             onChange={(e) => updateFormData("email", e.target.value)}
-                         className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500/20 font-medium transition-all"
+                         className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-500 focus:ring-orange-500/10 font-black px-6 text-lg transition-all"
                           />
                         </motion.div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <motion.div variants={fadeInUp} className="space-y-2">
-                            <Label htmlFor="phone" className="text-xs font-bold uppercase tracking-wider text-slate-400">Phone Number</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <motion.div variants={fadeInUp} className="space-y-3">
+                            <Label htmlFor="phone" className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Phone</Label>
                             <Input
                                 id="phone"
-                                placeholder="+91 987654321"
+                                placeholder="+91 98765 00000"
                                 value={formData.phoneNumber}
                                 onChange={(e) => updateFormData("phoneNumber", e.target.value)}
-                            className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500/20 font-medium transition-all"
+                            className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-500 focus:ring-orange-500/10 font-black px-6 text-lg transition-all"
                             />
                             </motion.div>
-                            <motion.div variants={fadeInUp} className="space-y-2">
-                            <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-slate-400">Secure Password <span className="text-orange-500">*</span></Label>
+                            <motion.div variants={fadeInUp} className="space-y-3">
+                            <Label htmlFor="password" className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-2">Secure Password</Label>
                             <Input
                                 id="password"
                                 type="password"
                                 placeholder="••••••••"
                                 value={formData.password}
                                 onChange={(e) => updateFormData("password", e.target.value)}
-                            className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500/20 font-medium transition-all"
+                            className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-500 focus:ring-orange-500/10 font-black px-6 text-lg transition-all"
                             />
                             </motion.div>
                         </div>
                       </CardContent>
-                    </>
+                    </div>
                   )}
 
-                  {/* Step 3: Verification */}
+                  {/* Step 3: Verification (NEW SPLIT UI) */}
                   {currentStep === 2 && (
-                    <>
-                      <CardHeader className="p-8 pb-4">
-                        <CardTitle className="text-2xl font-black italic tracking-tight">
-                            {formData.role === "DONOR" ? "Make it Personal" : "NGO Verification"}
-                        </CardTitle>
-                        <CardDescription className="font-medium text-slate-500">
-                          {formData.role === "DONOR" ? "Add an avatar so others can recognize you (Optional)." : "Provide location and certification."}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-5 px-8">
-                        {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs font-bold border border-red-100">
-                                {error}
-                            </div>
-                        )}
-
-                        {formData.role === "DONOR" && (
-                           <motion.div variants={fadeInUp} className="space-y-3">
-                             <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Profile Avatar</Label>
-                             <div 
-                                onClick={() => !uploadingImage && fileInputRef.current?.click()}
-                                className={`w-full h-40 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden relative ${
-                                  formData.imageUrl ? 'border-orange-200 bg-orange-50' : 'border-slate-200 hover:border-orange-400 hover:bg-slate-50'
-                                }`}
-                             >
-                                <input 
-                                   type="file" accept="image/*" className="hidden" 
-                                   ref={fileInputRef} 
-                                   onChange={(e) => handleFileUpload(e, "imageUrl")}
-                                   disabled={uploadingImage}
-                                />
-                                {uploadingImage ? (
-                                   <div className="flex flex-col items-center gap-3 text-orange-600">
-                                      <Loader2 className="w-8 h-8 animate-spin" />
-                                      <span className="font-bold text-sm">Uploading...</span>
-                                   </div>
-                                ) : formData.imageUrl ? (
-                                   <>
-                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                     <img src={formData.imageUrl} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Avatar" />
-                                     <div className="relative z-10 flex flex-col items-center text-orange-800 bg-white/80 px-4 py-2 rounded-xl backdrop-blur-sm">
-                                       <CheckCircle2 className="w-6 h-6 mb-1" />
-                                       <span className="font-bold text-sm">Uploaded</span>
-                                     </div>
-                                   </>
-                                ) : (
-                                   <div className="flex flex-col items-center gap-2 text-slate-400">
-                                     <ImageIcon className="w-6 h-6 mb-2" />
-                                     <span className="font-bold text-sm">Tap to upload</span>
-                                   </div>
-                                )}
-                             </div>
-                           </motion.div>
-                        )}
-                        
-                        {formData.role === "NGO" && (
-                            <div className="space-y-5">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <motion.div variants={fadeInUp} className="space-y-2">
-                                        <Label htmlFor="city" className="text-xs font-bold uppercase tracking-wider text-slate-400">City <span className="text-orange-500">*</span></Label>
-                                        <Input
-                                            id="city"
-                                            placeholder="Mumbai"
-                                            value={formData.city}
-                                            onChange={(e) => updateFormData("city", e.target.value)}
-                                        className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500/20 font-medium transition-all"
-                                        />
-                                    </motion.div>
-                                    <motion.div variants={fadeInUp} className="space-y-2">
-                                        <Label htmlFor="address" className="text-xs font-bold uppercase tracking-wider text-slate-400">Base Locality <span className="text-orange-500">*</span></Label>
-                                        <Input
-                                            id="address"
-                                            placeholder="Sector 12"
-                                            value={formData.address}
-                                            onChange={(e) => updateFormData("address", e.target.value)}
-                                        className="h-12 rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500/20 font-medium transition-all"
-                                        />
-                                    </motion.div>
+                    <div className="flex flex-col md:flex-row min-h-[500px]">
+                       {/* MAP PART */}
+                       <div className="w-full md:w-[60%] h-[350px] md:h-auto border-r border-slate-50 relative">
+                          <div className="absolute top-10 left-10 z-20 animate-in fade-in slide-in-from-left-8 duration-1000">
+                             <div className="bg-white/95 backdrop-blur-2xl px-6 py-4 rounded-[1.8rem] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.1)] border border-white/50 flex items-center gap-4 group cursor-default hover:scale-105 transition-transform duration-500">
+                                <div className="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-100 rotate-0 group-hover:rotate-12 transition-transform">
+                                   <MapPin className="w-5 h-5 text-white" fill="white" />
                                 </div>
-                                <motion.div variants={fadeInUp} className="space-y-3 pt-2">
-                                    <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">Registration Document Photo <span className="text-orange-500">*</span></Label>
-                                    <div 
-                                        onClick={() => !uploadingImage && verifyInputRef.current?.click()}
-                                        className={`w-full h-40 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden relative ${
-                                        formData.verificationDoc ? 'border-amber-200 bg-amber-50' : 'border-slate-200 hover:border-amber-400 hover:bg-slate-50'
-                                        }`}
-                                    >
-                                        <input 
-                                            type="file" accept="image/*" className="hidden" 
-                                            ref={verifyInputRef} 
-                                            onChange={(e) => handleFileUpload(e, "verificationDoc")}
-                                            disabled={uploadingImage}
-                                        />
-                                        {uploadingImage ? (
-                                            <div className="flex flex-col items-center gap-3 text-amber-600">
-                                                <Loader2 className="w-8 h-8 animate-spin" />
-                                                <span className="font-bold text-sm">Securing Document...</span>
-                                            </div>
-                                        ) : formData.verificationDoc ? (
-                                            <>
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={formData.verificationDoc} className="absolute inset-0 w-full h-full object-cover opacity-30" alt="Doc" />
-                                            <div className="relative z-10 flex flex-col items-center text-amber-800 bg-white/80 px-4 py-2 rounded-xl backdrop-blur-sm border border-amber-100">
-                                                <CheckCircle2 className="w-6 h-6 mb-1" />
-                                                <span className="font-bold text-sm">Securely Uploaded</span>
-                                            </div>
-                                            </>
-                                        ) : (
-                                            <div className="flex flex-col items-center gap-2 text-slate-400">
-                                                <UploadCloud className="w-6 h-6 mb-1" />
-                                                <span className="font-bold text-sm">Tap to upload proof of operation</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </motion.div>
+                                <div>
+                                   <p className="text-[11px] font-black uppercase tracking-[0.2em] text-orange-600 leading-none mb-1.5 opacity-80">Interactive Grid</p>
+                                   <p className="text-sm font-black text-slate-900 tracking-tighter uppercase italic leading-tight">Pin your operational base</p>
+                                </div>
+                             </div>
+                          </div>
+                          
+                          <LocationPicker 
+                            onLocationSelect={(data) => {
+                               setFormData(prev => ({
+                                  ...prev,
+                                  address: data.address,
+                                  city: data.city,
+                                  state: data.state,
+                                  district: data.district,
+                                  pincode: data.pincode,
+                                  latitude: data.latitude,
+                                  longitude: data.longitude
+                               }));
+                               toast.success(`Success! Hub set at ${data.city}`);
+                            }}
+                          />
+                       </div>
+
+                       {/* FORM PART */}
+                       <div className="flex-grow flex flex-col bg-slate-50/20 p-8">
+                          <div className="mb-8">
+                            <h3 className="text-2xl font-black italic tracking-tighter text-slate-900">
+                                {formData.role === "DONOR" ? "Profile Details" : "NGO Hub Setup"}
+                            </h3>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Finalizing Onboarding</p>
+                          </div>
+
+                          <div className="space-y-5 flex-grow overflow-y-auto pr-2 scrollbar-hide">
+                            {error && (
+                                <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-[10px] font-black border border-red-100 uppercase tracking-widest">
+                                    Error: {error}
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-4">
+                               <div className="space-y-2">
+                                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Detected City</Label>
+                                  <Input readOnly value={formData.city} placeholder="Pin Map" className="bg-white border-slate-100 italic font-black h-12 rounded-xl text-xs" />
+                               </div>
+                               <div className="space-y-2">
+                                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Zip/Pincode</Label>
+                                  <Input readOnly value={formData.pincode} placeholder="..." className="bg-white border-slate-100 italic font-black h-12 rounded-xl text-xs text-orange-600" />
+                               </div>
                             </div>
-                        )}
-                      </CardContent>
-                    </>
+
+                            <div className="space-y-2">
+                               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Operational Address</Label>
+                               <Input value={formData.address} onChange={(e) => updateFormData("address", e.target.value)} placeholder="Verify detected address" className="font-black border-slate-100 h-12 rounded-xl bg-white text-xs" />
+                            </div>
+
+                            <div className="pt-2">
+                               <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-3 block">
+                                  {formData.role === "DONOR" ? "Identity Photo" : "Registration Proof"}
+                               </Label>
+                               
+                               <div 
+                                  onClick={() => !uploadingImage && (formData.role === "DONOR" ? fileInputRef.current?.click() : verifyInputRef.current?.click())}
+                                  className={cn(
+                                     "w-full h-32 border-2 border-dashed rounded-[2rem] flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden relative",
+                                     formData.imageUrl || formData.verificationDoc ? 'border-orange-200 bg-orange-50/50 shadow-inner' : 'border-slate-100 bg-white hover:border-orange-300'
+                                  )}
+                               >
+                                  <input 
+                                     type="file" accept="image/*" className="hidden" 
+                                     ref={formData.role === "DONOR" ? fileInputRef : verifyInputRef} 
+                                     onChange={(e) => handleFileUpload(e, formData.role === "DONOR" ? "imageUrl" : "verificationDoc")}
+                                     disabled={uploadingImage}
+                                  />
+                                  
+                                  {uploadingImage ? (
+                                     <div className="flex flex-col items-center gap-2 text-orange-600">
+                                        <Loader2 className="w-7 h-7 animate-spin" strokeWidth={3} />
+                                        <span className="font-black text-[10px] uppercase tracking-widest">Uploading...</span>
+                                     </div>
+                                  ) : (formData.imageUrl || formData.verificationDoc) ? (
+                                     <>
+                                       <img src={formData.role === "DONOR" ? formData.imageUrl : formData.verificationDoc} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Doc" />
+                                       <div className="relative z-10 flex flex-col items-center gap-1">
+                                          <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                          <span className="font-black text-[9px] uppercase bg-white px-3 py-1 rounded-full shadow-sm">Uploaded</span>
+                                       </div>
+                                     </>
+                                  ) : (
+                                     <div className="flex flex-col items-center gap-1 text-slate-300">
+                                       <UploadCloud className="w-7 h-7 mb-1" />
+                                       <span className="font-black text-[10px] uppercase tracking-widest">Drop File</span>
+                                     </div>
+                                  )}
+                               </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-8 flex justify-between items-center gap-4">
+                             <Button
+                                 type="button"
+                                 variant="ghost"
+                                 onClick={prevStep}
+                                 disabled={isSubmitting}
+                                 className="rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400 h-14 px-6"
+                             >
+                                 <ChevronLeft className="h-4 w-4 mr-1" /> Back
+                             </Button>
+                             
+                             <Button
+                                 type="button"
+                                 onClick={handleSubmit}
+                                 disabled={!isStepValid() || isSubmitting || uploadingImage}
+                                 className="flex-grow h-14 rounded-2xl bg-slate-950 text-white font-black hover:bg-orange-600 transition-all shadow-xl group/btn"
+                             >
+                                 {isSubmitting ? (
+                                   <div className="flex items-center gap-2">
+                                       <Loader2 className="h-4 w-4 animate-spin" /> <span>Deploying...</span>
+                                   </div>
+                                 ) : (
+                                   <div className="flex items-center gap-2 uppercase tracking-widest text-xs">
+                                       Complete Registration <Check className="h-4 w-4 group-hover/btn:scale-125 transition-transform" />
+                                   </div>
+                                 )}
+                             </Button>
+                          </div>
+                       </div>
+                    </div>
                   )}
 
                 </motion.div>
               </AnimatePresence>
 
-              <div className="px-8 pb-8 pt-4">
-                  <div className="flex justify-between items-center border-t border-slate-100 pt-6">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        onClick={prevStep}
-                        disabled={currentStep === 0 || isSubmitting}
-                        className={cn(
-                           "flex items-center gap-1 transition-all duration-300 rounded-xl font-bold border-slate-200 text-slate-500",
-                           currentStep === 0 && "opacity-0 pointer-events-none"
-                        )}
-                    >
-                        <ChevronLeft className="h-4 w-4" /> Back
-                    </Button>
-                    
-                    <Button
-                        type="button"
-                        onClick={currentStep === steps.length - 1 ? handleSubmit : nextStep}
-                        disabled={!isStepValid() || isSubmitting || uploadingImage}
-                        className="flex items-center gap-2 transition-all duration-300 rounded-xl bg-slate-950 text-white font-black hover:bg-orange-600 px-6"
-                    >
-                        {isSubmitting ? (
-                        <>
-                            <Loader2 className="h-4 w-4 animate-spin" /> Launching...
-                        </>
-                        ) : (
-                        <>
-                            {currentStep === steps.length - 1 ? "Complete Registration" : "Continue"}
-                            {currentStep === steps.length - 1 ? (
-                            <Check className="h-4 w-4" />
-                            ) : (
-                            <ChevronRight className="h-4 w-4" />
-                            )}
-                        </>
-                        )}
-                    </Button>
-                  </div>
-              </div>
+              {/* SHARED FOOTER FOR STEPS 0 & 1 */}
+              {currentStep < 2 && (
+                <div className="px-10 pb-10 pt-4">
+                    <div className="flex justify-between items-center border-t border-slate-50 pt-8">
+                      <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={prevStep}
+                          disabled={currentStep === 0 || isSubmitting}
+                          className={cn(
+                             "flex items-center gap-2 transition-all duration-300 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-400 hover:text-slate-950",
+                             currentStep === 0 && "opacity-0 pointer-events-none"
+                          )}
+                      >
+                          <ChevronLeft className="h-4 w-4" /> Back
+                      </Button>
+                      
+                      <Button
+                          type="button"
+                          onClick={nextStep}
+                          disabled={!isStepValid() || uploadingImage}
+                          className="flex items-center gap-3 h-16 font-black transition-all duration-300 rounded-2xl bg-slate-950 text-white hover:bg-orange-600 px-10 shadow-2xl active:scale-95 group/next"
+                      >
+                          <span className="uppercase tracking-widest text-xs">Access Next Step</span>
+                          <ChevronRight className="h-5 w-5 group-hover/next:translate-x-1 transition-transform" />
+                      </Button>
+                    </div>
+                </div>
+              )}
             </div>
           </Card>
         </motion.div>
 
-        <p className="mt-8 text-center text-sm font-bold text-slate-400">
-           Already part of the network? <Link href="/login" className="text-orange-600 hover:text-orange-700 hover:underline transition-colors">Sign In Instead</Link>
+        <p className="mt-12 text-center text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">
+           Part of the movement? <Link href="/login" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 ml-1">Log In Here</Link>
         </p>
 
       </div>

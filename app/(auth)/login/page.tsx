@@ -22,6 +22,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [loginRole, setLoginRole] = useState<"DONOR" | "NGO">("DONOR");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -42,6 +44,10 @@ export default function LoginPage() {
 
       // Success! Route based on role
       const role = data.user.role;
+      if (role !== loginRole && role !== "ADMIN" && role !== "RIDER") {
+        throw new Error(`Account registered as ${role}. Please switch to the correct portal tab above.`);
+      }
+
       if (role === "DONOR") router.push("/donor");
       else if (role === "NGO") router.push("/ngo");
       else if (role === "RIDER") router.push("/rider");
@@ -72,8 +78,12 @@ export default function LoginPage() {
               </div>
               <span className="text-3xl font-black tracking-tighter text-slate-900">ShareBite</span>
            </Link>
-           <h1 className="text-4xl font-black tracking-tight text-center mb-2">Welcome Back</h1>
-           <p className="text-slate-500 font-medium text-sm">Securely access your logistics portal.</p>
+           <h1 className="text-4xl font-black tracking-tight text-center mb-2">
+              {loginRole === "DONOR" ? "Welcome Back" : "Ops Command"}
+           </h1>
+           <p className="text-slate-500 font-medium text-sm">
+              {loginRole === "DONOR" ? "Securely access your donor portal." : "Securely access your NGO logistics."}
+           </p>
         </div>
 
         <motion.div
@@ -82,6 +92,22 @@ export default function LoginPage() {
           className="bg-white border border-slate-100 p-8 sm:p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] relative"
         >
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="flex bg-slate-50 p-1.5 rounded-2xl">
+               <button
+                  type="button"
+                  onClick={() => setLoginRole("DONOR")}
+                  className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all ${loginRole === "DONOR" ? "bg-white text-orange-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+               >
+                  Donor
+               </button>
+               <button
+                  type="button"
+                  onClick={() => setLoginRole("NGO")}
+                  className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] transition-all ${loginRole === "NGO" ? "bg-white text-orange-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+               >
+                  NGO Hub
+               </button>
+            </div>
             <AnimatePresence>
               {error && (
                 <motion.div 

@@ -11,6 +11,10 @@ async function getDonorStatsHandler() {
     }
 
     const userId = session.userId as string;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true }
+    });
 
     const [
       totalDonations,
@@ -38,6 +42,7 @@ async function getDonorStatsHandler() {
     ]);
 
     return NextResponse.json({
+      userName: user?.name || "Donor",
       totalDonations,
       activeDonations,
       completedDonations,

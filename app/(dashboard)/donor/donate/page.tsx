@@ -1,0 +1,528 @@
+"use client";
+
+import React, { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  MapPin, 
+  UploadCloud, 
+  Loader2, 
+  Check, 
+  AlertCircle,
+  Package,
+  Calendar,
+  Layers,
+  Heart,
+  Soup,
+  ArrowLeft
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import LocationPicker from "@/components/map/LocationPicker";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
+
+const categories = [
+  { value: "VEG", label: "Vegetarian", icon: "🥦" },
+  { value: "NON_VEG", label: "Non-Vegetarian", icon: "🍗" },
+  { value: "DAIRY", label: "Dairy Products", icon: "🥛" },
+  { value: "BAKERY", label: "Bakery & Sweets", icon: "🥐" },
+  { value: "FRUITS_AND_VEGGIES", label: "Fruits & Veggies", icon: "🍎" },
+  { value: "COOKED_FOOD", label: "Cooked Meals", icon: "🍲" },
+  { value: "STAPLES", label: "Staples/Grains", icon: "🌾" },
+  { value: "PACKAGED_FOOD", label: "Packaged Food", icon: "📦" },
+  { value: "OTHERS", label: "Other Items", icon: "✨" },
+];
+
+export default function DonatePage() {
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    quantity: 1,
+    weight: 0,
+    expiryTime: "",
+    pickupStartTime: "",
+    pickupEndTime: "",
+    pickupLocation: "",
+    city: "",
+    state: "",
+    district: "",
+    pincode: "",
+    latitude: 0,
+    longitude: 0,
+    imageUrl: ""
+  });
+
+  const updateFormData = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Upload initialization failed");
+      const { presignedUrl, url } = await res.json();
+
+      const uploadRes = await fetch(presignedUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!uploadRes.ok) throw new Error("Cloud storage upload failed");
+
+      updateFormData("imageUrl", url);
+      toast.success("Photo attached successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const steps = [
+    { title: "Basics", icon: <Package /> },
+    { title: "Timing", icon: <Calendar /> },
+    { title: "Location", icon: <MapPin /> }
+  ];
+
+  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
+  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 0));
+
+  const isStepValid = () => {
+    if (currentStep === 0) {
+      return formData.title && formData.category && formData.quantity > 0;
+    }
+    if (currentStep === 1) {
+      return formData.expiryTime && formData.pickupStartTime && formData.pickupEndTime;
+    }
+    if (currentStep === 2) {
+      return formData.latitude !== 0 && formData.city;
+    }
+    return false;
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/donations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+         const data = await res.json();
+         if (data.details) {
+           throw new Error(data.details.map((d: any) => d.message).join(", "));
+         }
+         throw new Error(data.error || "Failed to post donation");
+      }
+
+      toast.success("Donation posted! Thank you for sharing.");
+      router.push("/donor");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50/50 selection:bg-orange-100 flex flex-col">
+      {/* Header */}
+      <nav className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-50">
+         <div className="flex items-center gap-4">
+            <Link href="/donor" className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 transition-all text-slate-400">
+               <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div className="h-6 w-px bg-slate-100 mx-2" />
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-100">
+                  <Soup className="w-4 h-4 text-white" />
+               </div>
+               <h1 className="text-xl font-black tracking-tighter">Post Donation</h1>
+            </div>
+         </div>
+
+         <div className="hidden md:flex items-center gap-6">
+            {steps.map((step, i) => (
+               <div key={i} className="flex items-center gap-3">
+                  <div className={cn(
+                     "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all",
+                     i < currentStep ? "bg-orange-600 text-white" : 
+                     i === currentStep ? "bg-slate-900 text-white shadow-xl scale-110" : 
+                     "bg-slate-100 text-slate-400"
+                  )}>
+                     {i < currentStep ? <Check className="w-3 h-3" strokeWidth={5} /> : i + 1}
+                  </div>
+                  <span className={cn(
+                     "text-[10px] uppercase font-black tracking-widest",
+                     i <= currentStep ? "text-slate-900" : "text-slate-300"
+                  )}>{step.title}</span>
+                  {i < steps.length - 1 && <ChevronRight className="w-4 h-4 text-slate-200" />}
+               </div>
+            ))}
+         </div>
+
+         <Button variant="ghost" className="rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400" onClick={() => router.back()}>
+            Cancel
+         </Button>
+      </nav>
+
+      {/* Main Content Split Layout */}
+      <div className="flex-grow flex flex-col lg:flex-row overflow-hidden">
+         
+         {/* FORM PART - SCROLLABLE */}
+         <div className="w-full lg:w-[45%] xl:w-[40%] bg-white border-r border-slate-100 overflow-y-auto p-8 md:p-12 scrollbar-hide">
+            <div className="max-w-md mx-auto h-full flex flex-col">
+               
+               <AnimatePresence mode="wait">
+                  <motion.div
+                     key={currentStep}
+                     initial={{ opacity: 0, x: -20 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     exit={{ opacity: 0, x: 10 }}
+                     transition={{ duration: 0.3 }}
+                     className="flex-grow"
+                  >
+                     {currentStep === 0 && (
+                        <div className="space-y-8">
+                           <div className="space-y-2">
+                              <h2 className="text-3xl font-black italic tracking-tighter text-slate-900 underline decoration-orange-600/10">Food Basics</h2>
+                              <p className="text-sm font-bold text-slate-400">Describe what you&apos;re sharing today.</p>
+                           </div>
+
+                           <div className="space-y-6 pt-4">
+                              <div className="space-y-3">
+                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Category <span className="text-orange-500">*</span></Label>
+                                 <div className="grid grid-cols-3 gap-3">
+                                    {categories.map((cat) => (
+                                       <button
+                                          key={cat.value}
+                                          onClick={() => updateFormData("category", cat.value)}
+                                          className={cn(
+                                             "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group",
+                                             formData.category === cat.value ? "border-orange-600 bg-orange-50/30 text-orange-600 shadow-xl shadow-orange-100" : "border-slate-50 bg-slate-50/50 hover:border-orange-200"
+                                          )}
+                                       >
+                                          <span className="text-2xl grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all">{cat.icon}</span>
+                                          <span className="text-[9.5px] font-black uppercase tracking-tighter leading-tight">{cat.label}</span>
+                                       </button>
+                                    ))}
+                                 </div>
+                              </div>
+
+                              <div className="space-y-3">
+                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Giving it a name <span className="text-orange-500">*</span></Label>
+                                 <Input 
+                                    placeholder="e.g. Extra Lunch Biryani" 
+                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black px-6 text-lg transition-all"
+                                    value={formData.title}
+                                    onChange={(e) => updateFormData("title", e.target.value)}
+                                 />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-3">
+                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Servings Count</Label>
+                                    <Input 
+                                       type="number" 
+                                       className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black px-6 text-lg transition-all"
+                                       value={formData.quantity}
+                                       min={1}
+                                       onChange={(e) => updateFormData("quantity", parseInt(e.target.value) || 0)}
+                                    />
+                                 </div>
+                                 <div className="space-y-3">
+                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Approx Weight (kg)</Label>
+                                    <Input 
+                                       type="number" 
+                                       className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black px-6 text-lg transition-all"
+                                       value={formData.weight}
+                                       step="0.1"
+                                       onChange={(e) => updateFormData("weight", parseFloat(e.target.value) || 0)}
+                                    />
+                                 </div>
+                              </div>
+
+                              <div className="space-y-3">
+                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Description</Label>
+                                 <Textarea 
+                                    placeholder="Any specific handling instructions or details?" 
+                                    className="rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-medium px-6 py-4 min-h-[120px] transition-all"
+                                    value={formData.description}
+                                    onChange={(e) => updateFormData("description", e.target.value)}
+                                 />
+                              </div>
+                           </div>
+                        </div>
+                     )}
+
+                     {currentStep === 1 && (
+                        <div className="space-y-8">
+                           <div className="space-y-2">
+                              <h2 className="text-3xl font-black italic tracking-tighter text-slate-900 underline decoration-orange-600/10">Timing Logistics</h2>
+                              <p className="text-sm font-bold text-slate-400">When should we pick this up?</p>
+                           </div>
+
+                           <div className="space-y-6 pt-4">
+                              <div className="space-y-3">
+                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Donation Expiry <span className="text-orange-500">*</span></Label>
+                                 <Input 
+                                    type="datetime-local" 
+                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold px-4 text-[13px] uppercase tracking-wider transition-all cursor-pointer"
+                                    value={formData.expiryTime}
+                                    onChange={(e) => updateFormData("expiryTime", e.target.value)}
+                                 />
+                                 <p className="text-[10px] font-bold text-orange-600 ml-1 opacity-70">Avoid wasting food, set a realistic safety buffer.</p>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                                 <div className="space-y-3">
+                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup Start</Label>
+                                    <Input 
+                                       type="datetime-local" 
+                                       className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold px-4 text-[13px] uppercase tracking-wider transition-all cursor-pointer"
+                                       value={formData.pickupStartTime}
+                                       onChange={(e) => updateFormData("pickupStartTime", e.target.value)}
+                                    />
+                                 </div>
+                                 <div className="space-y-3">
+                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup End</Label>
+                                    <Input 
+                                       type="datetime-local" 
+                                       className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold px-4 text-[13px] uppercase tracking-wider transition-all cursor-pointer"
+                                       value={formData.pickupEndTime}
+                                       onChange={(e) => updateFormData("pickupEndTime", e.target.value)}
+                                    />
+                                 </div>
+                              </div>
+
+                              <div className="pt-8">
+                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Visual Proof (Optional)</Label>
+                                 <div 
+                                    onClick={() => !uploadingImage && fileInputRef.current?.click()}
+                                    className={cn(
+                                       "mt-3 w-full h-40 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden relative",
+                                       formData.imageUrl ? 'border-orange-200 bg-orange-50/30' : 'border-slate-100 hover:border-orange-300'
+                                    )}
+                                 >
+                                    <input 
+                                       type="file" accept="image/*" className="hidden" 
+                                       ref={fileInputRef} 
+                                       onChange={handleFileUpload}
+                                       disabled={uploadingImage}
+                                    />
+                                    {uploadingImage ? (
+                                       <div className="flex flex-col items-center gap-2 text-orange-600">
+                                          <Loader2 className="w-8 h-8 animate-spin" strokeWidth={3} />
+                                          <span className="font-black text-[10px] uppercase tracking-widest">Uploading...</span>
+                                       </div>
+                                    ) : formData.imageUrl ? (
+                                       <>
+                                          <img src={formData.imageUrl} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Food" />
+                                          <div className="relative z-10 flex flex-col items-center gap-1">
+                                             <div className="p-2 bg-white rounded-full shadow-lg">
+                                                <Check className="w-5 h-5 text-green-600" strokeWidth={4} />
+                                             </div>
+                                             <span className="font-black text-[10px] uppercase bg-white/90 px-3 py-1 rounded-full shadow-sm">Photo Set</span>
+                                          </div>
+                                       </>
+                                    ) : (
+                                       <div className="flex flex-col items-center gap-1 text-slate-300">
+                                          <UploadCloud className="w-8 h-8 mb-1" />
+                                          <p className="font-black text-[10px] uppercase tracking-widest text-center">Tap to snap a photo</p>
+                                          <p className="text-[9px] font-bold opacity-50">Helps NGOs verify quality</p>
+                                       </div>
+                                    )}
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     )}
+
+                     {currentStep === 2 && (
+                        <div className="space-y-8">
+                           <div className="space-y-2">
+                              <h2 className="text-3xl font-black italic tracking-tighter text-slate-900 underline decoration-orange-600/10">Location Check</h2>
+                              <p className="text-sm font-bold text-slate-400">Confirm where items are stored.</p>
+                           </div>
+
+                           <div className="space-y-6 pt-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-3">
+                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">City</Label>
+                                    <Input readOnly value={formData.city} placeholder="Pin Map ->" className="bg-slate-50 border-slate-100 font-black italic h-12 rounded-xl text-xs" />
+                                 </div>
+                                 <div className="space-y-3">
+                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Zipcode</Label>
+                                    <Input readOnly value={formData.pincode} placeholder="..." className="bg-slate-50 border-slate-100 font-black italic h-12 rounded-xl text-xs" />
+                                 </div>
+                              </div>
+
+                              <div className="space-y-3">
+                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Logistics Address</Label>
+                                 <Input 
+                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black px-6 text-sm transition-all"
+                                    value={formData.pickupLocation}
+                                    placeholder="Door no, Street, Landmark..."
+                                    onChange={(e) => updateFormData("pickupLocation", e.target.value)}
+                                 />
+                                 <p className="text-[10px] font-bold text-slate-400 italic">This will be shown to the approved NGO only.</p>
+                              </div>
+
+                              <div className="p-6 bg-orange-50/50 rounded-3xl border border-orange-100/50 mt-10">
+                                 <div className="flex gap-4">
+                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-100">
+                                       <Heart className="w-5 h-5 fill-orange-600" />
+                                    </div>
+                                    <div className="flex-grow">
+                                       <h4 className="text-xs font-black uppercase tracking-widest text-orange-900 leading-none mb-1">Impact Preview</h4>
+                                       <p className="text-[11px] font-bold text-orange-700/70">Your {formData.quantity || 0} servings will nourish a small community hub in {formData.city || "your area"}.</p>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     )}
+                  </motion.div>
+               </AnimatePresence>
+
+               {/* Button Group */}
+               <div className="pt-12 mt-auto pb-8 flex items-center gap-4">
+                  {currentStep > 0 && (
+                     <Button 
+                        variant="ghost" 
+                        onClick={prevStep}
+                        className="h-14 px-8 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-400"
+                     >
+                        <ChevronLeft className="w-4 h-4 mr-2" /> Back
+                     </Button>
+                  )}
+                  
+                  {currentStep < steps.length - 1 ? (
+                     <Button 
+                        onClick={nextStep}
+                        disabled={!isStepValid()}
+                        className="flex-grow h-14 rounded-2xl bg-slate-900 text-white font-black hover:bg-orange-600 transition-all shadow-xl active:scale-95 group/next"
+                     >
+                        <span className="uppercase tracking-widest text-xs">Continue to {steps[currentStep+1].title}</span>
+                        <ChevronRight className="w-4 h-4 ml-2 group-hover/next:translate-x-1 transition-transform" />
+                     </Button>
+                  ) : (
+                     <Button 
+                        onClick={handleSubmit}
+                        disabled={!isStepValid() || isSubmitting || uploadingImage}
+                        className="flex-grow h-14 rounded-2xl bg-orange-600 text-white font-black hover:bg-slate-900 transition-all shadow-2xl shadow-orange-100 active:scale-95 italic text-lg"
+                     >
+                        {isSubmitting ? (
+                           <div className="flex items-center gap-3">
+                              <Loader2 className="w-5 h-5 animate-spin" /> Post Now...
+                           </div>
+                        ) : (
+                           <div className="flex items-center gap-2">
+                              Launch Donation <Check className="w-5 h-5" strokeWidth={3} />
+                           </div>
+                        )}
+                     </Button>
+                  )}
+               </div>
+            </div>
+         </div>
+
+         {/* MAP PART - STATIC/SIDE */}
+         <div className="hidden lg:block flex-grow relative bg-slate-100">
+            <div className="absolute inset-0 z-0">
+               <LocationPicker 
+                  onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
+                     setFormData(prev => ({
+                        ...prev,
+                        pickupLocation: data.address,
+                        city: data.city,
+                        state: data.state,
+                        district: data.district,
+                        pincode: data.pincode,
+                        latitude: data.latitude,
+                        longitude: data.longitude
+                     }));
+                     toast.success(`Success! Pin set at ${data.city}`);
+                  }}
+               />
+            </div>
+
+            {/* Float Info */}
+            <div className="absolute top-10 right-10 z-10 w-64 animate-in fade-in slide-in-from-right-8 duration-700">
+               <Card className="rounded-[2.5rem] border-0 shadow-2xl shadow-slate-900/10 overflow-hidden bg-white/90 backdrop-blur-md">
+                  <CardContent className="p-8">
+                     <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center text-white mb-6 shadow-lg shadow-orange-100">
+                        <MapPin className="w-5 h-5" />
+                     </div>
+                     <h3 className="font-black text-sm tracking-tight mb-2">Pin Pickup Point</h3>
+                     <p className="text-[11px] font-bold text-slate-400 leading-relaxed uppercase tracking-wider">Help our pickup partners find you faster by pinning exactly where items are.</p>
+                  </CardContent>
+               </Card>
+            </div>
+
+            {/* Overlay if not in Step 2 */}
+            {currentStep !== 2 && (
+               <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] transition-all pointer-events-none" />
+            )}
+         </div>
+
+         {/* Mobile Map Button if on mobile in step 2 */}
+         {currentStep === 2 && (
+            <div className="lg:hidden absolute bottom-24 right-6 left-6 h-64 bg-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white">
+               <LocationPicker 
+                  onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
+                     setFormData(prev => ({
+                        ...prev,
+                        pickupLocation: data.address,
+                        city: data.city,
+                        state: data.state,
+                        district: data.district,
+                        pincode: data.pincode,
+                        latitude: data.latitude,
+                        longitude: data.longitude
+                     }));
+                  }}
+               />
+            </div>
+         )}
+      </div>
+    </div>
+  );
+}

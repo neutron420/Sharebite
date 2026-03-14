@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const donationSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  quantity: z.number().int().positive("Quantity must be positive"),
+  description: z.string().optional().or(z.literal("")),
+  quantity: z.coerce.number().int().positive("Quantity must be positive"),
   category: z.enum([
     "VEG",
     "NON_VEG",
@@ -26,9 +26,12 @@ export const donationSchema = z.object({
   }),
   pickupLocation: z.string().min(5, "Pickup location must be at least 5 characters"),
   city: z.string().min(2, "City must be at least 2 characters"),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
-  weight: z.number().nonnegative("Weight cannot be negative").optional(),
+  state: z.string().optional(),
+  district: z.string().optional(),
+  pincode: z.string().optional(),
+  latitude: z.coerce.number().optional(),
+  longitude: z.coerce.number().optional(),
+  weight: z.coerce.number().nonnegative("Weight cannot be negative").optional(),
   imageUrl: z.string().url().optional().or(z.literal("")),
 });
 

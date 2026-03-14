@@ -38,6 +38,7 @@ async function publicUploadHandler(request: Request) {
     return NextResponse.json({
       presignedUrl,
       publicUrl,
+      url: publicUrl,
       key,
     });
   } catch (error) {

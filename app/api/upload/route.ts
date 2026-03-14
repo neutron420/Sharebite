@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       presignedUrl,
       publicUrl,
+      url: publicUrl,
       key,
     });
   } catch (error) {
