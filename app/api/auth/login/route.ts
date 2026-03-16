@@ -35,6 +35,28 @@ async function loginHandler(request: Request) {
       );
     }
 
+    // Block Suspended/Terminated NGOs
+    if (user.role === "NGO") {
+      if (user.isLicenseSuspended) {
+        return NextResponse.json(
+          { error: "Your account has been permanently terminated due to critical violations." },
+          { status: 403 }
+        );
+      }
+
+      if (user.suspensionExpiresAt && new Date(user.suspensionExpiresAt) > new Date()) {
+        const expiresAt = new Date(user.suspensionExpiresAt).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        });
+        return NextResponse.json(
+          { error: `Your account is currently suspended until ${expiresAt} due to platform violations.` },
+          { status: 403 }
+        );
+      }
+    }
+
     // Create session token
     const token = await signToken({
       userId: user.id,

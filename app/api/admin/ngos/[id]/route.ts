@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/audit";
 import { withSecurity } from "@/lib/api-handler";
+import { getSession } from "@/lib/auth";
 
 const NGO_SELECT = {
   id: true,
@@ -69,9 +70,12 @@ async function updateNgoHandler(
     const body = await request.json();
     const { isVerified, action, reason } = body;
 
-    // We assume withSecurity or Middleware handles initial Admin check
-    // But we need session for Audit logs
-    const session = request.headers.get("x-user-id"); // Injected by some wrappers or logic
+    const session = await getSession({ request });
+    const adminId = session?.userId;
+
+    if (!adminId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     // Handle normal verification toggle
     if (action === undefined && typeof isVerified === "boolean") {
@@ -92,7 +96,7 @@ async function updateNgoHandler(
       });
 
       await createAuditLog({
-        adminId: "ADMIN_SYSTEM", // Ideally passed from wrapper
+        adminId,
         action: isVerified ? "VERIFY_NGO" : "UNVERIFY_NGO",
         details: `${isVerified ? 'Verified' : 'Unverified'} NGO: ${id}`
       });
@@ -145,7 +149,7 @@ async function updateNgoHandler(
           userId: id,
           level: strikeLevel > 3 ? 3 : strikeLevel,
           reason: reason || "Mischievous activity",
-          adminId: "ADMIN_SYSTEM"
+          adminId
         }
       }));
 
@@ -167,7 +171,7 @@ async function updateNgoHandler(
       });
 
       await createAuditLog({
-        adminId: "ADMIN_SYSTEM",
+        adminId,
         action: "ISSUE_STRIKE",
         details: `Issued Strike Level ${strikeLevel} to NGO ${ngo.name} (${id}). Reason: ${reason}`
       });
@@ -179,30 +183,31 @@ async function updateNgoHandler(
     }
 
     if (action === "UNBLOCK") {
-      const [updatedUser] = await prisma.$transaction([
-        prisma.user.update({
-          where: { id },
-          data: {
-            strikeCount: 0,
-            suspensionExpiresAt: null,
-            isLicenseSuspended: false,
-            isVerified: true
-          },
-          select: NGO_SELECT
-        }),
-        prisma.report.updateMany({
-          where: { ngoId: id, status: "PENDING" },
-          data: { status: "RESOLVED" }
-        }),
-        prisma.violation.create({
-          data: {
-            userId: id,
-            level: 0,
-            reason: reason || "Penalty lifted by admin",
-            adminId: "ADMIN_SYSTEM"
-          }
-        })
-      ]);
+      // Execute sequentially to avoid transaction timeout (P2028)
+      const updatedUser = await prisma.user.update({
+        where: { id },
+        data: {
+          strikeCount: 0,
+          suspensionExpiresAt: null,
+          isLicenseSuspended: false,
+          isVerified: true
+        },
+        select: NGO_SELECT
+      });
+
+      await prisma.report.updateMany({
+        where: { ngoId: id, status: "PENDING" },
+        data: { status: "RESOLVED" }
+      });
+
+      await prisma.violation.create({
+        data: {
+          userId: id,
+          level: 0,
+          reason: reason || "Penalty lifted by admin",
+          adminId
+        }
+      });
 
       await createNotification({
         userId: id,
@@ -213,7 +218,7 @@ async function updateNgoHandler(
       });
 
       await createAuditLog({
-        adminId: "ADMIN_SYSTEM",
+        adminId,
         action: "RESTORE_NGO",
         details: `Restored NGO account: ${id}. Reason: ${reason || "Admin manual restore"}`
       });

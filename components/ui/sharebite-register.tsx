@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { Eye, EyeOff, ArrowRight, Utensils } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, ShieldCheck, Loader2, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
+// ─── Animated Dot Map ───
 type RoutePoint = { x: number; y: number; delay: number };
 
 const DotMap = () => {
@@ -80,46 +81,20 @@ const DotMap = () => {
         const progress = Math.min(elapsed / 3, 1);
         const x = route.start.x + (route.end.x - route.start.x) * progress;
         const y = route.start.y + (route.end.y - route.start.y) * progress;
-
-        ctx!.beginPath();
-        ctx!.moveTo(route.start.x, route.start.y);
-        ctx!.lineTo(x, y);
-        ctx!.strokeStyle = route.color;
-        ctx!.lineWidth = 1.5;
-        ctx!.stroke();
-
-        ctx!.beginPath();
-        ctx!.arc(route.start.x, route.start.y, 3, 0, Math.PI * 2);
-        ctx!.fillStyle = route.color;
-        ctx!.fill();
-
-        ctx!.beginPath();
-        ctx!.arc(x, y, 3, 0, Math.PI * 2);
-        ctx!.fillStyle = "#f97316";
-        ctx!.fill();
-
-        ctx!.beginPath();
-        ctx!.arc(x, y, 6, 0, Math.PI * 2);
-        ctx!.fillStyle = "rgba(249, 115, 22, 0.4)";
-        ctx!.fill();
-
-        if (progress === 1) {
-          ctx!.beginPath();
-          ctx!.arc(route.end.x, route.end.y, 3, 0, Math.PI * 2);
-          ctx!.fillStyle = route.color;
-          ctx!.fill();
-        }
+        ctx!.beginPath(); ctx!.moveTo(route.start.x, route.start.y); ctx!.lineTo(x, y);
+        ctx!.strokeStyle = route.color; ctx!.lineWidth = 1.5; ctx!.stroke();
+        ctx!.beginPath(); ctx!.arc(route.start.x, route.start.y, 3, 0, Math.PI * 2); ctx!.fillStyle = route.color; ctx!.fill();
+        ctx!.beginPath(); ctx!.arc(x, y, 3, 0, Math.PI * 2); ctx!.fillStyle = "#f97316"; ctx!.fill();
+        ctx!.beginPath(); ctx!.arc(x, y, 6, 0, Math.PI * 2); ctx!.fillStyle = "rgba(249,115,22,0.4)"; ctx!.fill();
+        if (progress === 1) { ctx!.beginPath(); ctx!.arc(route.end.x, route.end.y, 3, 0, Math.PI * 2); ctx!.fillStyle = route.color; ctx!.fill(); }
       });
     }
 
     function animate() {
-      drawDots();
-      drawRoutes();
-      const currentTime = (Date.now() - startTime) / 1000;
-      if (currentTime > 15) startTime = Date.now();
+      drawDots(); drawRoutes();
+      if ((Date.now() - startTime) / 1000 > 15) startTime = Date.now();
       animationFrameId = requestAnimationFrame(animate);
     }
-
     animate();
     return () => cancelAnimationFrame(animationFrameId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,10 +107,8 @@ const DotMap = () => {
   );
 };
 
-const inputClass =
-  "flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
-
 export default function ShareBiteRegister() {
+  const router = useRouter();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState("");
@@ -178,8 +151,7 @@ export default function ShareBiteRegister() {
         return;
       }
 
-      // Redirect to login after successful registration
-      window.location.href = "/admin/login";
+      router.push("/admin/login");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -187,93 +159,116 @@ export default function ShareBiteRegister() {
     }
   };
 
+  const inputClass =
+    "flex h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all";
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-orange-50 to-amber-100 p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-5xl overflow-hidden rounded-2xl flex bg-white shadow-xl"
       >
-        {/* Left side - Map */}
-        <div className="hidden lg:block w-2/5 relative overflow-hidden border-r border-orange-100">
-          <div className="absolute inset-0 bg-linear-to-br from-orange-50 to-amber-100">
+        {/* Left side - Animated Dot Map */}
+        <div className="hidden lg:flex w-2/5 relative overflow-hidden border-r border-orange-100 flex-col">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-100">
             <DotMap />
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-10">
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-                className="mb-6"
-              >
-                <div className="h-14 w-14 rounded-full bg-linear-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-200">
-                  <Utensils className="text-white h-7 w-7" />
-                </div>
-              </motion.div>
-              <motion.h2
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.5 }}
-                className="text-3xl font-bold mb-2 text-center text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-amber-600"
-              >
-                ShareBite
-              </motion.h2>
-              <motion.p
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-                className="text-sm text-center text-gray-600 max-w-xs"
-              >
-                Admin portal — manage donations, users, and keep the platform running smoothly
-              </motion.p>
-            </div>
+          </div>
+          <div className="relative z-10 flex flex-col items-center justify-center h-full p-8">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mb-6"
+            >
+              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-xl shadow-orange-200 rotate-3">
+                <ShieldCheck className="text-white h-8 w-8" />
+              </div>
+            </motion.div>
+
+            <motion.h2
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="text-3xl font-black mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600 tracking-tight"
+            >
+              ShareBite Admin
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="text-sm text-center text-gray-500 max-w-xs leading-relaxed"
+            >
+              Command center for managing donations, users, NGOs, and keeping the platform running at full speed
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="mt-8 flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-orange-100"
+            >
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Admin Access Portal</span>
+            </motion.div>
           </div>
         </div>
 
         {/* Right side - Register Form */}
-        <div className="w-full lg:w-3/5 p-8 md:p-10 flex flex-col justify-center bg-white max-h-screen overflow-y-auto">
+        <div className="w-full lg:w-3/5 p-8 md:p-10 flex flex-col justify-center bg-white">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">Create Admin Account</h1>
-            <p className="text-gray-500 mb-6">Fill in your details to set up an admin account</p>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="lg:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
+                <ShieldCheck className="text-white h-5 w-5" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Create Admin Account</h1>
+            </div>
+            <p className="text-gray-500 mb-7 text-sm">Set up your administrator credentials to manage ShareBite</p>
 
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-medium"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name & Email row */}
+              {/* Name & Email */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
                     Full Name <span className="text-orange-500">*</span>
                   </label>
                   <input
-                    id="name"
                     type="text"
                     value={form.name}
                     onChange={(e) => update("name", e.target.value)}
                     placeholder="John Doe"
                     required
+                    disabled={isLoading}
                     className={inputClass}
                   />
                 </div>
                 <div>
-                  <label htmlFor="reg-email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
                     Email <span className="text-orange-500">*</span>
                   </label>
                   <input
-                    id="reg-email"
                     type="email"
                     value={form.email}
                     onChange={(e) => update("email", e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder="admin@sharebite.org"
                     required
+                    disabled={isLoading}
                     className={inputClass}
                   />
                 </div>
@@ -281,55 +276,55 @@ export default function ShareBiteRegister() {
 
               {/* Password */}
               <div>
-                <label htmlFor="reg-password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
                   Password <span className="text-orange-500">*</span>
                 </label>
                 <div className="relative">
                   <input
-                    id="reg-password"
                     type={isPasswordVisible ? "text" : "password"}
                     value={form.password}
                     onChange={(e) => update("password", e.target.value)}
                     placeholder="Min 6 characters"
                     required
                     minLength={6}
-                    className={cn(inputClass, "pr-10")}
+                    disabled={isLoading}
+                    className={`${inputClass} pr-10`}
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-gray-400 hover:text-gray-600 transition-colors"
                     onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                   >
-                    {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {isPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              {/* Phone & City row */}
+              {/* Phone & City */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
                     Phone Number
                   </label>
                   <input
-                    id="phone"
                     type="tel"
                     value={form.phoneNumber}
                     onChange={(e) => update("phoneNumber", e.target.value)}
                     placeholder="+91 9876543210"
+                    disabled={isLoading}
                     className={inputClass}
                   />
                 </div>
                 <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
                     City
                   </label>
                   <input
-                    id="city"
                     type="text"
                     value={form.city}
                     onChange={(e) => update("city", e.target.value)}
                     placeholder="Mumbai"
+                    disabled={isLoading}
                     className={inputClass}
                   />
                 </div>
@@ -337,53 +332,60 @@ export default function ShareBiteRegister() {
 
               {/* Address */}
               <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
                   Address
                 </label>
                 <input
-                  id="address"
                   type="text"
                   value={form.address}
                   onChange={(e) => update("address", e.target.value)}
                   placeholder="Full address"
+                  disabled={isLoading}
                   className={inputClass}
                 />
               </div>
 
-              {/* Submit */}
+              {/* Submit Button */}
               <motion.div
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 onHoverStart={() => setIsHovered(true)}
                 onHoverEnd={() => setIsHovered(false)}
-                className="pt-2"
+                className="pt-3"
               >
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={cn(
-                    "w-full relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium text-white py-2.5 px-4 bg-linear-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-                    isHovered ? "shadow-lg shadow-orange-200" : ""
-                  )}
+                  className={`w-full relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl text-sm font-bold text-white py-3 px-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${isHovered ? "shadow-lg shadow-orange-200" : "shadow-md"}`}
                 >
-                  <span className="flex items-center justify-center">
-                    {isLoading ? "Creating account..." : "Create account"}
-                    {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
+                  <span className="flex items-center justify-center gap-2">
+                    {isLoading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Creating account...</>
+                    ) : (
+                      <><UserPlus className="h-4 w-4" /> Create Admin Account</>
+                    )}
                   </span>
                   {isHovered && (
                     <motion.span
                       initial={{ left: "-100%" }}
                       animate={{ left: "100%" }}
                       transition={{ duration: 1, ease: "easeInOut" }}
-                      className="absolute top-0 bottom-0 left-0 w-20 bg-linear-to-r from-transparent via-white/30 to-transparent"
+                      className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                       style={{ filter: "blur(8px)" }}
                     />
                   )}
                 </button>
               </motion.div>
 
-              <div className="text-center mt-4">
-                <a href="/admin/login" className="text-orange-600 hover:text-orange-700 text-sm transition-colors">
+              {/* Security Badge */}
+              <div className="flex items-center gap-2 justify-center pt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+                <span className="text-[10px] uppercase font-bold tracking-widest text-gray-300">Secured admin registration</span>
+              </div>
+
+              {/* Login Link */}
+              <div className="text-center pt-2">
+                <a href="/admin/login" className="text-orange-600 hover:text-orange-700 text-sm font-medium transition-colors">
                   Already have an account? Sign in
                 </a>
               </div>

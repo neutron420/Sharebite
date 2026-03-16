@@ -17,6 +17,7 @@ import {
   Loader2,
   Calendar,
   AlertCircle,
+  AlertTriangle,
   Bell,
   ShieldCheck,
   MapPin,
@@ -155,6 +156,7 @@ export default function DonorDashboard() {
             <SidebarItem icon={<MapPin />} label="NGO Map" link="/donor/ngos" />
            <SidebarItem icon={<Plus />} label="New Post" link="/donor/donate" />
            <SidebarItem icon={<Bell />} label="Alerts" link="/donor/notifications" />
+           <SidebarItem icon={<AlertTriangle />} label="Complaints" link="/donor/complaints" />
         </nav>
 
         <button 

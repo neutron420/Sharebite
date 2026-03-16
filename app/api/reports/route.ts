@@ -98,21 +98,36 @@ async function postReportHandler(request: Request) {
 
 async function getReportsHandler(request: Request) {
   try {
+    const session = await getSession({ request });
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status") || "PENDING";
+    const status = searchParams.get("status");
+
+    // Donors see only their own reports; Admins see all
+    const where: any = {};
+    if (session.role === "DONOR") {
+      where.reporterId = session.userId;
+    }
+    if (status && status !== "ALL") {
+      where.status = status;
+    }
 
     const reports = await prisma.report.findMany({
-      where: { status },
-      take: 20, // Added pagination
+      where,
+      take: 50,
       include: {
         reporter: { select: { name: true, email: true } },
-        ngo: { select: { id: true, name: true, email: true } }
+        ngo: { select: { id: true, name: true, email: true, imageUrl: true } }
       },
       orderBy: { createdAt: "desc" }
     });
 
     return NextResponse.json(reports);
   } catch (error) {
+    console.error("Get reports error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

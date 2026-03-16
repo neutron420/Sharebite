@@ -3,7 +3,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { Eye, EyeOff, ArrowRight, Utensils } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+
+// Helper function to merge class names
+const cn = (...classes: string[]) => {
+  return classes.filter(Boolean).join(" ");
+};
 
 type RoutePoint = {
   x: number;
@@ -126,7 +131,7 @@ const DotMap = () => {
 
     animate();
     return () => cancelAnimationFrame(animationFrameId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dimensions]);
 
   return (
@@ -136,13 +141,22 @@ const DotMap = () => {
   );
 };
 
-export default function ShareBiteLogin() {
+interface ShareBiteLoginProps {
+  /** If true, shows the role selector tabs (Donor / NGO / Rider). If false (admin login), hides them. */
+  showRoleSelector?: boolean;
+  /** Default role to pre-select */
+  defaultRole?: "DONOR" | "NGO" | "RIDER";
+}
+
+export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = "DONOR" }: ShareBiteLoginProps) {
+  const router = useRouter();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER">(defaultRole);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,21 +173,16 @@ export default function ShareBiteLogin() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Login failed");
+        setError(data.error || "Login failed. Please check your credentials.");
         return;
       }
 
-      // Redirect based on role
       const role = data.user?.role;
-      if (role === "ADMIN") {
-        window.location.href = "/admin";
-      } else if (role === "DONOR") {
-        window.location.href = "/donor";
-      } else if (role === "NGO") {
-        window.location.href = "/ngo";
-      } else {
-        window.location.href = "/";
-      }
+      if (role === "ADMIN") router.push("/admin");
+      else if (role === "DONOR") router.push("/donor");
+      else if (role === "NGO") router.push("/ngo");
+      else if (role === "RIDER") router.push("/rider");
+      else router.push("/");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -181,17 +190,23 @@ export default function ShareBiteLogin() {
     }
   };
 
+  const roleConfig = {
+    DONOR: { title: "Welcome Back, Hero", subtitle: "Securely access your donor portal and track your impact." },
+    NGO: { title: "Ops Command Center", subtitle: "Manage your logistics and rescue surplus food nearby." },
+    RIDER: { title: "Rider Dispatch", subtitle: "Accept missions and deliver hope across your city." },
+  };
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-linear-to-br from-orange-50 to-amber-100 p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-4xl overflow-hidden rounded-2xl flex bg-white shadow-xl"
       >
-        {/* Left side - Map */}
-        <div className="hidden md:block w-1/2 h-150 relative overflow-hidden border-r border-orange-100">
-          <div className="absolute inset-0 bg-linear-to-br from-orange-50 to-amber-100">
+        {/* Left side - Animated Dot Map */}
+        <div className="hidden md:block w-1/2 h-[600px] relative overflow-hidden border-r border-orange-100">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-100">
             <DotMap />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-10">
               <motion.div
@@ -200,7 +215,7 @@ export default function ShareBiteLogin() {
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="mb-6"
               >
-                <div className="h-14 w-14 rounded-full bg-linear-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-200">
+                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-200">
                   <Utensils className="text-white h-7 w-7" />
                 </div>
               </motion.div>
@@ -208,7 +223,7 @@ export default function ShareBiteLogin() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.5 }}
-                className="text-3xl font-bold mb-2 text-center text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-amber-600"
+                className="text-3xl font-bold mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600"
               >
                 ShareBite
               </motion.h2>
@@ -231,13 +246,40 @@ export default function ShareBiteLogin() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">Welcome back</h1>
-            <p className="text-gray-500 mb-8">Sign in to your account</p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">
+              {roleConfig[loginRole].title}
+            </h1>
+            <p className="text-gray-500 mb-6 text-sm">{roleConfig[loginRole].subtitle}</p>
+
+            {/* Role Selector Tabs */}
+            {showRoleSelector && (
+              <div className="flex bg-orange-50 p-1.5 rounded-xl mb-6">
+                {(["DONOR", "NGO", "RIDER"] as const).map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setLoginRole(role)}
+                    className={cn(
+                      "flex-1 py-2.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-all duration-200",
+                      loginRole === role
+                        ? "bg-white text-orange-600 shadow-sm"
+                        : "text-gray-400 hover:text-gray-600"
+                    )}
+                  >
+                    {role === "NGO" ? "NGO Hub" : role === "RIDER" ? "Rider" : "Donor"}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -252,6 +294,7 @@ export default function ShareBiteLogin() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email address"
                   required
+                  disabled={isLoading}
                   className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
@@ -268,6 +311,7 @@ export default function ShareBiteLogin() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
+                    disabled={isLoading}
                     className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 pr-10 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <button
@@ -291,7 +335,7 @@ export default function ShareBiteLogin() {
                   type="submit"
                   disabled={isLoading}
                   className={cn(
-                    "w-full relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium text-white py-2.5 px-4 bg-linear-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+                    "w-full relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium text-white py-2.5 px-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
                     isHovered ? "shadow-lg shadow-orange-200" : ""
                   )}
                 >
@@ -304,7 +348,7 @@ export default function ShareBiteLogin() {
                       initial={{ left: "-100%" }}
                       animate={{ left: "100%" }}
                       transition={{ duration: 1, ease: "easeInOut" }}
-                      className="absolute top-0 bottom-0 left-0 w-20 bg-linear-to-r from-transparent via-white/30 to-transparent"
+                      className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent"
                       style={{ filter: "blur(8px)" }}
                     />
                   )}
@@ -312,7 +356,7 @@ export default function ShareBiteLogin() {
               </motion.div>
 
               <div className="text-center mt-6 space-y-2">
-                <a href="/admin/register" className="text-orange-600 hover:text-orange-700 text-sm transition-colors block">
+                <a href={showRoleSelector ? "/register" : "/admin/register"} className="text-orange-600 hover:text-orange-700 text-sm transition-colors block">
                   Don&apos;t have an account? Register
                 </a>
               </div>
