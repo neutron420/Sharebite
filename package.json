@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.41",
+    "@ai-sdk/react": "^3.0.118",
     "@aws-sdk/client-s3": "^3.1007.0",
     "@aws-sdk/s3-request-presigner": "^3.1007.0",
     "@emotion/react": "^11.14.0",
@@ -24,6 +26,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "ai": "^6.0.116",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -37,6 +40,7 @@
     "mapbox-gl": "^3.20.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
+    "openai": "^6.29.0",
     "prisma": "^7.5.0",
     "radix-ui": "^1.4.3",
     "react": "19.2.3",

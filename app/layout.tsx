@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 };
 
 import { Toaster } from "sonner";
+import { FloatingAiChat } from "@/components/ai-chat/floating-chat";
 
 export default function RootLayout({
   children,
@@ -34,6 +35,7 @@ export default function RootLayout({
       >
         {children}
         <Toaster position="top-center" richColors />
+        <FloatingAiChat />
       </body>
     </html>
   );
