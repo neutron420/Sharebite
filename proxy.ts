@@ -32,36 +32,57 @@ export default async function proxy(request: NextRequest) {
     return new NextResponse(null, { status: 204, headers: response.headers });
   }
 
-  // 2. Global Auth Protection for /api/admin
-  if (pathname.startsWith("/api/admin")) {
-    // Admin routes check admin_session cookie first, then fallback to session
-    const session = request.cookies.get("admin_session")?.value || request.cookies.get("session")?.value;
-
-    if (!session) {
-      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-    }
-
-    try {
-      const { payload } = await jwtVerify(session, JWT_SECRET);
-      
-      // Strict Admin Check at Proxy Level
-      if (payload.role !== "ADMIN") {
-        return NextResponse.json({ error: "Forbidden: Admin access only" }, { status: 403 });
-      }
-    } catch (error) {
-      return NextResponse.json({ error: "Invalid or expired session" }, { status: 401 });
-    }
-  }
-
-  // 3. General Auth check for protected routes (non-public)
-  const protectedPaths = ["/api/donor", "/api/ngo", "/api/chat", "/api/notifications", "/api/requests", "/api/reports"];
+  // 2. Global Auth Protection
+  const protectedPaths = ["/api/admin", "/api/donor", "/api/ngo", "/api/rider", "/api/chat", "/api/notifications", "/api/requests", "/api/reports"];
   const isProtected = protectedPaths.some(p => pathname.startsWith(p));
 
   if (isProtected) {
-    // Check both cookies for non-admin protected routes
-    const session = request.cookies.get("session")?.value || request.cookies.get("admin_session")?.value;
-    if (!session) {
+    let prioritizedCookie = "";
+    if (pathname.startsWith("/api/admin")) prioritizedCookie = "admin_session";
+    else if (pathname.startsWith("/api/donor")) prioritizedCookie = "donor_session";
+    else if (pathname.startsWith("/api/ngo")) prioritizedCookie = "ngo_session";
+    else if (pathname.startsWith("/api/rider")) prioritizedCookie = "rider_session";
+
+    const allCookieNames = ["admin_session", "donor_session", "ngo_session", "rider_session", "session"];
+    const tokensToCheck: string[] = [];
+
+    // Prioritize the cookie matching the route
+    if (prioritizedCookie) {
+      const pToken = request.cookies.get(prioritizedCookie)?.value;
+      if (pToken) tokensToCheck.push(pToken);
+    }
+
+    // Add remaining cookies as fallbacks
+    for (const name of allCookieNames) {
+      if (name !== prioritizedCookie) {
+        const token = request.cookies.get(name)?.value;
+        if (token) tokensToCheck.push(token);
+      }
+    }
+
+    let isValid = false;
+    let decodedRole = "";
+
+    for (const token of tokensToCheck) {
+      try {
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+        if (payload) {
+          isValid = true;
+          decodedRole = payload.role as string;
+          break;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (!isValid) {
       return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    // Strict Admin Check at Proxy Level
+    if (pathname.startsWith("/api/admin") && decodedRole !== "ADMIN") {
+      return NextResponse.json({ error: "Forbidden: Admin access only" }, { status: 403 });
     }
   }
 

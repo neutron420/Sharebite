@@ -53,9 +53,6 @@ async function loginHandler(request: Request) {
       path: "/",
     } as const;
 
-    // Keep other role cookies so users can switch dashboards without losing prior role sessions.
-
-    cookieStore.set("session", token, cookieOptions);
     cookieStore.set(cookieName, token, cookieOptions);
 
     // Remove password from response
