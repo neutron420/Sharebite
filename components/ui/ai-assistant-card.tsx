@@ -4,6 +4,8 @@ import {
   SparklesIcon,
   X,
   SendHorizontal,
+  Phone,
+  Mail,
   HandHeart,
   Store,
   Truck,
@@ -198,31 +200,52 @@ export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
           )}
         </div>
 
-        <div className="relative mt-auto flex items-center gap-2 p-3 border-t bg-background">
-          <div className="relative flex-1">
-            <Textarea
-              placeholder="Type a message..."
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              className="min-h-[44px] max-h-[120px] resize-none border-none py-3 ps-4 pe-12 shadow-none focus-visible:ring-0 bg-muted/30 rounded-2xl text-sm"
-              rows={1}
-            />
-            
-            <Button
-              className="absolute end-1.5 bottom-1.5 size-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all"
-              size="icon"
-              type="submit"
-              onClick={() => handleSubmit()}
-              disabled={!input.trim() || isLoading}
-            >
-              <SendHorizontal className="size-4" />
-            </Button>
+        <div className="mt-auto border-t bg-background">
+          <div className="relative flex items-center gap-2 p-3">
+            <div className="relative flex-1">
+              <Textarea
+                placeholder="Type a message..."
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                className="min-h-[44px] max-h-[120px] resize-none border-none py-3 ps-4 pe-12 shadow-none focus-visible:ring-0 bg-muted/30 rounded-2xl text-sm"
+                rows={1}
+              />
+
+              <Button
+                className="absolute end-1.5 bottom-1.5 size-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all"
+                size="icon"
+                type="submit"
+                onClick={() => handleSubmit()}
+                disabled={!input.trim() || isLoading}
+              >
+                <SendHorizontal className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="px-4 pb-3 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <a
+                href="tel:+919002132340"
+                className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+              >
+                <Phone className="size-3.5 text-orange-600" />
+                +91 9002132340
+              </a>
+              <a
+                href="mailto:sharebite.support@gmail.com"
+                className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
+              >
+                <Mail className="size-3.5 text-orange-600" />
+                sharebite.support@gmail.com
+              </a>
+            </div>
           </div>
         </div>
       </CardContent>
