@@ -51,7 +51,6 @@ resource "aws_amplify_domain_association" "sharebite" {
   app_id      = aws_amplify_app.sharebite.id
   domain_name = var.domain_name
 
-  # https://master.example.com
   sub_domain {
     branch_name = aws_amplify_branch.master.branch_name
     prefix      = "master"
