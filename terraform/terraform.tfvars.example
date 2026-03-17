@@ -1,0 +1,13 @@
+aws_region     = "ap-south-1"
+project_name   = "sharebite"
+app_count      = 2
+database_url   = "YOUR_DATABASE_URL"
+redis_url      = "YOUR_REDIS_URL"
+jwt_secret     = "YOUR_JWT_SECRET"
+r2_account_id        = "YOUR_R2_ACCOUNT_ID"
+r2_access_key_id     = "YOUR_R2_ACCESS_KEY_ID"
+r2_secret_access_key = "YOUR_R2_SECRET_ACCESS_KEY"
+r2_bucket_name       = "sharebite"
+r2_public_domain     = "YOUR_R2_PUBLIC_DOMAIN"
+mapbox_token   = "YOUR_MAPBOX_TOKEN"
+openai_api_key = "YOUR_OPENAI_API_KEY"
