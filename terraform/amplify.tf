@@ -38,11 +38,6 @@ resource "aws_amplify_app" "sharebite" {
           - node_modules/**/*
   EOT
 
-  custom_rule {
-    source = "/<*>"
-    status = "404"
-    target = "/index.html"
-  }
 }
 
 resource "aws_amplify_branch" "master" {
