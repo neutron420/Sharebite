@@ -1,6 +1,6 @@
 resource "aws_amplify_app" "sharebite" {
-  name       = var.project_name
-  repository = var.github_repository_url
+  name         = var.project_name
+  repository   = var.github_repository_url
   access_token = var.github_access_token
 
   # Built-in environment variables
