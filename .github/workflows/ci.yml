@@ -35,7 +35,6 @@
 #           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 #           NEXT_PUBLIC_APP_URL: "https://sharebite.app"
 #           JWT_SECRET: "test-secret"
-#           # Mocking other envs to pass the build
 #           REDIS_URL: "rediss://localhost:6379"
 
 #   terraform-lint:

@@ -18,7 +18,25 @@ resource "aws_amplify_app" "sharebite" {
     NEXT_PUBLIC_APP_URL  = "https://master.${aws_amplify_app.sharebite.default_domain}"
   }
 
-  build_spec = file("../amplify.yml")
+  build_spec = <<-EOT
+    version: 1
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - npm ci
+            - npx prisma generate
+        build:
+          commands:
+            - npm run build
+      artifacts:
+        baseDirectory: .next
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+  EOT
 
   custom_rule {
     source = "/<*>"
