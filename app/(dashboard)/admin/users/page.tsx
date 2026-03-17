@@ -28,7 +28,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: "DONOR" | "NGO" | "ADMIN";
+  role: "DONOR" | "NGO" | "ADMIN" | "RIDER";
   isVerified: boolean;
   city: string | null;
   createdAt: string;
@@ -38,7 +38,9 @@ const ROLE_STYLES: Record<string, { bg: string; text: string; icon: typeof Users
   DONOR: { bg: "bg-orange-50", text: "text-orange-600", icon: Heart },
   NGO: { bg: "bg-blue-50", text: "text-blue-600", icon: Building2 },
   ADMIN: { bg: "bg-purple-50", text: "text-purple-600", icon: Shield },
+  RIDER: { bg: "bg-emerald-50", text: "text-emerald-600", icon: Users },
 };
+const DEFAULT_ROLE_STYLE = { bg: "bg-gray-100", text: "text-gray-600", icon: Users };
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
@@ -251,6 +253,7 @@ export default function UsersPage() {
               <option value="DONOR">Donors</option>
               <option value="NGO">NGOs</option>
               <option value="ADMIN">Admins</option>
+              <option value="RIDER">Riders</option>
             </select>
             <select
               value={verifiedFilter}
@@ -281,7 +284,7 @@ export default function UsersPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginated.map((u) => {
-                const roleStyle = ROLE_STYLES[u.role];
+                const roleStyle = ROLE_STYLES[u.role] ?? DEFAULT_ROLE_STYLE;
                 const RoleIcon = roleStyle.icon;
                 return (
                   <tr key={u.id} className="hover:bg-gray-50 transition-colors">
