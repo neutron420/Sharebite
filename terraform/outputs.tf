@@ -1,7 +1,11 @@
-output "alb_hostname" {
-  value = aws_lb.main.dns_name
+output "amplify_app_id" {
+  value = aws_amplify_app.sharebite.id
 }
 
-output "ecr_repository_url" {
-  value = aws_ecr_repository.app.repository_url
+output "amplify_default_domain" {
+  value = aws_amplify_app.sharebite.default_domain
+}
+
+output "amplify_custom_domain" {
+  value = var.domain_name
 }

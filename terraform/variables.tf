@@ -10,16 +10,20 @@ variable "project_name" {
   default     = "sharebite"
 }
 
-variable "container_port" {
-  description = "The port the container listens on"
-  type        = number
-  default     = 3000
+variable "github_repository_url" {
+  description = "The URL of the GitHub repository"
+  type        = string
 }
 
-variable "app_count" {
-  description = "Number of docker containers to run"
-  type        = number
-  default     = 2
+variable "github_access_token" {
+  description = "GitHub OAuth or Access Token for Amplify to read the repo"
+  type        = string
+  sensitive   = true
+}
+
+variable "domain_name" {
+  description = "Your custom domain name"
+  type        = string
 }
 
 variable "database_url" {

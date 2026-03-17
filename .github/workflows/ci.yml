@@ -1,0 +1,53 @@
+# name: Sharebite CI/CD Workflow
+
+# on:
+#   push:
+#     branches: [ master, ritesh, deepak, soumendra, souvik ]
+#   pull_request:
+#     branches: [ master ]
+
+# jobs:
+#   build-and-verify:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '20'
+#           cache: 'npm'
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Prisma Generate
+#         run: npx prisma generate
+
+#       - name: Lint check
+#         run: npm run lint
+
+#       - name: Next.js Build Check
+#         run: npm run build
+#         env:
+#           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+#           NEXT_PUBLIC_APP_URL: "https://sharebite.app"
+#           REDIS_URL: "rediss://localhost:6379"
+#           JWT_SECRET: "test-secret"
+
+#   terraform-lint:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout Code
+#         uses: actions/checkout@v4
+
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+
+#       - name: Terraform Init
+#         run: cd terraform && terraform init -backend=false
+
+#       - name: Terraform Validate
+#         run: cd terraform && terraform validate
