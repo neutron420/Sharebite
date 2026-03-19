@@ -31,6 +31,16 @@ import { useRouter } from "next/navigation";
 import DonationList from "@/components/ui/donation-list";
 import { Badge } from "@/components/ui/badge";
 import LiveRiderMap from "@/components/ui/live-rider-map";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { cn } from "@/lib/utils";
 
 interface DonorStats {
   totalDonations: number;
@@ -50,6 +60,8 @@ export default function DonorDashboard() {
   const [liveOps, setLiveOps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("Hero");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
 
   useEffect(() => {
     async function fetchData() {
@@ -87,7 +99,7 @@ export default function DonorDashboard() {
         const myDonationsRes = await fetch("/api/donations");
         if (myDonationsRes.ok) {
             const data = await myDonationsRes.json();
-            setRecentItems(data.slice(0, 5));
+            setRecentItems(data);
             
             // Extract "Live Ops" (Approved requests that have a PIN and aren't completed)
             const active = data.filter((d: any) => 
@@ -124,9 +136,9 @@ export default function DonorDashboard() {
   };
 
   const statCards = [
-    { label: "Food Rescued", value: `${stats?.totalWeightDonated || 0} kg`, icon: <UtensilsCrossed className="w-5 h-5" />, trend: "Impact Live", colorClass: "text-orange-600 group-hover:text-white" },
-    { label: "Active Shares", value: stats?.activeDonations || 0, icon: <Users className="w-5 h-5" />, trend: "Active Hub", colorClass: "text-slate-900 group-hover:text-white" },
-    { label: "Karma Points", value: ((stats?.totalDonations || 0) * 150).toLocaleString(), icon: <TrendingUp className="w-5 h-5" />, trend: "Level 01", colorClass: "text-orange-600 group-hover:text-white" },
+    { label: "Food Rescued", value: `${stats?.totalWeightDonated || 0} kg`, icon: UtensilsCrossed, trend: "Impact Live", colorClass: "text-orange-600 group-hover:text-white" },
+    { label: "Active Shares", value: stats?.activeDonations || 0, icon: Users, trend: "Active Hub", colorClass: "text-slate-900 group-hover:text-white" },
+    { label: "Karma Points", value: ((stats?.totalDonations || 0) * 150).toLocaleString(), icon: TrendingUp, trend: "Level 01", colorClass: "text-orange-600 group-hover:text-white" },
   ];
 
   if (loading) {
@@ -137,40 +149,8 @@ export default function DonorDashboard() {
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-[#FCFCFD] text-slate-950 flex selection:bg-orange-100">
-      
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 border-r border-slate-100 bg-white z-50 flex flex-col items-center md:items-stretch py-10 px-4">
-        <div className="px-2 mb-16">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 font-black text-white text-xl">S</div>
-            <span className="hidden md:block text-xl font-black tracking-tighter">DONOR HUB</span>
-          </div>
-        </div>
-
-        <nav className="flex-grow space-y-2">
-           <SidebarItem icon={<LayoutDashboard />} label="Overview" active link="/donor" />
-           <SidebarItem icon={<History />} label="My History" link="/donor/donations" />
-            <SidebarItem icon={<MapPin />} label="NGO Map" link="/donor/ngos" />
-           <SidebarItem icon={<Plus />} label="New Post" link="/donor/donate" />
-           <SidebarItem icon={<Bell />} label="Alerts" link="/donor/notifications" />
-           <SidebarItem icon={<AlertTriangle />} label="Complaints" link="/donor/complaints" />
-        </nav>
-
-        <button 
-          onClick={handleSignOut}
-          className="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-orange-600 transition-colors font-bold text-sm"
-        >
-           <LogOut className="w-5 h-5" />
-           <span className="hidden md:block uppercase tracking-wider">Disconnect</span>
-        </button>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-grow pl-20 md:pl-64 pt-12 pb-24 px-6 md:px-12 bg-white">
-        <div className="max-w-6xl mx-auto space-y-12">
+    <div className="max-w-6xl mx-auto space-y-12">
           
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
@@ -201,7 +181,7 @@ export default function DonorDashboard() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {liveOps.map((donation, i) => {
-                    const approvedReq = donation.requests.find((r: any) => 
+                    const approvedReq = donation.requests?.find((r: any) => 
                       r.status === "APPROVED" || r.status === "ASSIGNED" || r.status === "ON_THE_WAY" || r.status === "COLLECTED"
                     );
                     const isTracking = approvedReq && approvedReq.riderId && (approvedReq.status === "ASSIGNED" || approvedReq.status === "ON_THE_WAY");
@@ -284,40 +264,87 @@ export default function DonorDashboard() {
             )}
           </AnimatePresence>
 
-          {/* Real-time Stats */}
+          {/* Real-time Stats Report Section */}
           <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {statCards.map((stat, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="p-8 rounded-[2.5rem] bg-white border border-slate-100 hover:border-orange-200 transition-all group relative overflow-hidden shadow-sm hover:shadow-xl hover:shadow-orange-50"
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50/50 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex items-center justify-between mb-8">
-                  <div className={`w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-orange-600 transition-colors duration-500 ${stat.colorClass} shadow-inner`}>
-                    {stat.icon}
+            {statCards.map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-8 rounded-[2.5rem] bg-white border border-slate-100 hover:border-orange-200 transition-all group relative overflow-hidden shadow-xl shadow-slate-200/20"
+                >
+                  <div className="flex items-center gap-6">
+                    <div className={`w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-orange-600 transition-all duration-500 ${stat.colorClass} shadow-inner shrink-0`}>
+                      <Icon className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-4xl font-black text-slate-950 tracking-tighter leading-none mb-1">{stat.value}</h3>
+                      <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">{stat.label}</p>
+                      <div className="mt-2 flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                         <span className="text-[10px] font-black uppercase text-green-600 tracking-widest">{stat.trend}</span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-orange-600 bg-orange-50 px-3 py-1 rounded-full">{stat.trend}</span>
-                </div>
-                <p className="text-slate-400 font-bold text-sm mb-1 uppercase tracking-widest leading-none">{stat.label}</p>
-                <h3 className="text-4xl font-black text-slate-950 tracking-tighter">{stat.value}</h3>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </section>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Recent Items */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="flex items-center justify-between px-2">
-                <h2 className="text-2xl font-black italic tracking-tighter">Mission Inventory</h2>
-                <Link href="/donor/donations" className="text-xs font-black uppercase tracking-widest text-slate-300 hover:text-orange-600 transition-colors">Archive</Link>
+            {/* Recent Items / Mission Inventory Report */}
+            <div className="lg:col-span-2 space-y-8">
+              <div className="flex items-center justify-between px-4 border-l-4 border-slate-950">
+                <div>
+                   <h2 className="text-3xl font-black italic tracking-tighter uppercase text-slate-950">Mission Audit Feed</h2>
+                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Comprehensive logs of all sharing operations</p>
+                </div>
+                <Link href="/donor/donations" className="px-5 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-all shadow-sm">Full Archive &rarr;</Link>
               </div>
 
-              <div className="h-[450px]">
+              <div className="space-y-4">
                 {recentItems.length > 0 ? (
-                  <DonationList donations={recentItems} className="rounded-[2.5rem] border-2 border-slate-100 shadow-xl shadow-orange-50/20 bg-white" />
+                  <>
+                    <DonationList donations={recentItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)} className="rounded-[2.5rem] border border-slate-100 shadow-xl shadow-orange-50/20 bg-white" />
+                    
+                    {recentItems.length > itemsPerPage && (
+                      <Pagination className="mt-6">
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              href="#" 
+                              onClick={(e) => { e.preventDefault(); if(currentPage > 1) setCurrentPage(currentPage - 1); }}
+                              className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                          
+                          {Array.from({ length: Math.ceil(recentItems.length / itemsPerPage) }).map((_, i) => (
+                            <PaginationItem key={i}>
+                              <PaginationLink 
+                                href="#" 
+                                onClick={(e) => { e.preventDefault(); setCurrentPage(i + 1); }}
+                                isActive={currentPage === i + 1}
+                                className="cursor-pointer"
+                              >
+                                {i + 1}
+                              </PaginationLink>
+                            </PaginationItem>
+                          ))}
+
+                          <PaginationItem>
+                            <PaginationNext 
+                              href="#" 
+                              onClick={(e) => { e.preventDefault(); if(currentPage < Math.ceil(recentItems.length / itemsPerPage)) setCurrentPage(currentPage + 1); }}
+                              className={currentPage === Math.ceil(recentItems.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    )}
+                  </>
                 ) : (
                   <div className="p-20 rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center text-center">
                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
@@ -359,24 +386,8 @@ export default function DonorDashboard() {
               </div>
             </div>
           </div>
-        </div>
-      </main>
     </div>
   );
 }
 
-function SidebarItem({ icon, label, active = false, link = "#" }: { icon: React.ReactNode, label: string, active?: boolean, link?: string }) {
-  return (
-    <Link 
-      href={link}
-      className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all group ${
-        active ? 'bg-orange-600 text-white shadow-lg shadow-orange-100' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
-      }`}
-    >
-      <div className={`flex justify-center items-center [&>svg]:w-6 [&>svg]:h-6 ${active ? 'text-white' : 'text-slate-400 group-hover:text-orange-600'}`}>
-        {icon}
-      </div>
-      <span className={`font-black text-[11px] tracking-tight uppercase hidden md:block ${active ? 'text-white' : 'group-hover:text-slate-900'}`}>{label}</span>
-    </Link>
-  );
-}
+

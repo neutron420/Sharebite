@@ -435,45 +435,47 @@ export default function RegisterPage() {
                 exit={{ opacity: 0, x: -30 }}
                 className="p-8 md:p-10 flex flex-col justify-center h-full"
               >
-                <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">Join ShareBite</h1>
-                <p className="text-gray-500 mb-6 text-sm">Select how you want to use the platform</p>
+                <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">Create Your Account</h1>
+                <p className="text-gray-500 mb-6 text-sm">Join the mission to reduce food waste</p>
 
-                <RadioGroup
-                  value={formData.role ?? ""}
-                  onValueChange={(v) => updateFormData("role", v as Role)}
-                  className="space-y-3"
-                >
-                  {[
-                    { value: "DONOR", label: "I'm a Donor", desc: "Restaurants, individuals, businesses", icon: <Heart className="w-5 h-5" /> },
-                    { value: "NGO", label: "I'm an NGO", desc: "Organizations distributing food", icon: <Building2 className="w-5 h-5" /> },
-                    { value: "RIDER", label: "I'm a Rider", desc: "Delivery heroes transporting food", icon: <Truck className="w-5 h-5" /> },
-                  ].map((role) => (
-                    <motion.div
-                      key={role.value}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
-                      onClick={() => updateFormData("role", role.value as Role)}
+                {/* Role Selector Tabs (matches Login Page) */}
+                <div className="flex bg-orange-50 p-1.5 rounded-xl mb-8">
+                  {(["DONOR", "NGO", "RIDER"] as const).map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => updateFormData("role", role)}
                       className={cn(
-                        "flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all",
-                        formData.role === role.value
-                          ? "border-orange-500 bg-orange-50/50 shadow-md shadow-orange-100"
-                          : "border-gray-100 hover:border-orange-200 bg-gray-50/30"
+                        "flex-1 py-2.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-all duration-200",
+                        formData.role === role
+                          ? "bg-white text-orange-600 shadow-sm"
+                          : "text-gray-400 hover:text-gray-600"
                       )}
                     >
-                      <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
-                        formData.role === role.value ? "bg-orange-600 text-white rotate-3" : "bg-white text-gray-300 border border-gray-100"
-                      )}>
-                        {role.icon}
-                      </div>
-                      <div className="flex-grow">
-                        <p className="font-bold text-base text-gray-800">{role.label}</p>
-                        <p className="text-xs text-gray-400">{role.desc}</p>
-                      </div>
-                      <RadioGroupItem value={role.value} className="text-orange-600 border-gray-300" />
-                    </motion.div>
+                      {role === "NGO" ? "NGO Hub" : role === "RIDER" ? "Rider" : "Donor"}
+                    </button>
                   ))}
-                </RadioGroup>
+                </div>
+
+                <div className="space-y-4">
+                  <div className={cn(
+                    "p-6 rounded-2xl border-2 transition-all duration-300",
+                    "border-orange-500 bg-orange-50/30 shadow-md shadow-orange-100/50"
+                  )}>
+                    <div className="flex items-center gap-4 mb-3">
+                      <div className="w-12 h-12 rounded-xl bg-orange-600 text-white flex items-center justify-center shadow-lg shadow-orange-200">
+                        {formData.role === "DONOR" ? <Heart className="w-6 h-6" /> : formData.role === "NGO" ? <Building2 className="w-6 h-6" /> : <Truck className="w-6 h-6" />}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800">{stepDescriptions[formData.role || "DONOR"].title}</h3>
+                        <p className="text-xs text-gray-500 italic">Ready to make an impact?</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {stepDescriptions[formData.role || "DONOR"].subtitle}
+                    </p>
+                  </div>
+                </div>
 
                 <div className="flex justify-end mt-8">
                   <Button
@@ -502,9 +504,9 @@ export default function RegisterPage() {
                 className="p-8 md:p-10 flex flex-col justify-center h-full"
               >
                 <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">
-                  {formData.role === "DONOR" ? "Your Details" : formData.role === "NGO" ? "Organization Details" : "Rider Details"}
+                  {formData.role === "DONOR" ? "Donor Details" : formData.role === "NGO" ? "NGO Hub Setup" : "Rider Details"}
                 </h1>
-                <p className="text-gray-500 mb-6 text-sm">Fill in your credentials securely</p>
+                <p className="text-gray-500 mb-6 text-sm">Secure your account with mission-critical info</p>
 
                 {error && (
                   <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>

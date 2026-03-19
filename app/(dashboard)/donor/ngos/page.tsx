@@ -292,25 +292,10 @@ export default function DonorNgoMapPage() {
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-[#FCFCFD] px-4 py-6 lg:px-8 lg:py-8">
-      <div className="mb-6 rounded-3xl bg-white border border-slate-200 p-6">
-        <button
-          onClick={() => {
-            if (window.history.length > 1) {
-              router.back();
-              return;
-            }
-            router.push("/donor");
-          }}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-600 hover:text-orange-600 hover:border-orange-300 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
-
-        <h1 className="mt-3 text-2xl lg:text-3xl font-black tracking-tight uppercase italic">NGO Network Map</h1>
+    <div className="space-y-6">
+      <div className="rounded-3xl bg-white border border-slate-200 p-6">
+        <h1 className="text-2xl lg:text-3xl font-black tracking-tight uppercase italic">NGO Network Map</h1>
         <p className="mt-2 text-sm font-bold text-slate-500">Map of NGOs who requested pickups from your donations.</p>
 
         <div className="mt-5 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center">

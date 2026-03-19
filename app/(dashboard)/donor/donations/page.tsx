@@ -12,7 +12,6 @@ import {
   Calendar,
   MapPin,
   Clock,
-  Badge,
   Bell
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,11 +19,22 @@ import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
 import { useRouter } from "next/navigation";
 import DonationList from "@/components/ui/donation-list";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function DonorHistory() {
   const router = useRouter();
   const [donations, setDonations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
     async function fetchDonations() {
@@ -67,37 +77,7 @@ export default function DonorHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FCFCFD] text-slate-950 flex selection:bg-orange-100">
-      
-      {/* Sidebar - Minimalist White */}
-      <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 border-r border-slate-100 bg-white z-50 flex flex-col items-center md:items-stretch py-10 px-4">
-        <div className="px-2 mb-16">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 italic font-black text-white text-xl">S</div>
-            <span className="hidden md:block text-xl font-black tracking-tighter">DONOR HUB</span>
-          </div>
-        </div>
-
-        <nav className="flex-grow space-y-2">
-           <SidebarItem icon={<LayoutDashboard />} label="Overview" link="/donor" />
-           <SidebarItem icon={<History />} label="My History" active link="/donor/donations" />
-            <SidebarItem icon={<MapPin />} label="NGO Map" link="/donor/ngos" />
-           <SidebarItem icon={<Plus />} label="New Post" link="/donor/donate" />
-           <SidebarItem icon={<Bell />} label="Alerts" link="/donor/notifications" />
-        </nav>
-
-        <button 
-          onClick={handleSignOut}
-          className="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-orange-600 transition-colors font-bold text-sm"
-        >
-           <LogOut className="w-5 h-5" />
-           <span className="hidden md:block uppercase tracking-wider">Sign Out</span>
-        </button>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-grow pl-20 md:pl-64 pt-12 pb-24 px-6 md:px-12 bg-white">
-        <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto space-y-12">
           
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
             <motion.div
@@ -114,28 +94,48 @@ export default function DonorHistory() {
             </Link>
           </header>
 
-          <div className="h-[600px]">
-             <DonationList donations={donations} />
+          <div className="space-y-8">
+             <div className="h-auto">
+                <DonationList donations={donations.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)} />
+             </div>
+
+             {donations.length > itemsPerPage && (
+               <Pagination className="mt-8">
+                 <PaginationContent>
+                   <PaginationItem>
+                     <PaginationPrevious 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); if(currentPage > 1) setCurrentPage(currentPage - 1); }} 
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                     />
+                   </PaginationItem>
+                   
+                   {Array.from({ length: Math.ceil(donations.length / itemsPerPage) }).map((_, i) => (
+                     <PaginationItem key={i}>
+                       <PaginationLink 
+                         href="#" 
+                         onClick={(e) => { e.preventDefault(); setCurrentPage(i + 1); }}
+                         isActive={currentPage === i + 1}
+                         className="cursor-pointer"
+                       >
+                         {i + 1}
+                       </PaginationLink>
+                     </PaginationItem>
+                   ))}
+
+                   <PaginationItem>
+                     <PaginationNext 
+                        href="#" 
+                        onClick={(e) => { e.preventDefault(); if(currentPage < Math.ceil(donations.length / itemsPerPage)) setCurrentPage(currentPage + 1); }}
+                        className={currentPage === Math.ceil(donations.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                     />
+                   </PaginationItem>
+                 </PaginationContent>
+               </Pagination>
+             )}
           </div>
-          
-        </div>
-      </main>
     </div>
   );
 }
 
-function SidebarItem({ icon, label, active = false, link = "#" }: { icon: React.ReactNode, label: string, active?: boolean, link?: string }) {
-  return (
-    <Link 
-      href={link}
-      className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group ${
-        active ? 'bg-orange-600 text-white shadow-lg shadow-orange-100' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
-      }`}
-    >
-      <div className={`flex justify-center items-center [&>svg]:w-6 [&>svg]:h-6 ${active ? 'text-white' : 'text-slate-400 group-hover:text-orange-600'}`}>
-        {icon}
-      </div>
-      <span className={`font-black text-[13px] tracking-wide uppercase ${active ? 'text-white' : 'group-hover:text-slate-900'}`}>{label}</span>
-    </Link>
-  );
-}
+

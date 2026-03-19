@@ -240,53 +240,31 @@ export default function DonatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 selection:bg-orange-100 flex flex-col">
-      {/* Header */}
-      <nav className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-8 sticky top-0 z-50">
-         <div className="flex items-center gap-4">
-            <Link href="/donor" className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 transition-all text-slate-400">
-               <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div className="h-6 w-px bg-slate-100 mx-2" />
-            <div className="flex items-center gap-3">
-               <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-100">
-                  <Soup className="w-4 h-4 text-white" />
-               </div>
-               <h1 className="text-xl font-black tracking-tighter">Post Donation</h1>
-            </div>
-         </div>
-
-         <div className="hidden md:flex items-center gap-6">
-            {steps.map((step, i) => (
-               <div key={i} className="flex items-center gap-3">
-                  <div className={cn(
-                     "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black transition-all",
-                     i < currentStep ? "bg-orange-600 text-white" : 
-                     i === currentStep ? "bg-slate-900 text-white shadow-xl scale-110" : 
-                     "bg-slate-100 text-slate-400"
-                  )}>
-                     {i < currentStep ? <Check className="w-3 h-3" strokeWidth={5} /> : i + 1}
-                  </div>
-                  <span className={cn(
-                     "text-[10px] uppercase font-black tracking-widest",
-                     i <= currentStep ? "text-slate-900" : "text-slate-300"
-                  )}>{step.title}</span>
-                  {i < steps.length - 1 && <ChevronRight className="w-4 h-4 text-slate-200" />}
-               </div>
-            ))}
-         </div>
-
-         <Button variant="ghost" className="rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400" onClick={() => router.back()}>
-            Cancel
-         </Button>
-      </nav>
-
-      {/* Main Content Split Layout */}
-      <div className="flex-grow flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-full flex flex-col lg:flex-row overflow-hidden">
          
          {/* FORM PART - SCROLLABLE */}
-         <div className="w-full lg:w-[45%] xl:w-[40%] bg-white border-r border-slate-100 overflow-y-auto p-8 md:p-12 scrollbar-hide">
-            <div className="max-w-md mx-auto h-full flex flex-col">
+         <div className="w-full lg:w-[45%] xl:w-[40%] bg-white border-r border-slate-100 overflow-y-auto p-8 md:p-12">
+            <div className="max-w-md mx-auto min-h-full flex flex-col">
+               {/* Steps indicator inside form for better context */}
+               <div className="flex items-center justify-center gap-4 mb-10 overflow-x-auto pb-4 no-scrollbar">
+                  {steps.map((step, i) => (
+                    <div key={i} className="flex items-center gap-2 shrink-0">
+                      <div className={cn(
+                        "w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black transition-all",
+                        i < currentStep ? "bg-orange-600 text-white" : 
+                        i === currentStep ? "bg-slate-900 text-white shadow-lg" : 
+                        "bg-slate-100 text-slate-400"
+                      )}>
+                        {i < currentStep ? <Check className="w-3 h-3" strokeWidth={5} /> : i + 1}
+                      </div>
+                      <span className={cn(
+                        "text-[9px] uppercase font-black tracking-widest",
+                        i <= currentStep ? "text-slate-900" : "text-slate-300"
+                      )}>{step.title}</span>
+                      {i < steps.length - 1 && <div className="w-4 h-px bg-slate-100 mx-1" />}
+                    </div>
+                  ))}
+                </div>
                
                <AnimatePresence mode="wait">
                   <motion.div
@@ -717,6 +695,5 @@ export default function DonatePage() {
             </div>
          )}
       </div>
-    </div>
-  );
+   );
 }

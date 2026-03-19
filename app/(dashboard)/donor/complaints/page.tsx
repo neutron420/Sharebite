@@ -18,6 +18,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { cn } from "@/lib/utils";
 
 interface Report {
   id: string;
@@ -41,6 +51,8 @@ export default function DonorComplaintsPage() {
   const [showForm, setShowForm] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [filter, setFilter] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Form state
   const [ngoSearch, setNgoSearch] = useState("");
@@ -155,10 +167,7 @@ export default function DonorComplaintsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Link href="/donor" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-colors mb-3">
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
-          </Link>
-          <h1 className="text-3xl font-black tracking-tight italic">
+          <h1 className="text-3xl font-black tracking-tight italic text-slate-900 underline decoration-orange-600/10">
             <ShieldAlert className="w-8 h-8 inline-block text-orange-600 mr-2 -mt-1" />
             My Complaints
           </h1>
@@ -208,7 +217,7 @@ export default function DonorComplaintsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {reports.map((report, i) => {
+          {reports.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((report, i) => {
             const cfg = statusConfig[report.status] || statusConfig.PENDING;
             return (
               <motion.div
@@ -249,6 +258,39 @@ export default function DonorComplaintsPage() {
               </motion.div>
             );
           })}
+
+          {reports.length > itemsPerPage && (
+            <Pagination className="mt-10">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#" 
+                    onClick={(e) => { e.preventDefault(); if(currentPage > 1) setCurrentPage(currentPage - 1); }}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {Array.from({ length: Math.ceil(reports.length / itemsPerPage) }).map((_, i) => (
+                  <PaginationItem key={i}>
+                    <PaginationLink 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); setCurrentPage(i + 1); }}
+                      isActive={currentPage === i + 1}
+                      className="cursor-pointer"
+                    >
+                      {i + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#" 
+                    onClick={(e) => { e.preventDefault(); if(currentPage < Math.ceil(reports.length / itemsPerPage)) setCurrentPage(currentPage + 1); }}
+                    className={currentPage === Math.ceil(reports.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
       )}
 
