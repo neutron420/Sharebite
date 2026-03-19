@@ -20,6 +20,10 @@ export async function GET(request: Request) {
         address: true,
         city: true,
         imageUrl: true,
+        isVerified: true,
+        strikeCount: true,
+        suspensionExpiresAt: true,
+        isLicenseSuspended: true,
       },
     });
 
@@ -28,6 +32,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
 export async function PATCH(request: Request) {
   try {
     const session = await getSession({ request });
@@ -56,6 +61,10 @@ export async function PATCH(request: Request) {
         address: true,
         city: true,
         imageUrl: true,
+        isVerified: true,
+        strikeCount: true,
+        suspensionExpiresAt: true,
+        isLicenseSuspended: true,
       },
     });
 

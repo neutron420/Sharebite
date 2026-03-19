@@ -11,6 +11,7 @@ import {
   LogOut,
   User,
   ShieldCheck,
+  ShieldAlert,
   Menu,
   X,
   ChevronRight,
@@ -67,6 +68,7 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
     { label: "Ops Hub", icon: LayoutDashboard, href: "/ngo" },
     { label: "My Pickups", icon: Package, href: "/ngo/requests" },
     { label: "Find Food", icon: Search, href: "/donations" },
+    { label: "Complaints", icon: ShieldAlert, href: "/ngo/complaints" },
     { label: "Alerts", icon: Bell, href: "/ngo/notifications" },
   ];
 

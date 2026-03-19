@@ -81,6 +81,10 @@ model User {
   reports       Report[]     @relation("ReportedUser")
   reportsMade   Report[]     @relation("Reporter")
 
+  // NGO-filed complaints about Donors
+  donorReportsReceived DonorReport[] @relation("ReportedDonor")
+  donorReportsMade     DonorReport[] @relation("DonorReporter")
+
   // Strike System for NGOs
   strikeCount         Int       @default(0)
   suspensionExpiresAt DateTime?
@@ -281,5 +285,23 @@ model Report {
   updatedAt   DateTime @updatedAt
 
   @@index([ngoId])
+  @@index([status])
+}
+
+model DonorReport {
+  id          String   @id @default(uuid())
+  reason      String   @db.Text
+  details     String?  @db.Text
+  status      String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
+
+  reporterId  String
+  reporter    User     @relation("DonorReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  donorId     String
+  donor       User     @relation("ReportedDonor", fields: [donorId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([donorId])
   @@index([status])
 }

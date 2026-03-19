@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { 
   ChevronLeft, 
@@ -8,7 +8,11 @@ import {
   MapPin, 
   UploadCloud, 
   Loader2, 
-  Check, 
+  Check,
+  Clock,
+  Zap,
+  Timer,
+  Shield,
   AlertCircle,
   Package,
   Calendar,
@@ -54,6 +58,7 @@ export default function DonatePage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -77,6 +82,65 @@ export default function DonatePage() {
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const expiryPriorities = [
+    {
+      id: "urgent",
+      label: "Urgent",
+      subtitle: "Expires within 1-2 hours",
+      hours: 1.5,
+      icon: <Zap className="w-5 h-5" />,
+      color: "from-red-500 to-rose-600",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-200",
+      textColor: "text-red-600",
+      ringColor: "ring-red-500",
+      shadowColor: "shadow-red-100",
+      pulseColor: "bg-red-500",
+    },
+    {
+      id: "moderate",
+      label: "Moderate",
+      subtitle: "Expires within 4-5 hours",
+      hours: 4.5,
+      icon: <Timer className="w-5 h-5" />,
+      color: "from-amber-500 to-yellow-600",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-200",
+      textColor: "text-amber-600",
+      ringColor: "ring-amber-500",
+      shadowColor: "shadow-amber-100",
+      pulseColor: "bg-amber-500",
+    },
+    {
+      id: "safe",
+      label: "Safe",
+      subtitle: "Has enough time to expire",
+      hours: 8,
+      icon: <Shield className="w-5 h-5" />,
+      color: "from-emerald-500 to-green-600",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-200",
+      textColor: "text-emerald-600",
+      ringColor: "ring-emerald-500",
+      shadowColor: "shadow-emerald-100",
+      pulseColor: "bg-emerald-500",
+    },
+  ];
+
+  const handlePrioritySelect = useCallback((priorityId: string, hours: number) => {
+    setSelectedPriority(priorityId);
+    const now = new Date();
+    const expiry = new Date(now.getTime() + hours * 60 * 60 * 1000);
+    // Format as datetime-local value: YYYY-MM-DDTHH:MM
+    const year = expiry.getFullYear();
+    const month = String(expiry.getMonth() + 1).padStart(2, "0");
+    const day = String(expiry.getDate()).padStart(2, "0");
+    const hrs = String(expiry.getHours()).padStart(2, "0");
+    const mins = String(expiry.getMinutes()).padStart(2, "0");
+    const formatted = `${year}-${month}-${day}T${hrs}:${mins}`;
+    updateFormData("expiryTime", formatted);
+  }, []);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -302,13 +366,109 @@ export default function DonatePage() {
                            </div>
 
                            <div className="space-y-6 pt-4">
-                              <div className="space-y-3">
-                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Donation Expiry <span className="text-orange-500">*</span></Label>
+                              {/* Expiry Priority System */}
+                              <div className="space-y-4">
+                                 <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-slate-400" />
+                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Expiry Priority <span className="text-orange-500">*</span></Label>
+                                 </div>
+                                 
+                                 <div className="space-y-3">
+                                    {expiryPriorities.map((priority) => {
+                                       const isSelected = selectedPriority === priority.id;
+                                       return (
+                                          <button
+                                             key={priority.id}
+                                             type="button"
+                                             onClick={() => handlePrioritySelect(priority.id, priority.hours)}
+                                             className={cn(
+                                                "w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all duration-300 group relative overflow-hidden",
+                                                isSelected
+                                                   ? `${priority.borderColor} ${priority.bgColor} ring-2 ${priority.ringColor} ring-offset-2 shadow-xl ${priority.shadowColor}`
+                                                   : "border-slate-100 bg-slate-50/50 hover:border-slate-200 hover:bg-white"
+                                             )}
+                                          >
+                                             {/* Radio Indicator */}
+                                             <div className={cn(
+                                                "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-300",
+                                                isSelected
+                                                   ? `${priority.borderColor} ${priority.bgColor}`
+                                                   : "border-slate-200 bg-white"
+                                             )}>
+                                                {isSelected && (
+                                                   <motion.div
+                                                      initial={{ scale: 0 }}
+                                                      animate={{ scale: 1 }}
+                                                      className={cn("w-3 h-3 rounded-full bg-gradient-to-br", priority.color)}
+                                                   />
+                                                )}
+                                             </div>
+
+                                             {/* Icon */}
+                                             <div className={cn(
+                                                "w-10 h-10 rounded-xl flex items-center justify-center transition-all flex-shrink-0",
+                                                isSelected
+                                                   ? `bg-gradient-to-br ${priority.color} text-white shadow-lg ${priority.shadowColor}`
+                                                   : "bg-slate-100 text-slate-400 group-hover:text-slate-600"
+                                             )}>
+                                                {priority.icon}
+                                             </div>
+
+                                             {/* Text */}
+                                             <div className="flex-grow text-left">
+                                                <p className={cn(
+                                                   "font-black text-sm tracking-tight transition-colors",
+                                                   isSelected ? priority.textColor : "text-slate-700"
+                                                )}>{priority.label}</p>
+                                                <p className={cn(
+                                                   "text-[11px] font-bold transition-colors mt-0.5",
+                                                   isSelected ? `${priority.textColor} opacity-70` : "text-slate-400"
+                                                )}>{priority.subtitle}</p>
+                                             </div>
+
+                                             {/* Hamburger / indicator */}
+                                             {isSelected && (
+                                                <motion.div
+                                                   initial={{ opacity: 0, scale: 0.5 }}
+                                                   animate={{ opacity: 1, scale: 1 }}
+                                                   className={cn("w-6 h-6 rounded-full bg-gradient-to-br flex items-center justify-center flex-shrink-0", priority.color)}
+                                                >
+                                                   <Check className="w-3.5 h-3.5 text-white" strokeWidth={4} />
+                                                </motion.div>
+                                             )}
+                                          </button>
+                                       );
+                                    })}
+                                 </div>
+
+                                 {/* Auto-calculated expiry display */}
+                                 {selectedPriority && formData.expiryTime && (
+                                    <motion.div
+                                       initial={{ opacity: 0, y: -8 }}
+                                       animate={{ opacity: 1, y: 0 }}
+                                       className="flex items-center gap-3 px-4 py-3 bg-slate-900 rounded-2xl"
+                                    >
+                                       <Clock className="w-4 h-4 text-orange-400 flex-shrink-0" />
+                                       <p className="text-[11px] font-bold text-white/80">
+                                          Auto-set expiry: <span className="text-orange-400 font-black">{new Date(formData.expiryTime).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                                       </p>
+                                    </motion.div>
+                                 )}
+
+                                 {/* Or manual override */}
+                                 <div className="relative">
+                                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-slate-100" />
+                                    <p className="relative inline-block bg-white pr-3 text-[10px] font-black uppercase tracking-widest text-slate-300">or set manually</p>
+                                 </div>
+
                                  <Input 
                                     type="datetime-local" 
                                     className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold px-4 text-[13px] uppercase tracking-wider transition-all cursor-pointer"
                                     value={formData.expiryTime}
-                                    onChange={(e) => updateFormData("expiryTime", e.target.value)}
+                                    onChange={(e) => {
+                                       updateFormData("expiryTime", e.target.value);
+                                       setSelectedPriority(null); // Clear priority if user manually edits
+                                    }}
                                  />
                                  <p className="text-[10px] font-bold text-orange-600 ml-1 opacity-70">Avoid wasting food, set a realistic safety buffer.</p>
                               </div>

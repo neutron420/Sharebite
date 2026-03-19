@@ -35,8 +35,8 @@ async function loginHandler(request: Request) {
       );
     }
 
-    // Block Suspended/Terminated NGOs
-    if (user.role === "NGO") {
+    // Block Suspended/Terminated Users (Apply to all roles except ADMIN for safety)
+    if (user.role !== "ADMIN") {
       if (user.isLicenseSuspended) {
         return NextResponse.json(
           { error: "Your account has been permanently terminated due to critical violations." },
