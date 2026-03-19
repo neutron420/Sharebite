@@ -242,9 +242,9 @@ export default function ReviewsPage() {
       {/* Detail Modal */}
       {selectedReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedReview(null)}>
-          <div className="absolute inset-0 bg-gray-900/10" />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="absolute inset-0 bg-transparent" />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 w-full max-w-lg animate-in fade-in zoom-in duration-300 shadow-none" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-white/20 flex items-center justify-between bg-white/50 backdrop-blur-md">
               <h2 className="text-lg font-semibold text-gray-900">Review Details</h2>
               <button onClick={() => setSelectedReview(null)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
                 <X className="h-5 w-5" />

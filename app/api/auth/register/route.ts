@@ -49,8 +49,48 @@ async function registerHandler(request: Request) {
         longitude: validatedData.longitude,
         imageUrl: validatedData.imageUrl,
         verificationDoc: validatedData.verificationDoc,
+        donorType: (validatedData as any).donorType,
       },
+
     });
+
+    // NOTIFY ADMINS: Real-time registration alert
+    try {
+      const admins = await prisma.user.findMany({
+        where: { role: "ADMIN" },
+        select: { id: true }
+      });
+
+      const notificationData = admins.map(admin => ({
+        userId: admin.id,
+        type: "SYSTEM" as any,
+        title: "New Registration Alert",
+        message: `New ${user.role} "${user.name}" has joined the platform from ${user.city || 'an Unknown sector'}.`,
+        link: `/admin/users`
+      }));
+
+      await prisma.notification.createMany({ data: notificationData });
+
+      // Trigger WebSocket relay
+      await Promise.all(admins.map(admin =>
+        fetch('http://localhost:8081/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: admin.id,
+            notification: {
+              type: "SYSTEM",
+              title: "New Registration",
+              message: `${user.name} just signed up!`,
+              link: `/admin/users`,
+              createdAt: new Date().toISOString()
+            }
+          })
+        }).catch(() => {})
+      ));
+    } catch (e) {
+      console.error("Failed to notify admins of new registration:", e);
+    }
 
     // Remove password from response
     const { password: _, ...userWithoutPassword } = user;

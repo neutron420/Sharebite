@@ -300,9 +300,9 @@ export default function VerificationPage() {
       {/* Detail Modal */}
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedUser(null)}>
-          <div className="absolute inset-0 bg-gray-900/10" />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <div className="absolute inset-0 bg-transparent" />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300 shadow-none" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white/50 backdrop-blur-md border-b border-white/20 px-6 py-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">NGO Details</h2>
               <button onClick={() => setSelectedUser(null)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
                 <X className="h-5 w-5" />

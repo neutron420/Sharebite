@@ -23,6 +23,7 @@ export async function GET(
             address: true,
             city: true,
             imageUrl: true,
+            donorType: true,
             latitude: true,
             longitude: true,
           },

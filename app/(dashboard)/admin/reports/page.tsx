@@ -30,6 +30,7 @@ interface UserInfo {
   id: string;
   name: string;
   email: string;
+  donorType?: string;
 }
 
 interface Report {
@@ -321,7 +322,14 @@ export default function AdminReportsPage() {
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900">{targetUser.name}</p>
-                            <p className="text-[10px] text-gray-400">{targetUser.email}</p>
+                            <div className="flex items-center gap-1">
+                              <p className="text-[10px] text-gray-400">{targetUser.email}</p>
+                              {reportType === "DONOR_REPORT" && targetUser.donorType && (
+                                <span className="text-[8px] bg-orange-100 text-orange-600 px-1 rounded uppercase font-bold tracking-tighter">
+                                  {targetUser.donorType.replace(/_/g, " ")}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="flex gap-1">
@@ -427,9 +435,9 @@ export default function AdminReportsPage() {
       {/* --- Detail Modal --- */}
       {detailReport && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={() => setDetailReport(null)} />
-          <div className="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-gray-100 flex flex-col animate-in fade-in zoom-in duration-300">
-            <div className="bg-blue-50 px-8 py-6 flex items-center justify-between border-b border-blue-100">
+          <div className="absolute inset-0 bg-transparent" onClick={() => setDetailReport(null)} />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl border border-white/20 max-w-2xl w-full overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300 shadow-none">
+            <div className="bg-blue-50/50 backdrop-blur-md px-8 py-6 flex items-center justify-between border-b border-white/20">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-xl">
                   <Info className="h-6 w-6 text-blue-600" />
@@ -485,7 +493,14 @@ export default function AdminReportsPage() {
                     </div>
                     <div>
                       <p className="text-lg font-black text-gray-900 leading-tight">{(reportType === "NGO_REPORT" ? detailReport.ngo : detailReport.donor)?.name}</p>
-                      <p className="text-xs text-gray-500 font-medium">{(reportType === "NGO_REPORT" ? detailReport.ngo : detailReport.donor)?.email}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-gray-500 font-medium">{(reportType === "NGO_REPORT" ? detailReport.ngo : detailReport.donor)?.email}</p>
+                        {reportType === "DONOR_REPORT" && detailReport.donor?.donorType && (
+                          <span className="text-[9px] bg-orange-600 text-white px-1.5 py-0.5 rounded-full uppercase font-black tracking-widest">
+                            {detailReport.donor.donorType.replace(/_/g, " ")}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -550,9 +565,9 @@ export default function AdminReportsPage() {
       {/* --- Strike Modal --- */}
       {strikeModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-md" onClick={() => setStrikeModal(null)} />
-          <div className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-100 flex flex-col overflow-y-auto max-h-[90vh]">
-            <div className="bg-red-50 px-8 py-6 flex items-center justify-between border-b border-red-100">
+          <div className="absolute inset-0 bg-transparent" onClick={() => setStrikeModal(null)} />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl border border-white/20 max-w-lg w-full overflow-hidden flex flex-col overflow-y-auto max-h-[90vh] shadow-none">
+            <div className="bg-red-50/50 backdrop-blur-md px-8 py-6 flex items-center justify-between border-b border-white/20">
                <div className="flex items-center gap-3">
                  <div className="p-2 bg-red-100 rounded-xl">
                     <ShieldAlert className="h-6 w-6 text-red-600" />
@@ -640,8 +655,8 @@ export default function AdminReportsPage() {
       {/* --- Action Success Modal --- */}
       {successModal && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-md" onClick={() => setSuccessModal(null)} />
-          <div className="relative bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300">
+          <div className="absolute inset-0 bg-transparent" onClick={() => setSuccessModal(null)} />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-[2.5rem] border border-white/20 max-w-md w-full overflow-hidden flex flex-col animate-in fade-in zoom-in duration-300 shadow-none">
             <div className={`h-32 flex items-center justify-center relative ${
               successModal.level === 1 ? 'bg-blue-600' : successModal.level === 2 ? 'bg-orange-600' : 'bg-red-600'
             }`}>

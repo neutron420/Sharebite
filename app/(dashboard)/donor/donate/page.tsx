@@ -38,6 +38,8 @@ import LocationPicker from "@/components/map/LocationPicker";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2Icon, AlertCircleIcon } from "lucide-react";
 
 const categories = [
   { value: "VEG", label: "Vegetarian", icon: "🥦" },
@@ -59,6 +61,8 @@ export default function DonatePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -218,9 +222,17 @@ export default function DonatePage() {
          throw new Error(data.error || "Failed to post donation");
       }
 
+      setSuccess("Mission Accomplished! Your donation has been deployed to the grid.");
+      setError(null);
       toast.success("Donation posted! Thank you for sharing.");
-      router.push("/donor");
+      
+      // Delay redirect to allow the user to see the premium alert
+      setTimeout(() => {
+        router.push("/donor");
+      }, 3000);
     } catch (error: any) {
+      setError(error.message);
+      setSuccess(null);
       toast.error(error.message);
     } finally {
       setIsSubmitting(false);
@@ -283,8 +295,28 @@ export default function DonatePage() {
                      animate={{ opacity: 1, x: 0 }}
                      exit={{ opacity: 0, x: 10 }}
                      transition={{ duration: 0.3 }}
-                     className="flex-grow"
+                     className="flex-grow space-y-8"
                   >
+                     {/* Alerts Section */}
+                     {success && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}>
+                          <Alert variant="success" className="mb-8">
+                            <CheckCircle2Icon className="h-5 w-5" />
+                            <AlertTitle>Surplus Shared</AlertTitle>
+                            <AlertDescription>{success}</AlertDescription>
+                          </Alert>
+                        </motion.div>
+                     )}
+                     {error && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}>
+                          <Alert variant="destructive" className="mb-8">
+                            <AlertCircleIcon className="h-5 w-5" />
+                            <AlertTitle>Tactical Error</AlertTitle>
+                            <AlertDescription>{error}</AlertDescription>
+                          </Alert>
+                        </motion.div>
+                     )}
+
                      {currentStep === 0 && (
                         <div className="space-y-8">
                            <div className="space-y-2">

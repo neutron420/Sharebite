@@ -136,7 +136,7 @@ export default function NgoDonationDetail() {
               <div className="grid grid-cols-2 gap-4">
                  <InfoCard icon={<Clock />} label="Expiry" value={format(new Date(donation.expiryTime), "p, MMM dd")} />
                  <InfoCard icon={<Package />} label="Weight" value={`${donation.weight || 1} kg`} />
-                 <InfoCard icon={<User />} label="Donor" value={donation.donor?.name || "Hub Provider"} />
+                 <InfoCard icon={<User />} label="Donor" value={`${donation.donor?.name || "Hub Provider"} (${donation.donor?.donorType?.replace(/_/g, " ") || "NORMAL"})`} />
                  <InfoCard icon={<MapPin />} label="Sector" value={donation.city || "Direct Sect"} />
               </div>
 

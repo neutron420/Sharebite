@@ -31,6 +31,7 @@ interface User {
   role: "DONOR" | "NGO" | "ADMIN" | "RIDER";
   isVerified: boolean;
   city: string | null;
+  donorType: string | null;
   createdAt: string;
 }
 
@@ -366,9 +367,9 @@ export default function UsersPage() {
       {/* User Detail Modal */}
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedUser(null)}>
-          <div className="absolute inset-0 bg-gray-900/10" />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+          <div className="absolute inset-0 bg-transparent" />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 w-full max-w-md animate-in fade-in zoom-in duration-300 shadow-none" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-white/20 flex items-center justify-between bg-white/50 backdrop-blur-md">
               <h2 className="text-lg font-semibold text-gray-900">User Details</h2>
               <button onClick={() => setSelectedUser(null)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
                 <X className="h-5 w-5" />
@@ -385,22 +386,30 @@ export default function UsersPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-3 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Role</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{selectedUser.role}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-3 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Status</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{selectedUser.isVerified ? "Verified" : "Unverified"}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-3 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">City</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{selectedUser.city || "Not set"}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-3 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Joined</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{formatDate(selectedUser.createdAt)}</p>
                 </div>
+                {selectedUser.role === "DONOR" && (
+                  <div className="bg-orange-50/50 backdrop-blur-md rounded-lg p-3 border border-orange-200/50 col-span-2">
+                    <p className="text-xs text-orange-500 uppercase font-black tracking-widest">Donor Category</p>
+                    <p className="text-sm font-black text-orange-700 mt-1 uppercase italic tracking-tighter">
+                      {selectedUser.donorType?.replace(/_/g, " ") || "NORMAL VERSION"}
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="flex gap-3 pt-2">
                 {selectedUser.role !== "ADMIN" && (
@@ -428,8 +437,8 @@ export default function UsersPage() {
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
-          <div className="absolute inset-0 bg-gray-900/10" />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute inset-0 bg-transparent" />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 w-full max-w-sm p-6 animate-in fade-in zoom-in duration-300 shadow-none" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
               <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>

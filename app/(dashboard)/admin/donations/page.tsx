@@ -306,9 +306,9 @@ export default function DonationsPage() {
       {/* Detail Modal */}
       {selectedDonation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedDonation(null)}>
-          <div className="absolute inset-0 bg-gray-900/10" />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <div className="absolute inset-0 bg-transparent" />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300 shadow-none" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white/50 backdrop-blur-md border-b border-white/20 px-6 py-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Donation Details</h2>
               <button onClick={() => setSelectedDonation(null)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
                 <X className="h-5 w-5" />
@@ -323,32 +323,32 @@ export default function DonationsPage() {
                 <p className="text-gray-600 mt-2">{selectedDonation.description}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Donor</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{selectedDonation.donor.name}</p>
                   <p className="text-xs text-gray-500">{selectedDonation.donor.email}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Category</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{formatCategory(selectedDonation.category)}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Quantity</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{selectedDonation.quantity} servings</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Weight</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{selectedDonation.weight || 0} kg</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4 col-span-2">
+                  <div className="bg-white/40 backdrop-blur-md rounded-lg p-4 col-span-2 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Pickup Location</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{selectedDonation.pickupLocation}, {selectedDonation.city}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Expiry</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{formatDate(selectedDonation.expiryTime)}</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
+                <div className="bg-white/40 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Status</p>
                   <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full mt-1 ${STATUS_COLORS[selectedDonation.status]?.bg} ${STATUS_COLORS[selectedDonation.status]?.text}`}>
                     {selectedDonation.status}
@@ -360,7 +360,7 @@ export default function DonationsPage() {
                   <p className="text-sm font-medium text-gray-900 mb-2">Pickup Requests ({selectedDonation.requests.length})</p>
                   <div className="space-y-2">
                     {selectedDonation.requests.map((r, i) => (
-                      <div key={i} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                      <div key={i} className="flex items-center justify-between bg-white/40 backdrop-blur-md rounded-lg p-3 border border-white/20">
                         <p className="text-sm text-gray-700">{r.ngo.name}</p>
                         <span className="text-xs font-medium text-gray-500">{r.status}</span>
                       </div>

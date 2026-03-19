@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { Eye, EyeOff, ArrowRight, Utensils } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Utensils, AlertCircle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 // Helper function to merge class names
 const cn = (...classes: string[]) => {
@@ -157,6 +158,8 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER">(defaultRole);
+  const searchParams = useSearchParams();
+  const [success, setSuccess] = useState(searchParams.get("registered") === "true" ? "Registration Successful! Log in to deploy your first mission." : "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,13 +275,23 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
               </div>
             )}
 
+            {success && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-6">
+                <Alert variant="success">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertTitle>Authenticated</AlertTitle>
+                  <AlertDescription>{success}</AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
             {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm"
-              >
-                {error}
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-6">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Access Denied</AlertTitle>
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               </motion.div>
             )}
 

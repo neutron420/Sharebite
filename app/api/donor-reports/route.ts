@@ -120,7 +120,7 @@ async function getDonorReportsHandler(request: Request) {
       take: 50,
       include: {
         reporter: { select: { name: true, email: true } },
-        donor: { select: { id: true, name: true, email: true, imageUrl: true } }
+        donor: { select: { id: true, name: true, email: true, imageUrl: true, donorType: true } }
       },
       orderBy: { createdAt: "desc" }
     });

@@ -432,9 +432,9 @@ export default function NGOPartnersPage() {
       {/* Detail Modal */}
       {selectedNGO && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setSelectedNGO(null)}>
-          <div className="absolute inset-0 bg-gray-900/10" />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="absolute inset-0 bg-transparent" />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 w-full max-w-md animate-in fade-in zoom-in duration-300 shadow-none" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-white/20 flex items-center justify-between bg-white/50 backdrop-blur-md">
               <h2 className="text-lg font-semibold text-gray-900">NGO Details</h2>
               <button onClick={() => setSelectedNGO(null)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
                 <X className="h-5 w-5" />
@@ -547,9 +547,9 @@ export default function NGOPartnersPage() {
       {/* Global Strike Confirmation Modal */}
       {strikeModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-md" onClick={() => setStrikeModal(null)} />
-          <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100 flex flex-col scale-in-center">
-            <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center gap-3">
+          <div className="absolute inset-0 bg-transparent" onClick={() => setStrikeModal(null)} />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl border border-white/20 max-w-sm w-full overflow-hidden flex flex-col scale-in-center shadow-none">
+            <div className="bg-red-50/50 backdrop-blur-md px-6 py-4 border-b border-white/20 flex items-center gap-3">
                <ShieldAlert className="h-5 w-5 text-red-600" />
                <h2 className="text-lg font-bold text-gray-900">Confirm Strike</h2>
             </div>
@@ -606,9 +606,9 @@ export default function NGOPartnersPage() {
       {/* Premium Restore Access Modal */}
       {restoreModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-md" onClick={() => setRestoreModal(null)} />
-          <div className="relative bg-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100 flex flex-col scale-in-center">
-            <div className="bg-green-50 px-6 py-4 border-b border-green-100 flex items-center gap-3">
+          <div className="absolute inset-0 bg-transparent" onClick={() => setRestoreModal(null)} />
+          <div className="relative bg-white/90 backdrop-blur-xl rounded-3xl border border-white/20 max-w-sm w-full overflow-hidden flex flex-col scale-in-center shadow-none">
+            <div className="bg-green-50/50 backdrop-blur-md px-6 py-4 border-b border-white/20 flex items-center gap-3">
                <div className="p-2 bg-green-100 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                </div>

@@ -10,18 +10,28 @@ import {
   Heart,
   Building2,
   UploadCloud,
-  CheckCircle2,
   MapPin,
   Truck,
   Utensils,
   Eye,
   EyeOff,
   ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -153,7 +163,12 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [checkingPhone, setCheckingPhone] = useState(false);
+  const [phoneAvailable, setPhoneAvailable] = useState<boolean | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyInputRef = useRef<HTMLInputElement>(null);
@@ -173,11 +188,54 @@ export default function RegisterPage() {
     longitude: 0,
     imageUrl: "",
     verificationDoc: "",
+    donorType: "",
   });
 
   const updateFormData = (field: string, value: string | Role) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  // Debounced email check
+  useEffect(() => {
+    if (!formData.email || !formData.email.includes("@")) {
+      setEmailAvailable(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setCheckingEmail(true);
+      try {
+        const res = await fetch(`/api/auth/check-availability?email=${formData.email}`);
+        const data = await res.json();
+        setEmailAvailable(data.available);
+      } catch (e) {
+        setEmailAvailable(null);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [formData.email]);
+
+  // Debounced phone check
+  useEffect(() => {
+    if (!formData.phoneNumber || formData.phoneNumber.length < 10) {
+      setPhoneAvailable(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setCheckingPhone(true);
+      try {
+        const res = await fetch(`/api/auth/check-availability?phoneNumber=${formData.phoneNumber}`);
+        const data = await res.json();
+        setPhoneAvailable(data.available);
+      } catch (e) {
+        setPhoneAvailable(null);
+      } finally {
+        setCheckingPhone(false);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [formData.phoneNumber]);
 
   const nextStep = () => { if (currentStep < steps.length - 1) setCurrentStep((p) => p + 1); };
   const prevStep = () => { if (currentStep > 0) setCurrentStep((p) => p - 1); };
@@ -228,6 +286,7 @@ export default function RegisterPage() {
           latitude: formData.latitude,
           longitude: formData.longitude,
           ...((formData.role === "NGO" || formData.role === "RIDER") && formData.verificationDoc && { verificationDoc: formData.verificationDoc }),
+          ...(formData.role === "DONOR" && formData.donorType && { donorType: formData.donorType }),
         }),
       });
       const data = await res.json();
@@ -235,10 +294,14 @@ export default function RegisterPage() {
         if (data.details) throw new Error(data.details.map((d: any) => d.message).join(", "));
         throw new Error(data.error || "Registration failed.");
       }
+      setSuccess("Mission Ready! Your account has been authenticated and initialized.");
       toast.success("Account created successfully!");
-      router.push("/login?registered=true");
+      // Short delay for visual feedback of the premium alert
+      setTimeout(() => {
+        router.push("/login?registered=true");
+      }, 3000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Something went sideways during registration.");
       setIsSubmitting(false);
     }
   };
@@ -246,7 +309,12 @@ export default function RegisterPage() {
   const isStepValid = () => {
     switch (currentStep) {
       case 0: return formData.role !== null;
-      case 1: return formData.name.trim() !== "" && formData.email.trim() !== "" && formData.password.length >= 6;
+      case 1: 
+        const basicInfo = formData.name.trim() !== "" && formData.email.trim() !== "" && formData.password.length >= 6;
+        if (formData.role === "DONOR") {
+          return basicInfo && formData.donorType !== "";
+        }
+        return basicInfo;
       case 2:
         if (formData.role === "NGO" || formData.role === "RIDER") {
           return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.verificationDoc.trim() !== "";
@@ -336,9 +404,27 @@ export default function RegisterPage() {
 
         {/* Right side - Form */}
         <div className={cn(
-          "flex flex-col bg-white",
+          "flex flex-col bg-white p-8 md:p-10",
           isMapStep ? "w-full flex-row" : "w-full md:w-1/2"
         )}>
+          {success && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-6">
+              <Alert variant="success">
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertTitle>Authenticated</AlertTitle>
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
+          {error && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-6">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Access Denied</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
           <AnimatePresence mode="wait">
             {/* ─── STEP 0: Role Selection ─── */}
             {currentStep === 0 && (
@@ -441,24 +527,73 @@ export default function RegisterPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Email <span className="text-orange-500">*</span>
                     </label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => updateFormData("email", e.target.value)}
-                      placeholder="hello@sharebite.org"
-                      className="h-11 bg-gray-50 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
-                    />
+                    <div className="relative">
+                      <Input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => updateFormData("email", e.target.value)}
+                        placeholder="hello@sharebite.org"
+                        className={cn(
+                          "h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500 transition-all",
+                          emailAvailable === false && "border-red-500 bg-red-50 focus:border-red-500",
+                          emailAvailable === true && "border-emerald-500 bg-emerald-50 focus:border-emerald-500"
+                        )}
+                      />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                        {checkingEmail && <Loader2 className="w-4 h-4 animate-spin text-orange-600" />}
+                        {emailAvailable === true && <CheckCircle2 className="w-4 h-4 text-emerald-600 shadow-sm" strokeWidth={3} />}
+                        {emailAvailable === false && <XCircle className="w-4 h-4 text-red-600" strokeWidth={3} />}
+                      </div>
+                    </div>
+                    {emailAvailable === false && <p className="text-[10px] text-red-500 font-bold mt-1 px-1 italic">Email already in combat!</p>}
                   </div>
+
+                  {formData.role === "DONOR" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-1.5"
+                    >
+                      <label className="block text-sm font-medium text-gray-700">
+                        Category <span className="text-orange-500">*</span>
+                      </label>
+                      <Select
+                        onValueChange={(v) => updateFormData("donorType", v)}
+                        value={formData.donorType}
+                      >
+                        <SelectTrigger className="h-11 bg-gray-50 border-gray-200 focus:border-orange-500 focus:ring-orange-500">
+                          <SelectValue placeholder="Who are you?" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-orange-100">
+                          <SelectItem value="WEDDING" className="focus:bg-orange-50 focus:text-orange-600">Wedding / Event</SelectItem>
+                          <SelectItem value="NORMAL_VERSION" className="focus:bg-orange-50 focus:text-orange-600">Individual / Normal</SelectItem>
+                          <SelectItem value="OTHER" className="focus:bg-orange-50 focus:text-orange-600">Any Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[10px] text-gray-400 italic">Helps us curate the best experience for you</p>
+                    </motion.div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <div className="relative">
                       <Input
                         value={formData.phoneNumber}
                         onChange={(e) => updateFormData("phoneNumber", e.target.value)}
                         placeholder="+91 98765 00000"
-                        className="h-11 bg-gray-50 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                        className={cn(
+                          "h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500 transition-all",
+                          phoneAvailable === false && "border-red-500 bg-red-50 focus:border-red-500",
+                          phoneAvailable === true && "border-emerald-500 bg-emerald-50 focus:border-emerald-500"
+                        )}
                       />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                        {checkingPhone && <Loader2 className="w-4 h-4 animate-spin text-orange-600" />}
+                        {phoneAvailable === true && <CheckCircle2 className="w-4 h-4 text-emerald-600" strokeWidth={3} />}
+                        {phoneAvailable === false && <XCircle className="w-4 h-4 text-red-600" strokeWidth={3} />}
+                      </div>
+                    </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">

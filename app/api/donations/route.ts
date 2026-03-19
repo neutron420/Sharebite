@@ -68,6 +68,29 @@ async function postDonationHandler(request: Request) {
       await prisma.notification.createMany({
         data: [...adminNotifications, ...ngoNotifications]
       });
+
+      // TRIGGER WEBSOCKET RELAY: Live feed for NGOs and Admins
+      try {
+        const allTargetIds = [...adminNotifications, ...ngoNotifications].map(n => n.userId);
+        await Promise.all(allTargetIds.map(userId => 
+          fetch('http://localhost:8081/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: userId,
+              notification: {
+                type: "SYSTEM",
+                title: "Live Mission Alert",
+                message: `New donation "${donation.title}" just dropped in ${donation.city}. Ready for rescue?`,
+                link: `/donations/${donation.id}`,
+                createdAt: new Date().toISOString()
+              }
+            })
+          }).catch(() => {})
+        ));
+      } catch (e) {
+        console.error("WS Relay notification failed:", e);
+      }
     }
 
     // 3. Add to Redis GEO for fast proximity searching
@@ -136,6 +159,7 @@ async function getDonationsHandler(request: Request) {
             name: true,
             city: true,
             imageUrl: true,
+            donorType: true,
             latitude: true,
             longitude: true,
           },

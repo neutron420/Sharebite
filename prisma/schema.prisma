@@ -65,6 +65,8 @@ model User {
   latitude    Float?
   longitude   Float?
   imageUrl    String?
+  donorType   String?
+
 
   isVerified      Boolean @default(false)
   verificationDoc String?
@@ -127,6 +129,8 @@ model FoodDonation {
   latitude        Float?
   longitude       Float?
   imageUrl        String?
+
+
   status          DonationStatus @default(AVAILABLE)
 
   donorId       String
