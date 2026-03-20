@@ -16,6 +16,7 @@ export const metadata: Metadata = {
 import { Toaster } from "sonner";
 import { FloatingAiChat } from "@/components/ai-chat/floating-chat";
 import { SocketProvider } from "@/components/providers/socket-provider";
+import CookieConsent from "@/components/ui/cookie-consent";
 
 export default function RootLayout({
   children,
@@ -34,6 +35,7 @@ export default function RootLayout({
           {children}
           <Toaster position="top-center" richColors />
           <FloatingAiChat />
+          <CookieConsent />
         </SocketProvider>
       </body>
     </html>
