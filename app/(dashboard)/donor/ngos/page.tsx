@@ -10,51 +10,16 @@ import { motion } from "framer-motion";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
-type Donation = {
-  id: string;
-  title: string;
-  description: string;
-  quantity: number;
-  weight: number;
-  city: string;
-  category: string;
-  requests: PickupRequest[];
-};
-
-type PickupRequest = {
-  id: string;
-  status: string;
-  updatedAt: string;
-  ngo: {
-    id: string;
-    name: string;
-    city: string | null;
-    latitude: number | null;
-    longitude: number | null;
-  } | null;
-};
-
 type NgoMapItem = {
-  [x: string]: any;
   id: string;
   name: string;
   city: string;
+  state: string;
   latitude: number;
   longitude: number;
-  requestCount: number;
-  latestStatus: string;
-  latestUpdatedAt: string;
-  categories: string[];
-  totalQuantity: number;
-  totalWeight: number;
-  detailedDonations: Array<{
-    id: string;
-    title: string;
-    description: string;
-    quantity: number;
-    weight: number;
-    category: string;
-  }>;
+  rating: number;
+  distance: number | null;
+  completedPickups: number;
 };
 
 const INDIA_CENTER: [number, number] = [78.9629, 22.5937];
@@ -80,16 +45,15 @@ export default function DonorNgoMapPage() {
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [donorId, setDonorId] = useState<string | null>(null);
-  const [donations, setDonations] = useState<Donation[]>([]);
   const [selectedNgoId, setSelectedNgoId] = useState<string | null>(null);
 
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<(typeof FOOD_CATEGORIES)[number]>("ALL");
   const [city, setCity] = useState("ALL");
   const [showModal, setShowModal] = useState(false);
   const [activeNgo, setActiveNgo] = useState<NgoMapItem | null>(null);
   const [allCities, setAllCities] = useState<string[]>([]);
+  const [ngoMapItems, setNgoMapItems] = useState<NgoMapItem[]>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -119,118 +83,46 @@ export default function DonorNgoMapPage() {
   }, [router]);
 
   useEffect(() => {
-    if (!donorId) {
-      return;
-    }
+    if (!donorId) return;
 
-    const fetchDonations = async () => {
+    const fetchNetwork = async () => {
       try {
         setLoading(true);
-        const params = new URLSearchParams({ donorId });
+        const params = new URLSearchParams();
+        if (city !== "ALL") params.set("city", city);
 
-        if (search) {
-          params.set("search", search);
-        }
-        if (category !== "ALL") {
-          params.set("category", category);
-        }
-        if (city !== "ALL") {
-          params.set("city", city);
-        }
-
-        const res = await fetch(`/api/donations?${params.toString()}`, {
+        const res = await fetch(`/api/donor/network?${params.toString()}`, {
           credentials: "include",
         });
 
-        if (!res.ok) {
-          throw new Error("Failed to fetch donor NGO network");
+        if (!res.ok) throw new Error("Failed to fetch NGO network");
+
+        let data = (await res.json()) as NgoMapItem[];
+        
+        if (search) {
+          data = data.filter(n => n.name.toLowerCase().includes(search.toLowerCase()) || n.city?.toLowerCase().includes(search.toLowerCase()));
         }
 
-        const data = (await res.json()) as Donation[];
-        setDonations(Array.isArray(data) ? data : []);
+        setNgoMapItems(data);
       } catch (error) {
-        console.error("Donor NGO map fetch error:", error);
-        setDonations([]);
+        console.error("NGO network fetch error:", error);
+        setNgoMapItems([]);
       } finally {
         setLoading(false);
       }
     };
 
-    void fetchDonations();
-  }, [donorId, search, category, city]);
+    void fetchNetwork();
+  }, [donorId, search, city]);
 
   useEffect(() => {
-    if (donations.length > 0 && allCities.length === 0) {
-      const cities = Array.from(new Set(donations.map((d) => d.city).filter(Boolean))).sort();
+    if (ngoMapItems.length > 0 && allCities.length === 0) {
+      const cities = Array.from(new Set(ngoMapItems.map((n) => n.city).filter(Boolean))).sort();
       setAllCities(cities);
     }
-  }, [donations, allCities.length]);
+  }, [ngoMapItems, allCities.length]);
 
   const cityOptions = allCities;
-
-  const ngoMapItems = useMemo(() => {
-    const byNgo = new Map<string, NgoMapItem>();
-
-    for (const donation of donations) {
-      for (const req of donation.requests || []) {
-        const ngo = req.ngo;
-        if (!ngo || typeof ngo.latitude !== "number" || typeof ngo.longitude !== "number") {
-          continue;
-        }
-
-        const existing = byNgo.get(ngo.id);
-        if (!existing) {
-          byNgo.set(ngo.id, {
-            id: ngo.id,
-            name: ngo.name,
-            city: ngo.city || "Unknown",
-            latitude: ngo.latitude,
-            longitude: ngo.longitude,
-            requestCount: 1,
-            latestStatus: req.status,
-            latestUpdatedAt: req.updatedAt,
-            categories: [donation.category],
-            totalQuantity: donation.quantity,
-            totalWeight: donation.weight || 0,
-            detailedDonations: [{
-              id: donation.id,
-              title: donation.title,
-              description: donation.description,
-              quantity: donation.quantity,
-              weight: donation.weight || 0,
-              category: donation.category,
-            }],
-          });
-          continue;
-        }
-
-        existing.requestCount += 1;
-        if (!existing.categories.includes(donation.category)) {
-          existing.categories.push(donation.category);
-        }
-        
-        if (!existing.detailedDonations.some(d => d.id === donation.id)) {
-          existing.totalQuantity += donation.quantity;
-          existing.totalWeight += donation.weight || 0;
-          existing.detailedDonations.push({
-            id: donation.id,
-            title: donation.title,
-            description: donation.description,
-            quantity: donation.quantity,
-            weight: donation.weight || 0,
-            category: donation.category,
-          });
-        }
-
-        if (new Date(req.updatedAt).getTime() > new Date(existing.latestUpdatedAt).getTime()) {
-          existing.latestUpdatedAt = req.updatedAt;
-          existing.latestStatus = req.status;
-        }
-      }
-    }
-
-    return Array.from(byNgo.values()).sort((a, b) => b.requestCount - a.requestCount);
-  }, [donations]);
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxgl.accessToken || mapRef.current) {
@@ -290,7 +182,7 @@ export default function DonorNgoMapPage() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             <p style="margin:0;font-size:12px;font-weight:600;color:#64748b;">${ngo.city}</p>
           </div>
-          <p style="margin:0;font-size:11px;font-weight:700;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:8px;">Click to view ${ngo.requestCount} active requests</p>
+          <p style="margin:0;font-size:11px;font-weight:700;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:8px;">${ngo.distance ? `~${ngo.distance.toFixed(1)} km away` : 'Active Node'}</p>
         </div>`
       );
 
@@ -342,8 +234,8 @@ export default function DonorNgoMapPage() {
   return (
     <div className="space-y-6">
       <div className="rounded-3xl bg-white border border-slate-200 p-6">
-        <h1 className="text-2xl lg:text-3xl font-black tracking-tight uppercase italic">NGO Network Map</h1>
-        <p className="mt-2 text-sm font-bold text-slate-500">Map of NGOs who requested pickups from your donations.</p>
+        <h1 className="text-2xl lg:text-3xl font-black tracking-tight uppercase italic">NGO Network</h1>
+        <p className="mt-2 text-sm font-bold text-slate-500">Discover and visualize trusted Sharebite NGOs around you.</p>
 
         <div className="mt-5 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center">
           <div className="relative">
@@ -351,7 +243,7 @@ export default function DonorNgoMapPage() {
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by donation title"
+              placeholder="Search NGOs by name or city..."
               className="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-10 py-3 text-sm font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"
             />
             {searchInput && (
@@ -374,22 +266,7 @@ export default function DonorNgoMapPage() {
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-1 lg:grid-cols-[1fr_260px] gap-3 items-center">
-          <div className="flex flex-wrap gap-2">
-            {FOOD_CATEGORIES.map((option) => (
-              <button
-                key={option}
-                onClick={() => setCategory(option)}
-                className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-wider border transition-colors ${
-                  category === option
-                    ? "bg-orange-600 text-white border-orange-600"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-orange-300"
-                }`}
-              >
-                {option.replaceAll("_", " ")}
-              </button>
-            ))}
-          </div>
+        <div className="mt-3 grid grid-cols-1 lg:grid-cols-1 gap-3 items-center">
 
           <select
             value={city}
@@ -427,9 +304,9 @@ export default function DonorNgoMapPage() {
           )}
 
           <div className="space-y-3">
-            {ngoMapItems.map((ngo) => (
+            {ngoMapItems.map((ngo, idx) => (
               <div
-                key={ngo.id}
+                key={`${ngo.id}-${idx}`}
                 className={`rounded-2xl border p-4 transition-all ${
                   selectedNgoId === ngo.id
                     ? "border-orange-500 bg-orange-50"
@@ -449,12 +326,11 @@ export default function DonorNgoMapPage() {
 
                   <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] font-black text-slate-600">
                     <span className="inline-flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      {ngo.requestCount} requests
+                      <MapPin className="w-3.5 h-3.5 text-orange-500" />
+                      {ngo.distance ? `${ngo.distance.toFixed(1)} km away` : ngo.state}
                     </span>
                     <span className="inline-flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5" />
-                      {formatDistanceToNowStrict(new Date(ngo.latestUpdatedAt), { addSuffix: true })}
+                      ⭐ {ngo.rating.toFixed(1)} Rating
                     </span>
                   </div>
                 </button>
@@ -467,10 +343,10 @@ export default function DonorNgoMapPage() {
                     Focus on Map
                   </button>
                   <button
-                    onClick={() => router.push(`/donor/donations/${ngo.donationIds[0]}`)}
+                    onClick={() => router.push(`/donor/donate`)}
                     className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-700 hover:border-orange-400 hover:text-orange-700 transition-colors"
                   >
-                    View Request
+                    Donate Now
                   </button>
                 </div>
               </div>
@@ -516,43 +392,23 @@ export default function DonorNgoMapPage() {
               {/* Stats Bar */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-orange-50/50 rounded-2xl p-3 border border-orange-100/50">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-orange-400 mb-1">Total Items</p>
-                  <p className="text-xl font-black text-orange-600">{activeNgo.totalQuantity}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-orange-400 mb-1">Total Pickups</p>
+                  <p className="text-xl font-black text-orange-600">{activeNgo.completedPickups}</p>
                 </div>
                 <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Weight</p>
-                  <p className="text-xl font-black text-slate-600">{activeNgo.totalWeight.toFixed(1)} <span className="text-[10px]">KG</span></p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Rating</p>
+                  <p className="text-xl font-black text-slate-600">⭐ {activeNgo.rating.toFixed(1)}</p>
                 </div>
-              </div>
-
-              {/* Donation Cards */}
-              <div className="space-y-3">
-                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 px-1">Recent Requests</p>
-                {activeNgo.detailedDonations.map((d) => (
-                  <div key={d.id} className="rounded-2xl border border-slate-100 p-4 bg-white hover:border-orange-200 transition-colors shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                       <h3 className="text-sm font-bold text-slate-800 truncate pr-2">{d.title}</h3>
-                       <span className="text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full whitespace-nowrap">
-                         {d.category.split("_")[0]}
-                       </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed">&quot;{d.description}&quot;</p>
-                    <div className="flex items-center gap-4 border-t border-slate-50 pt-2 text-[10px] font-bold text-slate-400 italic">
-                       <span>Qty: {d.quantity}</span>
-                       <span>Wt: {d.weight}kg</span>
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
 
             {/* Footer - Minimal */}
             <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex gap-2 shrink-0">
                <button 
-                 onClick={() => router.push(`/donor/donations/${activeNgo.detailedDonations[0].id}`)}
+                 onClick={() => router.push(`/donor/donate`)}
                  className="flex-1 py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-orange-600 transition-all active:scale-95"
                >
-                 View Full Record
+                 Create Targeted Donation
                </button>
                <button 
                  onClick={() => setShowModal(false)}

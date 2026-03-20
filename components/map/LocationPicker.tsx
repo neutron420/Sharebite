@@ -217,10 +217,10 @@ export default function LocationPicker({ onLocationSelect, initialCoords }: Loca
       <div ref={mapContainer} className="w-full h-full" />
       
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-2xl px-6 py-3 rounded-full shadow-[0_15px_40px_-5px_rgba(0,0,0,0.1)] border border-white/50 z-20 animate-bounce duration-[2000ms]">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
+        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
           <div className="w-2 h-2 bg-orange-600 rounded-full animate-pulse" />
           Click range to pin exact base
-        </p>
+        </div>
       </div>
     </div>
   );
