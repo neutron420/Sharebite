@@ -1,18 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Sans, Playfair_Display } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 
-const playfairDisplay = Playfair_Display({
-  variable: "--font-playfair-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const plexsans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
+const roboto = Roboto({
+  variable: "--font-roboto",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"]
-})
+});
+
+
+// const playfairDisplay = Playfair_Display({
+//   variable: "--font-playfair-display",
+//   subsets: ["latin"],
+//   weight: ["400", "500", "600", "700"],
+// });
+
+// const plexsans = IBM_Plex_Sans({
+//   variable: "--font-plex-sans",
+//   subsets: ["latin"],
+//   weight: ["400", "500", "600", "700"]
+// })
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -44,7 +51,7 @@ export default function RootLayout({
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
       </head>
       <body
-        className={`${plexsans.variable} ${playfairDisplay.variable} antialiased`}
+        className={`${roboto.variable} antialiased`}
       >
         <SocketProvider>
           {children}
