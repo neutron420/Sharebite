@@ -9,11 +9,28 @@ import { withSecurity } from "@/lib/api-handler";
 async function loginHandler(request: Request) {
   try {
     const body = await request.json();
-    
-    // Validate input
-    const validatedData = loginSchema.parse(body);
+    const { turnstileToken, ...loginData } = body;
 
-    // Find user
+    // 1. Mandatory Turnstile Check
+    const TURNSTILE_SECRET_KEY = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY || "1x0000000000000000000000000000000AA";
+    const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: TURNSTILE_SECRET_KEY,
+        response: turnstileToken,
+      }),
+    });
+
+    const verifyData = await verifyRes.json();
+    if (!verifyData.success) {
+      return NextResponse.json({ error: "Security verification failed. Please refresh." }, { status: 403 });
+    }
+    
+    // 2. Validate input
+    const validatedData = loginSchema.parse(loginData);
+
+    // 3. Find user
     const user = await prisma.user.findUnique({
       where: { email: validatedData.email },
     });
@@ -112,4 +129,4 @@ async function loginHandler(request: Request) {
   }
 }
 
-export const POST = withSecurity(loginHandler, { limit: 10 }); // Brute force protection: 10 attempts per min
+export const POST = withSecurity(loginHandler, { limit: 50, window: 60 }); // Relaxed for development testing

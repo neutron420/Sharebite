@@ -4,9 +4,10 @@ import React, { useRef, useEffect, useState } from "react";
 import { Eye, EyeOff, ArrowRight, Utensils, AlertCircle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import Turnstile from "react-turnstile";
 
-// Helper function to merge class names
 const cn = (...classes: string[]) => {
   return classes.filter(Boolean).join(" ");
 };
@@ -147,9 +148,15 @@ interface ShareBiteLoginProps {
   showRoleSelector?: boolean;
   /** Default role to pre-select */
   defaultRole?: "DONOR" | "NGO" | "RIDER" | "ADMIN";
+  /** Custom forgot password link (e.g. for admin) */
+  forgotPasswordUrl?: string;
 }
 
-export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = "DONOR" }: ShareBiteLoginProps) {
+export default function ShareBiteLogin({ 
+  showRoleSelector = true, 
+  defaultRole = "DONOR",
+  forgotPasswordUrl = "/forgot-password"
+}: ShareBiteLoginProps) {
   const router = useRouter();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [email, setEmail] = useState("");
@@ -157,12 +164,17 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
   const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
   const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER" | "ADMIN">(defaultRole);
   const searchParams = useSearchParams();
   const [success, setSuccess] = useState(searchParams.get("registered") === "true" ? "Registration Successful! Log in to deploy your first mission." : "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!turnstileToken) {
+      setError("Please complete the security check.");
+      return;
+    }
     setError("");
     setIsLoading(true);
 
@@ -170,7 +182,7 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, role: loginRole }),
+        body: JSON.stringify({ email, password, role: loginRole, turnstileToken }),
       });
 
       const data = await res.json();
@@ -314,9 +326,14 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password <span className="text-orange-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    Password <span className="text-[#F89880]">*</span>
+                  </label>
+                  <Link href={forgotPasswordUrl} title="Forgot Password" className="text-xs text-[#F89880] hover:text-[#F89880]/80 transition-colors font-medium">
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <input
                     id="password"
@@ -336,6 +353,14 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
                     {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+              </div>
+
+              {/* Cloudflare Turnstile */}
+              <div className="flex justify-center border border-slate-100 rounded-xl p-3 bg-slate-50/50 scale-90 origin-center">
+                <Turnstile 
+                  sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
+                  onVerify={(token) => setTurnstileToken(token)}
+                />
               </div>
 
               <motion.div

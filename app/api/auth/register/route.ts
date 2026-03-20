@@ -26,11 +26,9 @@ async function registerHandler(request: Request) {
     // Hash password with high work factor
     const hashedPassword = await bcrypt.hash(validatedData.password, 12);
 
-    // SECURITY: Prevent unauthorized ADMIN registration
+    // SECURITY NOTE: In production, you should wrap ADMIN registration behind an invite code or secret key.
+    // For now, allowing direct ADMIN creation as requested for the /admin/register portal.
     let assignedRole = validatedData.role;
-    if (assignedRole === "ADMIN") {
-      assignedRole = "DONOR"; // Silent fail-safe
-    }
 
     // Create user
     const user = await prisma.user.create({
@@ -120,4 +118,4 @@ async function registerHandler(request: Request) {
   }
 }
 
-export const POST = withSecurity(registerHandler, { limit: 10 }); // Prevent spam registrations
+export const POST = withSecurity(registerHandler, { limit: 50 }); // Higher allowance for dev testing

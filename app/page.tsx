@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -19,6 +19,28 @@ import {
   Utensils,
   Play
 } from "lucide-react";
+import { useInView, useSpring, useTransform } from "framer-motion";
+
+function Counter({ value, direction = "up" }: { value: number, direction?: "up" | "down" }) {
+  const ref = React.useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  const spring = useSpring(0, {
+    mass: 1,
+    stiffness: 100,
+    damping: 30,
+  });
+
+  const display = useTransform(spring, (current) => Math.round(current).toLocaleString());
+
+  useEffect(() => {
+    if (isInView) {
+      spring.set(value);
+    }
+  }, [isInView, spring, value]);
+
+  return <motion.span ref={ref}>{display}</motion.span>;
+}
 
 import Marquee from "@/components/magicui/marquee";
 import { BentoCard, BentoGrid } from "@/components/magicui/bento-grid";
@@ -121,7 +143,7 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-600"></span>
             </span>
-            Active Logistics in 12 Major Cities
+            Active Logistics in <Counter value={12} /> Major Cities
           </motion.div>
 
           <motion.h1 
@@ -199,9 +221,9 @@ export default function Home() {
           </BentoGrid>
         </section>
 
-        {/* Roles Section - Premium Contrast */}
-        <section id="roles" className="px-10 py-32 bg-slate-950 text-white rounded-[4rem] mx-4 md:mx-12 overflow-hidden relative group">
-          <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-orange-600/10 to-transparent pointer-none" />
+        {/* Roles Section - Premium Orange Gradient */}
+        <section id="roles" className="px-10 py-32 bg-gradient-to-br from-orange-400 via-[#F89880] to-orange-600 text-white rounded-[4rem] mx-4 md:mx-12 overflow-hidden relative group shadow-inner border border-white/10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
           
           <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-20 relative z-10">
             <RoleItem luxury title="The Giver" desc="Transform surplus into status. Posting handles everything from logistics to detailed impact reports." />
@@ -213,7 +235,7 @@ export default function Home() {
         {/* Minimalist CTA */}
         <section className="px-6 py-48 text-center">
           <h2 className="text-5xl md:text-[100px] font-medium tracking-tighter mb-14 text-slate-950 ">Ready to Lead?</h2>
-          <p className="text-lg text-slate-400 mb-16 max-w-lg mx-auto font-medium">Join 12,000+ pioneers redefining food security. Experience the future of sharing.</p>
+          <p className="text-lg text-slate-400 mb-16 max-w-lg mx-auto font-medium">Join <Counter value={12000} />+ pioneers redefining food security. Experience the future of sharing.</p>
           <Link href="/register" className="px-20 py-8 bg-slate-950 text-white font-medium text-2xl rounded-[2rem] hover:bg-orange-600 hover:-translate-y-2 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] active:scale-95 group">
              Initialize Profile <ArrowRight className="inline ml-2 group-hover:translate-x-3 transition-transform" />
           </Link>
@@ -228,10 +250,10 @@ export default function Home() {
 function RoleItem({ title, desc, luxury = false }: { title: string, desc: string, luxury?: boolean }) {
   return (
     <div className="space-y-6 group cursor-default">
-       <div className="h-0.5 w-12 bg-orange-600 group-hover:w-full transition-all duration-700" />
-       <h3 className="text-4xl font-medium  tracking-tight">{title}</h3>
-       <p className="text-slate-400 font-medium leading-relaxed">{desc}</p>
-       <button className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-widest text-white hover:text-orange-500 transition-colors">
+       <div className="h-0.5 w-12 bg-white group-hover:w-full transition-all duration-700" />
+       <h3 className="text-4xl font-medium tracking-tight text-white">{title}</h3>
+       <p className="text-white/80 font-medium leading-relaxed">{desc}</p>
+       <button className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-widest text-white/90 hover:text-white transition-colors">
          Explore Role <ChevronRight className="w-4 h-4" />
        </button>
     </div>

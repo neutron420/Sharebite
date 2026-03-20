@@ -109,8 +109,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifLoading, setNotifLoading] = useState(false);
 
-  // Skip layout for login/register pages
-  const isAuthPage = pathname?.includes("/login") || pathname?.includes("/register");
+  // Skip layout for login/register/forgot-password pages
+  const isAuthPage = pathname?.includes("/login") || pathname?.includes("/register") || pathname?.includes("/forgot-password");
 
   const toggleMenu = (id: string) => {
     setExpandedMenus((prev) =>

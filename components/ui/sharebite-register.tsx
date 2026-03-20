@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { Eye, EyeOff, ArrowRight, ShieldCheck, Loader2, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import LocationPicker from "@/components/map/LocationPicker";
 
 // ─── Animated Dot Map ───
 type RoutePoint = { x: number; y: number; delay: number };
@@ -121,6 +122,11 @@ export default function ShareBiteRegister() {
     phoneNumber: "",
     address: "",
     city: "",
+    state: "",
+    district: "",
+    pincode: "",
+    latitude: 0,
+    longitude: 0,
   });
 
   const update = (field: string, value: string) =>
@@ -141,6 +147,11 @@ export default function ShareBiteRegister() {
           phoneNumber: form.phoneNumber || undefined,
           address: form.address || undefined,
           city: form.city || undefined,
+          state: form.state || undefined,
+          district: form.district || undefined,
+          pincode: form.pincode || undefined,
+          latitude: form.latitude || undefined,
+          longitude: form.longitude || undefined,
         }),
       });
 
@@ -302,7 +313,7 @@ export default function ShareBiteRegister() {
 
               {/* Phone & City */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
                     Phone Number
                   </label>
@@ -315,34 +326,34 @@ export default function ShareBiteRegister() {
                     className={inputClass}
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={form.city}
-                    onChange={(e) => update("city", e.target.value)}
-                    placeholder="Mumbai"
-                    disabled={isLoading}
-                    className={inputClass}
-                  />
-                </div>
               </div>
 
-              {/* Address */}
+              {/* Secure Map Location Selection */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
-                  Address
+                  Geographic Base Assignment <span className="text-orange-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={form.address}
-                  onChange={(e) => update("address", e.target.value)}
-                  placeholder="Full address"
-                  disabled={isLoading}
-                  className={inputClass}
-                />
+                <div className="h-[250px] w-full rounded-xl overflow-hidden border-2 border-orange-100 shadow-inner">
+                  <LocationPicker
+                    onLocationSelect={(data) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        address: data.address,
+                        city: data.city,
+                        state: data.state,
+                        district: data.district,
+                        pincode: data.pincode,
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                      }));
+                    }}
+                  />
+                </div>
+                {form.city && (
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-1">
+                    <ShieldCheck size={14} /> Location locked: {form.city}, {form.state}
+                  </p>
+                )}
               </div>
 
               {/* Submit Button */}
