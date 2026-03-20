@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import LocationPicker from "@/components/map/LocationPicker";
 
-// ─── Animated Dot Map ───
 type RoutePoint = { x: number; y: number; delay: number };
 
 const DotMap = () => {
