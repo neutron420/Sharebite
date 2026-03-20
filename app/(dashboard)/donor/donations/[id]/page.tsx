@@ -165,7 +165,7 @@ export default function DonorDonationDetails() {
       <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 border-r border-slate-100 bg-white z-50 flex-col py-10 px-4 hidden md:flex">
          <div className="px-2 mb-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 italic font-black text-white text-xl">S</div>
+              <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100  font-black text-white text-xl">S</div>
               <span className="text-xl font-black tracking-tighter">DONOR HUB</span>
             </div>
          </div>
@@ -201,7 +201,7 @@ export default function DonorDonationDetails() {
                         <Badge className={`${getStatusColor(donation.status)} border-none font-black text-[10px] uppercase tracking-widest px-3 py-1 shadow-sm`}>
                            {donation.status}
                         </Badge>
-                        <h1 className="text-4xl font-black tracking-tight leading-none italic">{donation.title}</h1>
+                        <h1 className="text-4xl font-black tracking-tight leading-none ">{donation.title}</h1>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{donation.category} • {donation.quantity} Servings • {donation.weight} kg</p>
                      </div>
                   </div>
@@ -237,7 +237,7 @@ export default function DonorDonationDetails() {
             {/* Step Tracker — Shows when there is an approved/active request */}
             {approvedRequest && (
                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[2.5rem] p-8 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
-                  <h2 className="text-xl font-black italic tracking-tight mb-8">Logistics Tracker</h2>
+                  <h2 className="text-xl font-black  tracking-tight mb-8">Logistics Tracker</h2>
                   <div className="flex items-start justify-between relative">
                      {/* Progress Bar Background */}
                      <div className="absolute top-6 left-0 right-0 h-1 bg-slate-100 rounded-full mx-12" />
@@ -283,7 +283,7 @@ export default function DonorDonationDetails() {
                   <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center md:items-start">
                      
                      <div className="flex flex-col flex-grow items-center md:items-start text-center md:text-left space-y-4">
-                        <h2 className="text-3xl font-black italic">Logistics Confirmed!</h2>
+                        <h2 className="text-3xl font-black ">Logistics Confirmed!</h2>
                         <p className="text-orange-100 font-bold max-w-lg">
                            You&apos;ve approved <span className="text-white">&quot;{approvedRequest.ngo?.name}&quot;</span> to collect this donation. 
                            When they (or their rider) arrive, verify their identity with the secret Handover PIN below before giving them the food.
@@ -304,7 +304,7 @@ export default function DonorDonationDetails() {
             {approvedRequest && approvedRequest.riderId && (approvedRequest.status === "ASSIGNED" || approvedRequest.status === "ON_THE_WAY") && (
                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                   <div className="flex items-center justify-between px-2">
-                     <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-3">
+                     <h2 className="text-2xl font-black  tracking-tighter flex items-center gap-3">
                         <Navigation className="w-8 h-8 text-orange-600" /> Live Pursuit Grid
                      </h2>
                      <div className="flex items-center gap-2">
@@ -334,7 +334,7 @@ export default function DonorDonationDetails() {
                         <PartyPopper className="w-10 h-10 text-white" />
                      </div>
                      <div className="flex-grow text-center md:text-left space-y-2">
-                        <h2 className="text-3xl font-black italic">Mission Accomplished!</h2>
+                        <h2 className="text-3xl font-black ">Mission Accomplished!</h2>
                         <p className="text-green-100 font-bold max-w-lg">
                            Your donation &quot;{donation.title}&quot; has been successfully delivered to {completedRequest.ngo?.name}. 
                            You&apos;ve made a real difference today! 🎉
@@ -414,7 +414,7 @@ export default function DonorDonationDetails() {
                <div className="space-y-6 pt-6">
                   <div className="flex items-end justify-between px-2">
                      <div>
-                        <h2 className="text-2xl font-black italic">Pending Requests</h2>
+                        <h2 className="text-2xl font-black ">Pending Requests</h2>
                         <p className="text-slate-500 font-bold text-sm">NGOs requesting this donation.</p>
                      </div>
                      <Badge className="bg-blue-50 text-blue-600 border-none font-black">{pendingRequests.length} Received</Badge>
@@ -440,7 +440,7 @@ export default function DonorDonationDetails() {
                            </div>
 
                            <div className="bg-slate-50 p-4 rounded-2xl mb-6">
-                              <p className="text-sm font-bold text-slate-600 italic">&quot;{req.message || "No message provided."}&quot;</p>
+                              <p className="text-sm font-bold text-slate-600 ">&quot;{req.message || "No message provided."}&quot;</p>
                            </div>
 
                            <div className="mt-auto grid grid-cols-2 gap-3">
@@ -471,7 +471,7 @@ export default function DonorDonationDetails() {
                   <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg shadow-slate-200/50 mb-6 border border-slate-100">
                      <Users className="w-8 h-8 text-slate-300" strokeWidth={2} />
                   </div>
-                  <h3 className="text-xl font-black italic tracking-tight mb-2 text-slate-900">Waiting for NGOs...</h3>
+                  <h3 className="text-xl font-black  tracking-tight mb-2 text-slate-900">Waiting for NGOs...</h3>
                   <p className="text-slate-400 font-bold">Your donation is live! We&apos;ll notify you as soon as an NGO sends a pickup request.</p>
                </div>
             )}
