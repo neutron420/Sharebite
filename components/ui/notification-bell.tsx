@@ -1,20 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { useRouter } from 'next/navigation';
+import { useSocket } from '@/components/providers/socket-provider';
+import { toast } from 'sonner';
+import { useRouter } from 'next/router';
 
 export default function NotificationBell() {
    const [notifications, setNotifications] = useState<any[]>([]);
    const [isOpen, setIsOpen] = useState(false);
    const [unreadCount, setUnreadCount] = useState(0);
    const router = useRouter();
+   const { addListener } = useSocket();
 
    useEffect(() => {
       fetchNotifications();
-      // Polling every 30 seconds for new alerts
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
-   }, []);
+      
+      // Real-time WebSocket Listener
+      const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
+         setNotifications(prev => [newNotif, ...prev]);
+         setUnreadCount(prev => prev + 1);
+         toast.info(newNotif.title, { description: newNotif.message });
+      });
+
+      // Periodic backup refresh
+      const interval = setInterval(fetchNotifications, 60000); 
+      return () => {
+         unsubscribe();
+         clearInterval(interval);
+      };
+   }, [addListener]);
 
    const fetchNotifications = async () => {
       try {

@@ -81,7 +81,7 @@ async function postRequestHandler(request: Request) {
         type: "REQUEST_STATUS",
         title: "New Pickup Request",
         message: `Your donation "${donation.title}" has a new request from an NGO.`,
-        link: `/dashboard/requests/${pickupRequest.id}`,
+        link: `/donor/donations/${donation.id}`,
       }
     });
 

@@ -477,7 +477,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end mt-8">
+                <div className="flex justify-center mt-8">
                   <Button
                     onClick={nextStep}
                     disabled={!isStepValid()}

@@ -146,6 +146,10 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     fetchUser();
     fetchNotifications();
+    
+    // Set up real-time polling for notifications (every 30 seconds)
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
   }, [fetchUser, fetchNotifications]);
 
   const handleLogout = async () => {
@@ -172,7 +176,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
 
   const renderSidebar = () => (
     <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-      <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Donor Menu</p>
+      {sidebarOpen && <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Donor Menu</p>}
       {SIDEBAR_ITEMS.map((item) => {
         const hasChildren = item.children && item.children.length > 0;
         const isExpanded = expandedMenus.includes(item.id);
@@ -257,13 +261,13 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
       )}
 
       {/* Desktop sidebar */}
-      <aside className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 ${sidebarOpen ? "w-64" : "w-20"}`}>
-        <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
-          <div className="h-9 w-9 rounded-lg bg-orange-500 flex items-center justify-center shrink-0">
-            <Utensils className="h-5 w-5 text-white" />
+      <aside className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 overflow-x-hidden ${sidebarOpen ? "w-64" : "w-20"}`}>
+        <div className={`h-16 flex items-center border-b border-gray-200 shrink-0 ${sidebarOpen ? "px-5 gap-3" : "px-3 justify-between"}`}>
+          <div className={`${sidebarOpen ? "h-9 w-9" : "h-8 w-8"} rounded-lg bg-orange-500 flex items-center justify-center shrink-0 transition-all duration-300`}>
+            <Utensils className={`${sidebarOpen ? "h-5 w-5" : "h-4 w-4"} text-white transition-all`} />
           </div>
-          {sidebarOpen && <span className="text-lg font-bold text-gray-900 flex-1">ShareBite</span>}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100">
+          {sidebarOpen && <span className="text-lg font-bold text-gray-900 flex-1 truncate">ShareBite</span>}
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 shrink-0">
             <ChevronLeft className={`h-4 w-4 transition-transform duration-300 ${!sidebarOpen ? "rotate-180" : ""}`} />
           </button>
         </div>
@@ -342,7 +346,10 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                     notifications.map((n) => (
                       <MenuItem 
                         key={n.id} 
-                        onClick={() => setNotifAnchor(null)}
+                        onClick={() => {
+                          setNotifAnchor(null);
+                          if (n.link) router.push(n.link);
+                        }}
                         className="py-3 px-4 hover:bg-orange-50 transition-colors whitespace-normal"
                       >
                          <Stack direction="row" spacing={2} alignItems="flex-start">

@@ -92,6 +92,21 @@ export async function sendNotification(userId: string, notification: Record<stri
   return false;
 }
 
+// Broadcast rider location to a group of users (e.g., the donor and NGO)
+export function broadcastRiderLocation(userIds: string[], riderId: string, lat: number, lng: number) {
+  const message = JSON.stringify({
+    type: "RIDER_LOCATION",
+    payload: { riderId, lat, lng }
+  });
+
+  userIds.forEach(id => {
+    const ws = clients.get(id);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(message);
+    }
+  });
+}
+
 // Internal HTTP server for Next.js to trigger notifications
 const httpServer = createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/notify') {
@@ -99,7 +114,15 @@ const httpServer = createServer(async (req, res) => {
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
       try {
-        const { userId, notification } = JSON.parse(body);
+        const { type, userId, userIds, notification, riderId, lat, lng } = JSON.parse(body);
+        
+        if (type === "RIDER_LOCATION_UPDATE" && userIds && riderId) {
+          broadcastRiderLocation(userIds, riderId, lat, lng);
+          res.writeHead(200);
+          res.end();
+          return;
+        }
+
         const success = await sendNotification(userId, notification);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success }));

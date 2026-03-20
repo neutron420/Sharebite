@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 import redis from "@/lib/redis";
 import { withSecurity } from "@/lib/api-handler";
 import { getSession } from "@/lib/auth";
@@ -23,6 +24,28 @@ async function postLocationHandler(request: Request) {
     const key = `rider:pos:${session.userId}`;
     // Store as JSON string with 60s expiry
     await redis.set(key, JSON.stringify({ lat, lng, updatedAt: Date.now() }), "EX", 60);
+
+    // Broadcast to relevant users via WebSocket (Donor and NGO)
+    const activeRequest = await prisma.pickupRequest.findFirst({
+        where: { 
+          riderId: session.userId as string,
+          status: { in: ["ASSIGNED", "ON_THE_WAY"] } 
+        },
+        include: { donation: true }
+    });
+
+    if (activeRequest) {
+      await fetch("http://localhost:8081/notify", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "RIDER_LOCATION_UPDATE",
+          riderId: session.userId,
+          lat,
+          lng,
+          userIds: [activeRequest.donation.donorId, activeRequest.ngoId]
+        })
+      }).catch(err => console.error("WS Broadcast error:", err));
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

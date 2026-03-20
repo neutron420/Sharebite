@@ -34,6 +34,14 @@ async function loginHandler(request: Request) {
         { status: 401 }
       );
     }
+    
+    // Explicit Role Enforcement (Optional but recommended for designated login pages)
+    if (validatedData.role && user.role !== validatedData.role) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 }
+      );
+    }
 
     // Block Suspended/Terminated Users (Apply to all roles except ADMIN for safety)
     if (user.role !== "ADMIN") {

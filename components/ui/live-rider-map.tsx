@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Loader2 } from "lucide-react";
+import { useSocket } from "@/components/providers/socket-provider";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -54,6 +55,7 @@ export default function LiveRiderMap({
   const riderMarker = useRef<mapboxgl.Marker | null>(null);
   const [loading, setLoading] = useState(true);
   const [routeStats, setRouteStats] = useState<{ distance: string, duration: string } | null>(null);
+  const { addListener } = useSocket();
 
   const fetchRoute = useCallback(async (m: mapboxgl.Map) => {
     if (!donorCoords || !ngoCoords || !mapboxgl.accessToken) {
@@ -179,7 +181,23 @@ export default function LiveRiderMap({
     };
   }, [donorCoords, fetchRoute, ngoCoords, riderName]);
 
-  // Poll for Rider Location
+  // Main Socket Listener for live tracking
+  useEffect(() => {
+    if (!riderId || status === "COLLECTED" || status === "COMPLETED") return;
+
+    const unsubscribe = addListener("RIDER_LOCATION", (data) => {
+      if (data.riderId === riderId && typeof data.lng === "number" && typeof data.lat === "number") {
+        riderMarker.current?.setLngLat([data.lng, data.lat]);
+        if (map.current) {
+          map.current.easeTo({ center: [data.lng, data.lat], duration: 800 });
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [riderId, status, addListener]);
+
+  // Poll for Rider Location as a fallback
   useEffect(() => {
     if (!riderId || status === "COLLECTED" || status === "COMPLETED") return;
 
@@ -205,10 +223,7 @@ export default function LiveRiderMap({
       } catch {}
     };
 
-    const interval = window.setInterval(() => {
-      void pollLocation();
-    }, 10000);
-
+    const interval = window.setInterval(pollLocation, 30000); 
     void pollLocation();
 
     return () => {

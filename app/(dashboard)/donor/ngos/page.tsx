@@ -6,12 +6,16 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { ArrowLeft, Building2, Clock, Loader2, MapPin, Search, X } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
+import { motion } from "framer-motion";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
 type Donation = {
   id: string;
   title: string;
+  description: string;
+  quantity: number;
+  weight: number;
   city: string;
   category: string;
   requests: PickupRequest[];
@@ -31,6 +35,7 @@ type PickupRequest = {
 };
 
 type NgoMapItem = {
+  [x: string]: any;
   id: string;
   name: string;
   city: string;
@@ -40,7 +45,16 @@ type NgoMapItem = {
   latestStatus: string;
   latestUpdatedAt: string;
   categories: string[];
-  donationIds: string[];
+  totalQuantity: number;
+  totalWeight: number;
+  detailedDonations: Array<{
+    id: string;
+    title: string;
+    description: string;
+    quantity: number;
+    weight: number;
+    category: string;
+  }>;
 };
 
 const INDIA_CENTER: [number, number] = [78.9629, 22.5937];
@@ -73,6 +87,9 @@ export default function DonorNgoMapPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<(typeof FOOD_CATEGORIES)[number]>("ALL");
   const [city, setCity] = useState("ALL");
+  const [showModal, setShowModal] = useState(false);
+  const [activeNgo, setActiveNgo] = useState<NgoMapItem | null>(null);
+  const [allCities, setAllCities] = useState<string[]>([]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -142,9 +159,14 @@ export default function DonorNgoMapPage() {
     void fetchDonations();
   }, [donorId, search, category, city]);
 
-  const cityOptions = useMemo(() => {
-    return Array.from(new Set(donations.map((d) => d.city).filter(Boolean))).sort();
-  }, [donations]);
+  useEffect(() => {
+    if (donations.length > 0 && allCities.length === 0) {
+      const cities = Array.from(new Set(donations.map((d) => d.city).filter(Boolean))).sort();
+      setAllCities(cities);
+    }
+  }, [donations, allCities.length]);
+
+  const cityOptions = allCities;
 
   const ngoMapItems = useMemo(() => {
     const byNgo = new Map<string, NgoMapItem>();
@@ -168,7 +190,16 @@ export default function DonorNgoMapPage() {
             latestStatus: req.status,
             latestUpdatedAt: req.updatedAt,
             categories: [donation.category],
-            donationIds: [donation.id],
+            totalQuantity: donation.quantity,
+            totalWeight: donation.weight || 0,
+            detailedDonations: [{
+              id: donation.id,
+              title: donation.title,
+              description: donation.description,
+              quantity: donation.quantity,
+              weight: donation.weight || 0,
+              category: donation.category,
+            }],
           });
           continue;
         }
@@ -177,9 +208,20 @@ export default function DonorNgoMapPage() {
         if (!existing.categories.includes(donation.category)) {
           existing.categories.push(donation.category);
         }
-        if (!existing.donationIds.includes(donation.id)) {
-          existing.donationIds.push(donation.id);
+        
+        if (!existing.detailedDonations.some(d => d.id === donation.id)) {
+          existing.totalQuantity += donation.quantity;
+          existing.totalWeight += donation.weight || 0;
+          existing.detailedDonations.push({
+            id: donation.id,
+            title: donation.title,
+            description: donation.description,
+            quantity: donation.quantity,
+            weight: donation.weight || 0,
+            category: donation.category,
+          });
         }
+
         if (new Date(req.updatedAt).getTime() > new Date(existing.latestUpdatedAt).getTime()) {
           existing.latestUpdatedAt = req.updatedAt;
           existing.latestStatus = req.status;
@@ -242,10 +284,13 @@ export default function DonorNgoMapPage() {
 
     for (const ngo of ngoMapItems) {
       const popup = new mapboxgl.Popup({ offset: 20 }).setHTML(
-        `<div style="font-family:system-ui,sans-serif;padding:4px 2px;min-width:190px;">
-          <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#0f172a;">${ngo.name}</p>
-          <p style="margin:0 0 6px;font-size:12px;color:#475569;">${ngo.city}</p>
-          <p style="margin:0;font-size:11px;color:#64748b;">Requests: ${ngo.requestCount} | ${ngo.latestStatus}</p>
+        `<div style="font-family:system-ui,sans-serif;padding:6px 4px;min-width:200px;">
+          <p style="margin:0 0 6px;font-weight:900;font-size:14px;color:#ea580c;text-transform:uppercase;letter-spacing:0.5px;">${ngo.name}</p>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <p style="margin:0;font-size:12px;font-weight:600;color:#64748b;">${ngo.city}</p>
+          </div>
+          <p style="margin:0;font-size:11px;font-weight:700;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:8px;">Click to view ${ngo.requestCount} active requests</p>
         </div>`
       );
 
@@ -256,6 +301,8 @@ export default function DonorNgoMapPage() {
 
       marker.getElement().addEventListener("click", () => {
         setSelectedNgoId(ngo.id);
+        setActiveNgo(ngo);
+        setShowModal(true);
       });
 
       markersRef.current.push(marker);
@@ -431,6 +478,92 @@ export default function DonorNgoMapPage() {
           </div>
         </aside>
       </div>
+
+      {/* Donation Details Modal */}
+      {showModal && activeNgo && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none"
+          onClick={() => setShowModal(false)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="bg-white rounded-[2rem] w-full max-w-md max-h-[80vh] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-200 flex flex-col pointer-events-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header - Compact */}
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 leading-tight">{activeNgo.name}</h2>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeNgo.city}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-colors"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
+              {/* Stats Bar */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-orange-50/50 rounded-2xl p-3 border border-orange-100/50">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-orange-400 mb-1">Total Items</p>
+                  <p className="text-xl font-black text-orange-600">{activeNgo.totalQuantity}</p>
+                </div>
+                <div className="bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Weight</p>
+                  <p className="text-xl font-black text-slate-600">{activeNgo.totalWeight.toFixed(1)} <span className="text-[10px]">KG</span></p>
+                </div>
+              </div>
+
+              {/* Donation Cards */}
+              <div className="space-y-3">
+                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-400 px-1">Recent Requests</p>
+                {activeNgo.detailedDonations.map((d) => (
+                  <div key={d.id} className="rounded-2xl border border-slate-100 p-4 bg-white hover:border-orange-200 transition-colors shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                       <h3 className="text-sm font-bold text-slate-800 truncate pr-2">{d.title}</h3>
+                       <span className="text-[9px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+                         {d.category.split("_")[0]}
+                       </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed">&quot;{d.description}&quot;</p>
+                    <div className="flex items-center gap-4 border-t border-slate-50 pt-2 text-[10px] font-bold text-slate-400 italic">
+                       <span>Qty: {d.quantity}</span>
+                       <span>Wt: {d.weight}kg</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer - Minimal */}
+            <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex gap-2 shrink-0">
+               <button 
+                 onClick={() => router.push(`/donor/donations/${activeNgo.detailedDonations[0].id}`)}
+                 className="flex-1 py-3 bg-slate-900 text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-orange-600 transition-all active:scale-95"
+               >
+                 View Full Record
+               </button>
+               <button 
+                 onClick={() => setShowModal(false)}
+                 className="px-4 py-3 bg-white border border-slate-200 text-slate-500 rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-slate-100 transition-all opacity-80"
+               >
+                 Dismiss
+               </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -146,7 +146,7 @@ interface ShareBiteLoginProps {
   /** If true, shows the role selector tabs (Donor / NGO / Rider). If false (admin login), hides them. */
   showRoleSelector?: boolean;
   /** Default role to pre-select */
-  defaultRole?: "DONOR" | "NGO" | "RIDER";
+  defaultRole?: "DONOR" | "NGO" | "RIDER" | "ADMIN";
 }
 
 export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = "DONOR" }: ShareBiteLoginProps) {
@@ -157,7 +157,7 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
   const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER">(defaultRole);
+  const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER" | "ADMIN">(defaultRole);
   const searchParams = useSearchParams();
   const [success, setSuccess] = useState(searchParams.get("registered") === "true" ? "Registration Successful! Log in to deploy your first mission." : "");
 
@@ -170,7 +170,7 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role: loginRole }),
       });
 
       const data = await res.json();
@@ -197,6 +197,7 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
     DONOR: { title: "Welcome Back, Hero", subtitle: "Securely access your donor portal and track your impact." },
     NGO: { title: "Ops Command Center", subtitle: "Manage your logistics and rescue surplus food nearby." },
     RIDER: { title: "Rider Dispatch", subtitle: "Accept missions and deliver hope across your city." },
+    ADMIN: { title: "ShareBite Admin Hub", subtitle: "Total platform oversight and cognitive engine monitoring." },
   };
 
   return (
@@ -208,7 +209,7 @@ export default function ShareBiteLogin({ showRoleSelector = true, defaultRole = 
         className="w-full max-w-4xl overflow-hidden rounded-2xl flex bg-white shadow-xl"
       >
         {/* Left side - Animated Dot Map */}
-        <div className="hidden md:block w-1/2 h-[600px] relative overflow-hidden border-r border-orange-100">
+        <div className="hidden md:flex md:w-1/2 relative overflow-hidden border-r border-orange-100">
           <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-amber-100">
             <DotMap />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-10">
