@@ -159,7 +159,7 @@ export default function NgoComplaintsPage() {
           <Link href="/ngo" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-colors mb-3">
             <ArrowLeft className="w-3.5 h-3.5" /> Back to Ops Hub
           </Link>
-          <h1 className="text-3xl font-black tracking-tight italic">
+          <h1 className="text-3xl font-black tracking-tight ">
             <ShieldAlert className="w-8 h-8 inline-block text-orange-600 mr-2 -mt-1" />
             Donor Complaints
           </h1>

@@ -142,7 +142,7 @@ export default function NgoRequestsPage() {
       
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 italic underline decoration-orange-600/10 underline-offset-8">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2  underline decoration-orange-600/10 underline-offset-8">
              Pickup Operations
           </h1>
           <p className="text-slate-400 font-bold">Manage your active, pending, and completed food collections.</p>
@@ -152,7 +152,7 @@ export default function NgoRequestsPage() {
       {/* Active Pickups - Priority */}
       <section className="space-y-6">
         <div className="flex items-center justify-between px-2">
-          <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-3 text-orange-600">
+          <h2 className="text-2xl font-black  tracking-tighter flex items-center gap-3 text-orange-600">
             <ShieldCheck className="w-8 h-8" /> Active Pickups
           </h2>
           <Badge className="bg-orange-50 text-orange-600 border-none font-black">{activeRequests.length} Ops</Badge>
@@ -180,7 +180,7 @@ export default function NgoRequestsPage() {
                     <Badge className={`${req.status === 'ON_THE_WAY' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'} border-none font-black text-[10px] uppercase tracking-widest`}>
                        {req.status}
                     </Badge>
-                    <h3 className="text-2xl font-black tracking-tight leading-none italic">{req.donation.title}</h3>
+                    <h3 className="text-2xl font-black tracking-tight leading-none ">{req.donation.title}</h3>
                     <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-2">
                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                           <MapPin className="w-3.5 h-3.5" /> {req.donation.pickupLocation}, {req.donation.city}
@@ -199,14 +199,14 @@ export default function NgoRequestsPage() {
                  <div className="shrink-0 flex flex-col items-center gap-3">
                     <button 
                        onClick={() => setVerifyingId(req.id)}
-                       className="px-10 py-5 bg-orange-600 text-white font-black rounded-2xl flex items-center gap-3 group-hover:bg-slate-950 transition-all shadow-xl shadow-orange-100 italic text-xs uppercase tracking-widest active:scale-95"
+                       className="px-10 py-5 bg-orange-600 text-white font-black rounded-2xl flex items-center gap-3 group-hover:bg-slate-950 transition-all shadow-xl shadow-orange-100  text-xs uppercase tracking-widest active:scale-95"
                     >
                         Verify Handover <ShieldCheck className="w-5 h-5" />
                      </button>
                      {req.riderId && (req.status === 'ASSIGNED' || req.status === 'ON_THE_WAY') && (
                         <button 
                            onClick={() => setTrackingId(req.id === trackingId ? null : req.id)}
-                           className={`px-10 py-5 ${req.id === trackingId ? 'bg-slate-950' : 'bg-white border-2 border-orange-600 text-orange-600'} font-black rounded-2xl flex items-center gap-3 transition-all italic text-xs uppercase tracking-widest active:scale-95`}
+                           className={`px-10 py-5 ${req.id === trackingId ? 'bg-slate-950' : 'bg-white border-2 border-orange-600 text-orange-600'} font-black rounded-2xl flex items-center gap-3 transition-all  text-xs uppercase tracking-widest active:scale-95`}
                         >
                            {req.id === trackingId ? 'Tracking Active' : 'Live Track'} <Navigation className="w-5 h-5" />
                         </button>
@@ -218,7 +218,7 @@ export default function NgoRequestsPage() {
            ) : (
              <div className="p-16 rounded-[4rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center opacity-50">
                 <CheckCircle2 className="w-12 h-12 text-slate-200 mb-4" />
-                <h3 className="text-lg font-black italic">No active pickups</h3>
+                <h3 className="text-lg font-black ">No active pickups</h3>
                 <p className="text-slate-400 font-bold text-sm">Requested items will appear here once approved by donors.</p>
               </div>
            )}
@@ -234,7 +234,7 @@ export default function NgoRequestsPage() {
                  className="space-y-6 overflow-hidden pt-6"
               >
                  <div className="flex items-center justify-between px-2">
-                    <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-3">
+                    <h2 className="text-2xl font-black  tracking-tighter flex items-center gap-3">
                        <Navigation className="w-8 h-8 text-orange-600" /> Active Pursuit
                     </h2>
                     <button 
@@ -269,7 +269,7 @@ export default function NgoRequestsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
          {/* Pending Requests */}
          <div className="space-y-6">
-            <h3 className="text-xl font-black italic flex items-center gap-2 px-2">
+            <h3 className="text-xl font-black  flex items-center gap-2 px-2">
                <Clock className="w-5 h-5 text-slate-400" /> Awaiting Approval
             </h3>
             <div className="space-y-3">
@@ -285,13 +285,13 @@ export default function NgoRequestsPage() {
                      <Badge className="bg-white text-slate-400 border-none font-black text-[9px] uppercase">Pending</Badge>
                   </div>
                ))}
-               {pendingRequests.length === 0 && <p className="text-center py-10 text-slate-400 text-xs font-bold italic tracking-wider">No pending requests</p>}
+               {pendingRequests.length === 0 && <p className="text-center py-10 text-slate-400 text-xs font-bold  tracking-wider">No pending requests</p>}
             </div>
          </div>
 
          {/* Completed History */}
          <div className="space-y-6">
-            <h3 className="text-xl font-black italic flex items-center gap-2 px-2">
+            <h3 className="text-xl font-black  flex items-center gap-2 px-2">
                <History className="w-5 h-5 text-orange-600" /> Operations History
             </h3>
             <div className="space-y-3">
@@ -300,7 +300,7 @@ export default function NgoRequestsPage() {
                      <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-lg">🎖️</div>
                          <div>
-                            <h4 className="font-black text-sm tracking-tight group-hover:text-orange-600 transition-colors uppercase italic">{req.donation.title}</h4>
+                            <h4 className="font-black text-sm tracking-tight group-hover:text-orange-600 transition-colors uppercase ">{req.donation.title}</h4>
                             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Donated by {req.donation.donor?.name || 'Hub'}</p>
                          </div>
                       </div>
@@ -312,7 +312,7 @@ export default function NgoRequestsPage() {
                       </button>
                    </div>
                 ))}
-               {completedRequests.length === 0 && <p className="text-center py-10 text-slate-400 text-xs font-bold italic tracking-wider">No completed cycles</p>}
+               {completedRequests.length === 0 && <p className="text-center py-10 text-slate-400 text-xs font-bold  tracking-wider">No completed cycles</p>}
             </div>
          </div>
       </div>
@@ -338,7 +338,7 @@ export default function NgoRequestsPage() {
                      <div className="w-20 h-20 bg-orange-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl shadow-orange-200 animate-pulse">
                         <ShieldCheck className="w-10 h-10 text-white" />
                      </div>
-                     <h2 className="text-3xl font-black italic tracking-tight underline italic decoration-orange-600/20">Security Handover</h2>
+                     <h2 className="text-3xl font-black  tracking-tight underline  decoration-orange-600/20">Security Handover</h2>
                      <p className="text-slate-500 font-bold text-sm">Ask the donor for the secret 4-digit PIN to verify this collection.</p>
                   </div>
 
@@ -393,7 +393,7 @@ export default function NgoRequestsPage() {
                <motion.div 
                   initial={{ scale: 0.9, y: 20 }} 
                   animate={{ scale: 1, y: 0 }} 
-                  className="bg-white rounded-[3.5rem] p-10 max-w-md w-full shadow-2xl space-y-8 relative overflow-hidden text-center italic"
+                  className="bg-white rounded-[3.5rem] p-10 max-w-md w-full shadow-2xl space-y-8 relative overflow-hidden text-center "
                >
                   <div className="space-y-4">
                      <div className="w-20 h-20 bg-orange-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl shadow-orange-200 ring-8 ring-orange-50">
@@ -414,7 +414,7 @@ export default function NgoRequestsPage() {
 
                      <textarea 
                         placeholder="Write a quick note... (optional)"
-                        className="w-full h-32 p-6 rounded-3xl bg-slate-50 border-2 border-slate-100 focus:border-orange-600 focus:outline-none transition-all font-bold text-xs italic"
+                        className="w-full h-32 p-6 rounded-3xl bg-slate-50 border-2 border-slate-100 focus:border-orange-600 focus:outline-none transition-all font-bold text-xs "
                         value={reviewComment}
                         onChange={(e) => setReviewComment(e.target.value)}
                      />

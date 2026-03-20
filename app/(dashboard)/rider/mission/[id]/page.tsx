@@ -184,7 +184,7 @@ export default function MissionDetailPage() {
   );
 
   if (!request) return (
-    <div className="text-center p-20 italic">
+    <div className="text-center p-20 ">
        <h2 className="text-2xl font-black uppercase text-black">Mission Classified</h2>
        <p className="text-gray-400 mt-2 font-bold">You do not have clearance for this sector.</p>
        <button onClick={() => router.push('/rider')} className="mt-8 px-6 py-3 bg-gray-100 border border-gray-200 rounded-2xl uppercase font-black text-[10px] tracking-widest hover:bg-gray-200 text-black transition-all">Return to Ops</button>
@@ -196,7 +196,7 @@ export default function MissionDetailPage() {
   const isOnWay = request.status === "ON_THE_WAY";
 
   return (
-    <div className="space-y-10 italic text-black">
+    <div className="space-y-10  text-black">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
@@ -290,7 +290,7 @@ export default function MissionDetailPage() {
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-orange-600/10 blur-[100px] group-hover:bg-orange-600/20 transition-all duration-1000" />
               
               <div className="space-y-2">
-                 <h2 className="text-2xl font-black uppercase tracking-tighter italic text-black">Mission Steps</h2>
+                 <h2 className="text-2xl font-black uppercase tracking-tighter  text-black">Mission Steps</h2>
                  <p className="text-[10px] font-bold text-orange-500/60 uppercase tracking-widest">Protocol Execution</p>
               </div>
 
@@ -363,7 +363,7 @@ export default function MissionDetailPage() {
       <AnimatePresence>
          {verifying && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl">
-               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-zinc-900 border border-white/10 rounded-[3.5rem] p-10 max-w-md w-full shadow-2xl space-y-8 text-center italic">
+               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-zinc-900 border border-white/10 rounded-[3.5rem] p-10 max-w-md w-full shadow-2xl space-y-8 text-center ">
                   <div className="w-24 h-24 bg-orange-600 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-orange-950">
                      <ShieldCheck className="w-12 h-12 text-white" />
                   </div>

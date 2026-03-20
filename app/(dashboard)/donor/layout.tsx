@@ -192,7 +192,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
               <button
                 onClick={() => setExpandedMenus(prev => prev.includes(item.id) ? prev.filter(i => i !== item.id) : [...prev, item.id])}
                 className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  active ? "bg-orange-50 text-orange-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  active ? "bg-orange-50 text-orange-600" : "text-black-600 hover:bg-gray-100 hover:text-gray-900 hover:scale-105"
                 }`}
               >
                 <item.icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-orange-600" : "text-gray-400"}`} />
@@ -208,7 +208,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                 href={item.href || "#"}
                 onClick={() => setMobileOpen(false)}
                 className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  active ? "bg-orange-50 text-orange-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  active ? "bg-orange-50 text-orange-600" : "text-black-600 hover:bg-gray-100 hover:text-gray-900 hover:scale-105"
                 }`}
               >
                 <item.icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-orange-600" : "text-gray-400"}`} />

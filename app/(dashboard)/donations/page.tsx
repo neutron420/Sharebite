@@ -318,7 +318,7 @@ export default function DonationsMapPage() {
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
-        <h1 className="text-2xl lg:text-3xl font-black tracking-tight uppercase italic">Find Food</h1>
+        <h1 className="text-2xl lg:text-3xl font-black tracking-tight uppercase ">Find Food</h1>
         <p className="mt-2 text-sm font-bold text-slate-500">
           Live donation map with pin drops for available food pickups.
         </p>

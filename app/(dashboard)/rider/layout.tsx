@@ -86,12 +86,12 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-white text-black flex italic selection:bg-orange-500/30">
+    <div className="min-h-screen bg-white text-black flex  selection:bg-orange-500/30">
       
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 border-r border-gray-200 bg-white/90 backdrop-blur-xl z-50 py-10 px-6 shadow-lg">
         <div className="flex items-center gap-3 mb-16 px-2">
-          <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-2xl shadow-orange-950/50 italic font-black text-white text-xl">R</div>
+          <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-2xl shadow-orange-950/50  font-black text-white text-xl">R</div>
           <span className="text-xl font-black tracking-tighter uppercase whitespace-nowrap text-black">Rider Stealth</span>
         </div>
 
@@ -143,7 +143,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-gray-200 px-6 h-20 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center font-black text-white italic">R</div>
+            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center font-black text-white ">R</div>
             <span className="font-black text-sm tracking-tighter uppercase whitespace-nowrap text-black">Rider Hub</span>
           </div>
           <button 

@@ -351,7 +351,7 @@ export default function NGOPartnersPage() {
                  <p className="text-[10px] text-red-600 font-black uppercase mb-1 flex items-center gap-1">
                     <XCircle className="h-3 w-3" /> Restriction Reason
                  </p>
-                 <p className="text-xs font-semibold text-gray-800 italic line-clamp-2">
+                 <p className="text-xs font-semibold text-gray-800  line-clamp-2">
                    {ngo.violations?.[0]?.reason || "Multiple policy violations or manual admin block."}
                  </p>
                  <p className="text-[9px] text-gray-400 mt-2">
@@ -485,7 +485,7 @@ export default function NGOPartnersPage() {
                           <p className="text-xs font-bold text-orange-800">{report.reason}</p>
                           <span className="text-[10px] text-gray-400">{formatDate(report.createdAt)}</span>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1 italic">"{report.details || 'No details provided'}"</p>
+                        <p className="text-xs text-gray-600 mt-1 ">"{report.details || 'No details provided'}"</p>
                         <p className="text-[10px] text-gray-400 mt-1">— Reported by {report.reporter.name}</p>
                          <button 
                            onClick={() => {
@@ -559,7 +559,7 @@ export default function NGOPartnersPage() {
                </p>
                <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 text-left">
                   <p className="text-[10px] text-gray-400 font-bold uppercase">Reason</p>
-                  <p className="text-xs text-gray-700 italic">"{strikeModal.reason}"</p>
+                  <p className="text-xs text-gray-700 ">"{strikeModal.reason}"</p>
                </div>
                
                <div className="space-y-2 text-left">

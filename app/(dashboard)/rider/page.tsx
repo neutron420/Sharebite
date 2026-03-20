@@ -127,7 +127,7 @@ export default function RiderDashboard() {
               <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2 uppercase text-black">
                  Mission Update
               </h1>
-              <p className="text-gray-600 font-bold italic">Secure logistics & humanitarian response protocol.</p>
+              <p className="text-gray-600 font-bold ">Secure logistics & humanitarian response protocol.</p>
             </motion.div>
           </header>
 
@@ -152,7 +152,7 @@ export default function RiderDashboard() {
                              {activeMission.status}
                           </Badge>
                           <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none truncate text-black">{activeMission.donation.title}</h3>
-                          <div className="flex items-center gap-2 text-xs font-bold text-gray-600 italic">
+                          <div className="flex items-center gap-2 text-xs font-bold text-gray-600 ">
                              Status: {activeMission.status === 'ASSIGNED' ? 'Proceed to pickup' : 'Proceed to delivery'}
                           </div>
                        </div>
@@ -231,10 +231,10 @@ export default function RiderDashboard() {
                         <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center group-hover:bg-orange-600 transition-colors border border-gray-100">
                            <Package className="w-6 h-6 text-gray-400 group-hover:text-white" />
                         </div>
-                        <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-500/10 px-3 py-1 rounded-full italic">Priority</span>
+                        <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-500/10 px-3 py-1 rounded-full ">Priority</span>
                      </div>
                      <h4 className="text-xl font-black mb-1 truncate text-black">{bounty.donation.title}</h4>
-                     <p className="text-xs font-bold text-gray-500 italic mb-6 truncate">{bounty.donation.donor.address}</p>
+                     <p className="text-xs font-bold text-gray-500  mb-6 truncate">{bounty.donation.donor.address}</p>
                      
                      <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                         <div className="flex items-center gap-2">
@@ -254,7 +254,7 @@ export default function RiderDashboard() {
       <AnimatePresence>
          {verifyingId && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-100 flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl">
-               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-zinc-900 border border-white/10 rounded-[3.5rem] p-10 max-w-md w-full shadow-2xl space-y-8 text-center italic">
+               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-zinc-900 border border-white/10 rounded-[3.5rem] p-10 max-w-md w-full shadow-2xl space-y-8 text-center ">
                   <div className="w-24 h-24 bg-orange-600 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-orange-950 animate-pulse">
                      <ShieldCheck className="w-12 h-12 text-white" />
                   </div>

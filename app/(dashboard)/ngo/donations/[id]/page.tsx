@@ -83,7 +83,7 @@ export default function NgoDonationDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FCFCFD] text-slate-950 flex selection:bg-orange-100 italic">
+    <div className="min-h-screen bg-[#FCFCFD] text-slate-950 flex selection:bg-orange-100 ">
       <main className="flex-grow max-w-5xl mx-auto px-6 py-12 space-y-12">
         <button 
            onClick={() => router.push("/ngo")}
@@ -117,14 +117,14 @@ export default function NgoDonationDetail() {
                     <ShieldCheck className="w-5 h-5" />
                     <h4 className="font-black uppercase text-[10px] tracking-widest">Quality Assurance</h4>
                  </div>
-                 <p className="text-xl font-black italic leading-tight">This item is verified surplus and ready for distribution.</p>
+                 <p className="text-xl font-black  leading-tight">This item is verified surplus and ready for distribution.</p>
               </div>
            </div>
 
            {/* Tactical Info */}
            <div className="space-y-8">
               <div className="space-y-4">
-                 <h1 className="text-5xl font-black tracking-tight leading-none italic">{donation.title}</h1>
+                 <h1 className="text-5xl font-black tracking-tight leading-none ">{donation.title}</h1>
                  <div className="flex gap-2">
                     <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-200 border-none font-black text-[10px] uppercase tracking-widest">{donation.category}</Badge>
                     <Badge className="bg-blue-100 text-blue-600 border-none font-black text-[10px] uppercase tracking-widest">{donation.quantity} Servings</Badge>
@@ -143,7 +143,7 @@ export default function NgoDonationDetail() {
               <div className="p-8 rounded-[3rem] bg-slate-900 text-white space-y-6">
                  <div className="flex items-center gap-3">
                     <MapPin className="w-5 h-5 text-orange-500" />
-                    <h4 className="font-black uppercase text-[10px] tracking-widest italic">Pickup Logistics</h4>
+                    <h4 className="font-black uppercase text-[10px] tracking-widest ">Pickup Logistics</h4>
                  </div>
                  <div className="space-y-4">
                     <div className="flex items-center gap-4">
@@ -176,7 +176,7 @@ export default function NgoDonationDetail() {
                      <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl border border-slate-100">
                         <Send className="w-10 h-10 text-orange-600" />
                      </div>
-                     <h2 className="text-3xl font-black italic tracking-tight">Mission Brief</h2>
+                     <h2 className="text-3xl font-black  tracking-tight">Mission Brief</h2>
                      <p className="text-slate-500 font-bold text-sm">Send a message to the donor explaining your distribution plan.</p>
                   </div>
 

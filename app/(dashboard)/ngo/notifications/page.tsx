@@ -88,7 +88,7 @@ export default function NgoNotificationsPage() {
       <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 border-r border-slate-100 bg-white z-50 flex flex-col items-center md:items-stretch py-10 px-4">
         <div className="px-2 mb-16">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 italic font-black text-white text-xl">N</div>
+            <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100  font-black text-white text-xl">N</div>
             <span className="hidden md:block text-xl font-black tracking-tighter">NGO OP-CENTER</span>
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function NgoNotificationsPage() {
           
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 italic underline decoration-orange-600/10 underline-offset-8">
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2  underline decoration-orange-600/10 underline-offset-8">
                  Alerts
               </h1>
               <p className="text-slate-400 font-bold">Real-time operation updates and humanitarian alerts.</p>

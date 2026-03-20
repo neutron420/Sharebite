@@ -173,7 +173,7 @@ export default function DonorDashboard() {
                 className="space-y-6 overflow-hidden"
               >
                 <div className="flex items-center justify-between px-2">
-                  <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-3 text-orange-600">
+                  <h2 className="text-2xl font-black  tracking-tighter flex items-center gap-3 text-orange-600">
                     <ShieldCheck className="w-8 h-8" /> Live Operations
                   </h2>
                   <Badge className="bg-orange-50 text-orange-600 border-none font-black">{liveOps.length} Active</Badge>
@@ -299,7 +299,7 @@ export default function DonorDashboard() {
             <div className="lg:col-span-2 space-y-8">
               <div className="flex items-center justify-between px-4 border-l-4 border-slate-950">
                 <div>
-                   <h2 className="text-3xl font-black italic tracking-tighter uppercase text-slate-950">Mission Audit Feed</h2>
+                   <h2 className="text-3xl font-black  tracking-tighter uppercase text-slate-950">Mission Audit Feed</h2>
                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Comprehensive logs of all sharing operations</p>
                 </div>
                 <Link href="/donor/donations" className="px-5 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-all shadow-sm">Full Archive &rarr;</Link>
@@ -368,7 +368,7 @@ export default function DonorDashboard() {
                     <div className="w-14 h-14 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-6 border border-white/20">
                        <Award className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-2xl font-black italic mb-4 leading-tight tracking-tighter">Impact Level <br />Pro-Donor 04</h3>
+                    <h3 className="text-2xl font-black  mb-4 leading-tight tracking-tighter">Impact Level <br />Pro-Donor 04</h3>
                     <p className="text-orange-50/80 text-[10px] font-bold mb-10 leading-relaxed uppercase tracking-[0.2em]">Unlock premium donor certificates by reaching 100kg impact milestone.</p>
                     <button className="w-full py-5 bg-white text-orange-600 font-black rounded-2xl hover:bg-slate-950 hover:text-white transition-all active:scale-95 shadow-xl shadow-orange-800/10 uppercase text-[10px] tracking-widest">
                        Verify Ranks

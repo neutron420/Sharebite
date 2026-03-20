@@ -167,7 +167,7 @@ export default function DonorComplaintsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight italic text-slate-900 underline decoration-orange-600/10">
+          <h1 className="text-3xl font-black tracking-tight  text-slate-900 underline decoration-orange-600/10">
             <ShieldAlert className="w-8 h-8 inline-block text-orange-600 mr-2 -mt-1" />
             My Complaints
           </h1>

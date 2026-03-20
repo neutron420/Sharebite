@@ -84,7 +84,7 @@ export default function DonorHistory() {
                initial={{ opacity: 0, x: -20 }}
                animate={{ opacity: 1, x: 0 }}
             >
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 italic underline decoration-orange-600/10 underline-offset-8 transition-all hover:decoration-orange-500/20 cursor-default">
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2  underline decoration-orange-600/10 underline-offset-8 transition-all hover:decoration-orange-500/20 cursor-default">
                  Donation History
               </h1>
               <p className="text-slate-400 font-bold">Track your past and current active shares.</p>

@@ -92,12 +92,12 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#FCFCFD] text-slate-950 flex italic selection:bg-orange-100">
+    <div className="min-h-screen bg-[#FCFCFD] text-slate-950 flex  selection:bg-orange-100">
       
       {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 border-r border-slate-100 bg-white z-50 py-10 px-6">
         <div className="flex items-center gap-3 mb-16 px-2">
-          <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 italic font-black text-white text-xl uppercase">N</div>
+          <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100  font-black text-white text-xl uppercase">N</div>
           <span className="text-xl font-black tracking-tighter uppercase whitespace-nowrap">NGO Ops Hub</span>
         </div>
 
@@ -149,7 +149,7 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile Header */}
         <header className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center font-black text-white italic">N</div>
+            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center font-black text-white ">N</div>
             <span className="font-black text-sm tracking-tighter uppercase whitespace-nowrap">NGO Hub</span>
           </div>
           <button 

@@ -114,7 +114,7 @@ export default function NgoDashboard() {
            initial={{ opacity: 0, x: -20 }}
            animate={{ opacity: 1, x: 0 }}
         >
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 italic underline decoration-orange-600/10 underline-offset-8 transition-all hover:decoration-orange-500/20 cursor-default">
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2  underline decoration-orange-600/10 underline-offset-8 transition-all hover:decoration-orange-500/20 cursor-default">
              {userName} 👋
           </h1>
           <p className="text-slate-400 font-bold">Deploy your logistics to rescue surplus nearby.</p>
@@ -151,7 +151,7 @@ export default function NgoDashboard() {
       {stats && stats.activeRequests && stats.activeRequests.length > 0 && (
         <section className="space-y-6">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-3 text-orange-600">
+            <h2 className="text-2xl font-black  tracking-tighter flex items-center gap-3 text-orange-600">
               <ShieldCheck className="w-8 h-8" /> Active Operations
             </h2>
             <Badge className="bg-orange-50 text-orange-600 border-none font-black">{stats.activeRequests.length} Live</Badge>
@@ -216,7 +216,7 @@ export default function NgoDashboard() {
         {/* Nearby Supplies Table */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-2xl font-black italic tracking-tighter">Available Supplies Nearby</h2>
+            <h2 className="text-2xl font-black  tracking-tighter">Available Supplies Nearby</h2>
             <Link href="/donations" className="text-xs font-black uppercase tracking-widest text-slate-300 hover:text-orange-600 transition-colors">Global Search</Link>
           </div>
 
@@ -265,7 +265,7 @@ export default function NgoDashboard() {
                  </div>
                  <h4 className="font-black text-lg text-slate-900">No active surplus found</h4>
                  <p className="text-slate-400 text-sm font-bold mt-1 max-w-[240px]">We couldn&apos;t find any active donations in your sector. Expand your search radius.</p>
-                 <Link href="/donations" className="mt-6 px-10 py-4 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-950 transition-all shadow-xl shadow-orange-100 italic">
+                 <Link href="/donations" className="mt-6 px-10 py-4 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-950 transition-all shadow-xl shadow-orange-100 ">
                     Explore Large Hub hubs
                  </Link>
               </div>
@@ -281,7 +281,7 @@ export default function NgoDashboard() {
                 <div className="w-14 h-14 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-6 border border-white/20">
                    <Award className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-black italic mb-4 leading-tight tracking-tighter">Verified Distributer <br />Status Active</h3>
+                <h3 className="text-2xl font-black  mb-4 leading-tight tracking-tighter">Verified Distributer <br />Status Active</h3>
                 <p className="text-orange-50/80 text-[10px] font-bold mb-10 leading-relaxed uppercase tracking-[0.2em]">Your certificate expires in 120 days. Keep operations active to auto-renew.</p>
                 <button className="w-full py-5 bg-white text-orange-600 font-black rounded-2xl hover:bg-slate-900 hover:text-white transition-all active:scale-95 shadow-xl shadow-orange-800/10 uppercase text-[10px] tracking-widest">
                    Download Identity

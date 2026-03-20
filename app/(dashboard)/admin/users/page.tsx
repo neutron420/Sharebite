@@ -405,7 +405,7 @@ export default function UsersPage() {
                 {selectedUser.role === "DONOR" && (
                   <div className="bg-orange-50/50 backdrop-blur-md rounded-lg p-3 border border-orange-200/50 col-span-2">
                     <p className="text-xs text-orange-500 uppercase font-black tracking-widest">Donor Category</p>
-                    <p className="text-sm font-black text-orange-700 mt-1 uppercase italic tracking-tighter">
+                    <p className="text-sm font-black text-orange-700 mt-1 uppercase  tracking-tighter">
                       {selectedUser.donorType?.replace(/_/g, " ") || "NORMAL VERSION"}
                     </p>
                   </div>

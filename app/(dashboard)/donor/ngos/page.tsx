@@ -234,7 +234,7 @@ export default function DonorNgoMapPage() {
   return (
     <div className="space-y-6">
       <div className="rounded-3xl bg-white border border-slate-200 p-6">
-        <h1 className="text-2xl lg:text-3xl font-black tracking-tight uppercase italic">NGO Network</h1>
+        <h1 className="text-2xl lg:text-3xl font-black tracking-tight uppercase ">NGO Network</h1>
         <p className="mt-2 text-sm font-bold text-slate-500">Discover and visualize trusted Sharebite NGOs around you.</p>
 
         <div className="mt-5 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center">

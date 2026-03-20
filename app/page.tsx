@@ -131,7 +131,7 @@ export default function Home() {
             className="text-5xl md:text-[80px] font-black tracking-tight leading-[0.95] mb-10 text-slate-950"
           >
             Zero Waste. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 italic">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 ">
                Unlimited Hope.
             </span>
           </motion.h1>
@@ -171,7 +171,7 @@ export default function Home() {
                      <div className="p-4 bg-slate-50 rounded-[1.5rem] border border-slate-100 group-hover:bg-orange-50 group-hover:border-orange-100 transition-all shadow-sm">
                        {p.icon}
                      </div>
-                     <span className="text-2xl font-black italic tracking-tighter text-slate-900">{p.name}</span>
+                     <span className="text-2xl font-black  tracking-tighter text-slate-900">{p.name}</span>
                   </div>
                 ))}
               </Marquee>
@@ -182,7 +182,7 @@ export default function Home() {
         {/* Polished Bento Grid */}
         <section id="features" className="px-6 py-40 max-w-7xl mx-auto">
           <div className="text-center mb-28">
-            <h2 className="text-4xl md:text-7xl font-black tracking-tight mb-8">Platform of <span className="text-orange-600 italic">Prestige.</span></h2>
+            <h2 className="text-4xl md:text-7xl font-black tracking-tight mb-8">Platform of <span className="text-orange-600 ">Prestige.</span></h2>
             <p className="text-slate-500 font-bold text-lg max-w-xl mx-auto">Engineered for absolute reliability, transparency, and global scale.</p>
           </div>
           
@@ -206,7 +206,7 @@ export default function Home() {
 
         {/* Minimalist CTA */}
         <section className="px-6 py-48 text-center">
-          <h2 className="text-5xl md:text-[100px] font-black tracking-tighter mb-14 text-slate-950 italic">Ready to Lead?</h2>
+          <h2 className="text-5xl md:text-[100px] font-black tracking-tighter mb-14 text-slate-950 ">Ready to Lead?</h2>
           <p className="text-lg text-slate-400 mb-16 max-w-lg mx-auto font-medium">Join 12,000+ pioneers redefining food security. Experience the future of sharing.</p>
           <Link href="/register" className="px-20 py-8 bg-slate-950 text-white font-black text-2xl rounded-[2rem] hover:bg-orange-600 hover:-translate-y-2 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] active:scale-95 group">
              Initialize Profile <ArrowRight className="inline ml-2 group-hover:translate-x-3 transition-transform" />
@@ -223,7 +223,7 @@ function RoleItem({ title, desc, luxury = false }: { title: string, desc: string
   return (
     <div className="space-y-6 group cursor-default">
        <div className="h-0.5 w-12 bg-orange-600 group-hover:w-full transition-all duration-700" />
-       <h3 className="text-4xl font-black italic tracking-tight">{title}</h3>
+       <h3 className="text-4xl font-black  tracking-tight">{title}</h3>
        <p className="text-slate-400 font-medium leading-relaxed">{desc}</p>
        <button className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-white hover:text-orange-500 transition-colors">
          Explore Role <ChevronRight className="w-4 h-4" />
