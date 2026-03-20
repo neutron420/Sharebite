@@ -82,28 +82,30 @@ export default function Home() {
       
       {/* Premium Background Pattern */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] bg-[radial-gradient(circle_at_center,rgba(255,100,50,0.08),transparent_70%)] opacity-70" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1800px] bg-[radial-gradient(circle_at_center,rgba(255, 100, 50, 0.08),transparent_70%)] opacity-70" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       </div>
 
       {/* Broad & Premium Navbar */}
       <nav className="fixed top-8 z-50 w-[95%] max-w-7xl">
         <div className="mx-auto rounded-[2rem] border border-orange-100 bg-white/60 backdrop-blur-2xl px-8 py-4 flex items-center justify-between shadow-[0_10px_40px_rgba(0,0,0,0.04)]">
+            <a href="#">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-10 h-10 bg-orange-600 rounded-2xl shadow-[0_8px_20px_rgba(234,88,12,0.2)] flex items-center justify-center group-hover:rotate-6 transition-all">
-              <Heart className="w-5 h-5 text-white" fill="white" />
-            </div>
+              <div className="w-10 h-10 bg-orange-600 rounded-2xl shadow-[0_8px_20px_rgba(234,88,12,0.2)] flex items-center justify-center group-hover:rotate-6 transition-all">
+                <Heart className="w-5 h-5 text-white" fill="white" />
+              </div>  
             <span className="text-2xl font-black tracking-tighter text-slate-900">ShareBite</span>
           </div>
+            </a>    
           
-          <div className="hidden lg:flex items-center gap-12 text-[12px] font-black uppercase tracking-[0.2em] text-slate-400">
+          <div className="hidden font-[var(--font-display)] font-bold lg:flex items-center gap-12 text-[12px] font-black uppercase tracking-[0.2em] text-gray-500">
             <a href="#features" className="hover:text-orange-600 transition-colors">Tech Stack</a>
             <a href="#impact" className="hover:text-orange-600 transition-colors">Impact Log</a>
             <a href="#roles" className="hover:text-orange-600 transition-colors">Coalition</a>
             <Link href="/login" className="hover:text-orange-600 transition-colors">Portal</Link>
           </div>
 
-          <Link href="/register" className="px-8 py-3 bg-slate-950 text-white text-[12px] font-black rounded-2xl hover:bg-orange-600 hover:shadow-xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center gap-2">
+          <Link href="/register" className="px-8 py-3 bg-slate-950 text-white text-[12px] font-bold rounded-2xl hover:bg-orange-600 hover:shadow-xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center gap-2">
             JOIN MOVEMENT <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -131,7 +133,7 @@ export default function Home() {
             className="text-5xl md:text-[80px] font-black tracking-tight leading-[0.95] mb-10 text-slate-950"
           >
             Zero Waste. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 italic">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 ">
                Unlimited Hope.
             </span>
           </motion.h1>
@@ -171,7 +173,7 @@ export default function Home() {
                      <div className="p-4 bg-slate-50 rounded-[1.5rem] border border-slate-100 group-hover:bg-orange-50 group-hover:border-orange-100 transition-all shadow-sm">
                        {p.icon}
                      </div>
-                     <span className="text-2xl font-black italic tracking-tighter text-slate-900">{p.name}</span>
+                     <span className="text-2xl font-black tracking-tighter text-slate-900">{p.name}</span>
                   </div>
                 ))}
               </Marquee>
@@ -182,7 +184,7 @@ export default function Home() {
         {/* Polished Bento Grid */}
         <section id="features" className="px-6 py-40 max-w-7xl mx-auto">
           <div className="text-center mb-28">
-            <h2 className="text-4xl md:text-7xl font-black tracking-tight mb-8">Platform of <span className="text-orange-600 italic">Prestige.</span></h2>
+            <h2 className="text-4xl md:text-7xl font-black tracking-tight mb-8">Platform of <span className="text-orange-600 ">Prestige.</span></h2>
             <p className="text-slate-500 font-bold text-lg max-w-xl mx-auto">Engineered for absolute reliability, transparency, and global scale.</p>
           </div>
           
@@ -206,7 +208,7 @@ export default function Home() {
 
         {/* Minimalist CTA */}
         <section className="px-6 py-48 text-center">
-          <h2 className="text-5xl md:text-[100px] font-black tracking-tighter mb-14 text-slate-950 italic">Ready to Lead?</h2>
+          <h2 className="text-5xl md:text-[100px] font-black tracking-tighter mb-14 text-slate-950 ">Ready to Lead?</h2>
           <p className="text-lg text-slate-400 mb-16 max-w-lg mx-auto font-medium">Join 12,000+ pioneers redefining food security. Experience the future of sharing.</p>
           <Link href="/register" className="px-20 py-8 bg-slate-950 text-white font-black text-2xl rounded-[2rem] hover:bg-orange-600 hover:-translate-y-2 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] active:scale-95 group">
              Initialize Profile <ArrowRight className="inline ml-2 group-hover:translate-x-3 transition-transform" />
@@ -223,7 +225,7 @@ function RoleItem({ title, desc, luxury = false }: { title: string, desc: string
   return (
     <div className="space-y-6 group cursor-default">
        <div className="h-0.5 w-12 bg-orange-600 group-hover:w-full transition-all duration-700" />
-       <h3 className="text-4xl font-black italic tracking-tight">{title}</h3>
+       <h3 className="text-4xl font-black tracking-tight">{title}</h3>
        <p className="text-slate-400 font-medium leading-relaxed">{desc}</p>
        <button className="flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-white hover:text-orange-500 transition-colors">
          Explore Role <ChevronRight className="w-4 h-4" />

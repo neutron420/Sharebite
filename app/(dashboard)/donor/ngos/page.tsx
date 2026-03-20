@@ -310,7 +310,7 @@ export default function DonorNgoMapPage() {
           Back
         </button>
 
-        <h1 className="mt-3 text-2xl lg:text-3xl font-black tracking-tight uppercase italic">NGO Network Map</h1>
+        <h1 className="mt-3 text-2xl lg:text-3xl font-black tracking-tight uppercase ">NGO Network Map</h1>
         <p className="mt-2 text-sm font-bold text-slate-500">Map of NGOs who requested pickups from your donations.</p>
 
         <div className="mt-5 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center">

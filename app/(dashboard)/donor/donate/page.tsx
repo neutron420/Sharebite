@@ -224,7 +224,7 @@ export default function DonatePage() {
                      {currentStep === 0 && (
                         <div className="space-y-8">
                            <div className="space-y-2">
-                              <h2 className="text-3xl font-black italic tracking-tighter text-slate-900 underline decoration-orange-600/10">Food Basics</h2>
+                              <h2 className="text-3xl font-black  tracking-tighter text-slate-900 underline decoration-orange-600/10">Food Basics</h2>
                               <p className="text-sm font-bold text-slate-400">Describe what you&apos;re sharing today.</p>
                            </div>
 
@@ -297,7 +297,7 @@ export default function DonatePage() {
                      {currentStep === 1 && (
                         <div className="space-y-8">
                            <div className="space-y-2">
-                              <h2 className="text-3xl font-black italic tracking-tighter text-slate-900 underline decoration-orange-600/10">Timing Logistics</h2>
+                              <h2 className="text-3xl font-black  tracking-tighter text-slate-900 underline decoration-orange-600/10">Timing Logistics</h2>
                               <p className="text-sm font-bold text-slate-400">When should we pick this up?</p>
                            </div>
 
@@ -380,7 +380,7 @@ export default function DonatePage() {
                      {currentStep === 2 && (
                         <div className="space-y-8">
                            <div className="space-y-2">
-                              <h2 className="text-3xl font-black italic tracking-tighter text-slate-900 underline decoration-orange-600/10">Location Check</h2>
+                              <h2 className="text-3xl font-black  tracking-tighter text-slate-900 underline decoration-orange-600/10">Location Check</h2>
                               <p className="text-sm font-bold text-slate-400">Confirm where items are stored.</p>
                            </div>
 
@@ -388,11 +388,11 @@ export default function DonatePage() {
                               <div className="grid grid-cols-2 gap-4">
                                  <div className="space-y-3">
                                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">City</Label>
-                                    <Input readOnly value={formData.city} placeholder="Pin Map ->" className="bg-slate-50 border-slate-100 font-black italic h-12 rounded-xl text-xs" />
+                                    <Input readOnly value={formData.city} placeholder="Pin Map ->" className="bg-slate-50 border-slate-100 font-black  h-12 rounded-xl text-xs" />
                                  </div>
                                  <div className="space-y-3">
                                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Zipcode</Label>
-                                    <Input readOnly value={formData.pincode} placeholder="..." className="bg-slate-50 border-slate-100 font-black italic h-12 rounded-xl text-xs" />
+                                    <Input readOnly value={formData.pincode} placeholder="..." className="bg-slate-50 border-slate-100 font-black  h-12 rounded-xl text-xs" />
                                  </div>
                               </div>
 
@@ -404,7 +404,7 @@ export default function DonatePage() {
                                     placeholder="Door no, Street, Landmark..."
                                     onChange={(e) => updateFormData("pickupLocation", e.target.value)}
                                  />
-                                 <p className="text-[10px] font-bold text-slate-400 italic">This will be shown to the approved NGO only.</p>
+                                 <p className="text-[10px] font-bold text-slate-400 ">This will be shown to the approved NGO only.</p>
                               </div>
 
                               <div className="p-6 bg-orange-50/50 rounded-3xl border border-orange-100/50 mt-10">
@@ -449,7 +449,7 @@ export default function DonatePage() {
                      <Button 
                         onClick={handleSubmit}
                         disabled={!isStepValid() || isSubmitting || uploadingImage}
-                        className="flex-grow h-14 rounded-2xl bg-orange-600 text-white font-black hover:bg-slate-900 transition-all shadow-2xl shadow-orange-100 active:scale-95 italic text-lg"
+                        className="flex-grow h-14 rounded-2xl bg-orange-600 text-white font-black hover:bg-slate-900 transition-all shadow-2xl shadow-orange-100 active:scale-95  text-lg"
                      >
                         {isSubmitting ? (
                            <div className="flex items-center gap-3">
