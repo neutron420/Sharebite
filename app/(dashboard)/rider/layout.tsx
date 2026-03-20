@@ -15,6 +15,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSocket } from "@/components/providers/socket-provider";
+import { toast } from "sonner";
 
 interface RiderUser {
   id: string;
@@ -50,9 +52,18 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
     }
   }, [router]);
 
+  const { addListener } = useSocket();
+
   useEffect(() => {
     fetchUser();
-  }, [fetchUser]);
+
+    // Listen for real-time notifications via WebSocket
+    const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
+       toast.info(newNotif.title, { description: newNotif.message });
+    });
+
+    return () => unsubscribe();
+  }, [fetchUser, addListener]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });

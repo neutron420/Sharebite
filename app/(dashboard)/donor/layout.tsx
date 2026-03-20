@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useSocket } from "@/components/providers/socket-provider";
+import { toast } from "sonner";
 import {
   LayoutDashboard,
   History,
@@ -100,7 +102,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
   
-  // Header state
+  const { addListener } = useSocket();
   const [searchQuery, setSearchQuery] = useState("");
   const [notifAnchor, setNotifAnchor] = useState<null | HTMLElement>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -129,7 +131,6 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
 
   const fetchNotifications = useCallback(async () => {
     try {
-      setNotifLoading(true);
       const res = await fetch("/api/notifications", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
@@ -138,19 +139,22 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
       }
     } catch (err) {
       console.error("Failed to fetch notifications", err);
-    } finally {
-      setNotifLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchUser();
     fetchNotifications();
-    
-    // Set up real-time polling for notifications (every 30 seconds)
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [fetchUser, fetchNotifications]);
+
+    // Listen for real-time notifications via WebSocket
+    const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
+       setNotifications(prev => [newNotif, ...prev]);
+       setUnreadCount(prev => prev + 1);
+       toast.info(newNotif.title, { description: newNotif.message });
+    });
+
+    return () => unsubscribe();
+  }, [fetchUser, fetchNotifications, addListener]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });

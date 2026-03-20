@@ -3,7 +3,7 @@ import { Bell } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useSocket } from '@/components/providers/socket-provider';
 import { toast } from 'sonner';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 
 export default function NotificationBell() {
    const [notifications, setNotifications] = useState<any[]>([]);
