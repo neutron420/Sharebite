@@ -174,8 +174,8 @@ export default function DonorDashboard() {
           
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2  underline decoration-orange-600/10 underline-offset-8">
-                 Salute, {userName}! 👋
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2">
+                 Salute, {userName}!
               </h1>
               <p className="text-slate-400 font-bold">Your donations have impacted hundreds of lives today.</p>
             </motion.div>
