@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 import { useSocket } from "@/components/providers/socket-provider";
 
 interface NGOUser {
@@ -199,6 +200,9 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
 
         {/* Page Content */}
         <main className="flex-1">
+          <div className="flex justify-end px-6 pt-6 lg:px-10 lg:pt-8">
+            <DashboardRefreshButton />
+          </div>
           {children}
         </main>
       </div>

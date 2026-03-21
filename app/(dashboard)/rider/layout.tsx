@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useSocket } from "@/components/providers/socket-provider";
 import { toast } from "sonner";
+import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 
 interface RiderUser {
   id: string;
@@ -193,7 +194,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
 
         {/* Page Content */}
         <main className="flex-1 p-6 md:p-12">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex justify-end">
+              <DashboardRefreshButton />
+            </div>
             {children}
           </div>
         </main>

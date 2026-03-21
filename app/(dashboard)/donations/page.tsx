@@ -7,6 +7,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Loader2, MapPin, Package, Clock, ArrowLeft, Search, X, Navigation } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 import { toast } from "sonner";
+import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -305,20 +306,23 @@ export default function DonationsMapPage() {
   return (
     <div className="min-h-screen bg-[#FCFCFD] px-4 py-6 lg:px-8 lg:py-8">
       <div className="mb-6 rounded-3xl bg-white border border-slate-200 p-6">
-        <button
-          onClick={() => {
-            if (window.history.length > 1) {
-              router.back();
-              return;
-            }
-            router.push("/ngo");
-          }}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-600 hover:text-orange-600 hover:border-orange-300 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
-        <h1 className="text-2xl lg:text-3xl font-black tracking-tight uppercase italic">Find Food</h1>
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                router.back();
+                return;
+              }
+              router.push("/ngo");
+            }}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-xs font-black uppercase tracking-wider text-slate-600 hover:text-orange-600 hover:border-orange-300 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          <DashboardRefreshButton />
+        </div>
+        <h1 className="mt-4 text-2xl lg:text-3xl font-black tracking-tight uppercase italic">Find Food</h1>
         <p className="mt-2 text-sm font-bold text-slate-500">
           Live donation map with pin drops for available food pickups.
         </p>

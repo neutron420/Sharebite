@@ -35,6 +35,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 import { useSocket } from "@/components/providers/socket-provider";
 
 interface DonorUser {
@@ -387,6 +388,8 @@ export default function DonorLayout({
             </div>
 
             <div className="flex items-center gap-2">
+              <DashboardRefreshButton className="shrink-0" />
+
               <IconButton
                 onClick={(event) => setNotifAnchor(event.currentTarget)}
                 className="hover:bg-gray-100 text-gray-500 hover:text-orange-600 transition-colors"
