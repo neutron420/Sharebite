@@ -77,7 +77,7 @@ export default function DonorHistory() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12">
+    <div className="w-full space-y-12">
           
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
             <motion.div

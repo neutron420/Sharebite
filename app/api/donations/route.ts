@@ -5,11 +5,12 @@ import { getSession } from "@/lib/auth";
 import { NotificationType } from "@/app/generated/prisma";
 import redis from "@/lib/redis";
 import { withSecurity } from "@/lib/api-handler";
+import { checkAndAwardBadges, awardDonationKarma } from "@/lib/achievements";
 
 async function postDonationHandler(request: Request) {
   try {
     const session = await getSession({ request });
-    // RBAC check (Donors/Admins only)
+
     if (!session || (session.role !== "DONOR" && session.role !== "ADMIN")) {
       return NextResponse.json(
         { error: "Unauthorized. Only donors can create donations." },
@@ -46,7 +47,6 @@ async function postDonationHandler(request: Request) {
       link: `/admin/donations/${donation.id}`
     }));
 
-    // 2. Notify all Verified NGOs in the same city
     const nearbyNGOs = await prisma.user.findMany({
       where: {
         role: "NGO",
@@ -106,6 +106,17 @@ async function postDonationHandler(request: Request) {
         // Log but don't fail the request - database part is done
         console.error("Redis geoadd error:", e);
       }
+    }
+
+    // 4. Award Karma & Check Badge Achievements
+    try {
+      await awardDonationKarma(session.userId as string, validatedData.weight || 0);
+      const newBadges = await checkAndAwardBadges(session.userId as string);
+      if (newBadges.length > 0) {
+        console.log(`[BADGES] Donor ${session.userId} unlocked: ${newBadges.join(", ")}`);
+      }
+    } catch (e) {
+      console.error("Achievement check error:", e);
     }
 
     return NextResponse.json(donation, { status: 201 });

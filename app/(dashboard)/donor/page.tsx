@@ -1,52 +1,104 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { 
-  Plus, 
-  History, 
-  TrendingUp, 
-  UtensilsCrossed, 
-  Users, 
-  Award,
+import {
   ArrowRight,
-  Clock,
-  LayoutDashboard,
-  LogOut,
-  ChevronRight,
-  Loader2,
   Calendar,
-  AlertCircle,
-  AlertTriangle,
-  Bell,
-  ShieldCheck,
+  Loader2,
   MapPin,
+  Navigation,
+  Plus,
+  ShieldCheck,
+  TrendingUp,
   Truck,
-  Navigation
+  UserRound,
+  Users,
+  UtensilsCrossed,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { formatDistanceToNow, format } from "date-fns";
+import confetti from "canvas-confetti";
+import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
+import { FiArrowRight, FiAward, FiCheckCircle, FiClock, FiX } from "react-icons/fi";
 import DonationList from "@/components/ui/donation-list";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import LiveRiderMap from "@/components/ui/live-rider-map";
+import { useSocket } from "@/components/providers/socket-provider";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { cn } from "@/lib/utils";
 
 interface DonorStats {
   totalDonations: number;
   activeDonations: number;
   completedDonations: number;
   totalWeightDonated: number;
+  userName?: string;
+}
+
+interface DonorNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+  link?: string | null;
+}
+
+interface BadgeSpotlight {
+  id: string;
+  notificationId: string;
+  badgeName: string;
+  message: string;
+  createdAt: string;
+}
+
+function extractBadgeName(title: string) {
+  const match = title.replace("🏅", "").trim().match(/Badge Unlocked:\s*(.+?)(?:!|$)/i);
+  return match?.[1]?.trim() || "New Achievement";
+}
+
+function toBadgeSpotlight(notification: DonorNotification): BadgeSpotlight | null {
+  if (notification.type !== "SYSTEM" || !notification.title?.includes("Badge Unlocked")) {
+    return null;
+  }
+
+  return {
+    id: `${notification.id}:${notification.createdAt}`,
+    notificationId: notification.id,
+    badgeName: extractBadgeName(notification.title),
+    message: notification.message,
+    createdAt: notification.createdAt,
+  };
+}
+
+function mergeBadgeSpotlights(
+  current: BadgeSpotlight[],
+  incoming: Array<BadgeSpotlight | null>,
+) {
+  const deduped = new Map<string, BadgeSpotlight>();
+
+  [...current, ...incoming.filter(Boolean)].forEach((spotlight) => {
+    if (!spotlight) {
+      return;
+    }
+
+    deduped.set(spotlight.notificationId, spotlight);
+  });
+
+  return Array.from(deduped.values()).sort(
+    (left, right) =>
+      new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+  );
 }
 
 /**
@@ -55,11 +107,13 @@ interface DonorStats {
  */
 export default function DonorDashboard() {
   const router = useRouter();
+  const { addListener } = useSocket();
   const [stats, setStats] = useState<DonorStats | null>(null);
   const [recentItems, setRecentItems] = useState<any[]>([]);
   const [liveOps, setLiveOps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState("Hero");
+  const [badgeSpotlights, setBadgeSpotlights] = useState<BadgeSpotlight[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
 
@@ -111,6 +165,15 @@ export default function DonorDashboard() {
             setLiveOps(active);
         }
 
+        const notificationsRes = await fetch("/api/notifications");
+        if (notificationsRes.ok) {
+          const notificationsData: DonorNotification[] = await notificationsRes.json();
+          const unreadBadgeSpotlights = notificationsData
+            .filter((notification) => !notification.isRead)
+            .map(toBadgeSpotlight);
+          setBadgeSpotlights((previous) => mergeBadgeSpotlights(previous, unreadBadgeSpotlights));
+        }
+
       } catch (error: any) {
         console.error("Dashboard load error:", error);
         if (error.message?.includes("Session expired")) {
@@ -124,15 +187,69 @@ export default function DonorDashboard() {
     }
 
     fetchData();
-  }, []);
+  }, [router]);
 
-  const handleSignOut = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-    } catch (e) {
-      router.push("/login");
+  useEffect(() => {
+    const unsubscribe = addListener("NOTIFICATION", (payload) => {
+      const spotlight = toBadgeSpotlight(payload as DonorNotification);
+      if (!spotlight) {
+        return;
+      }
+
+      setBadgeSpotlights((previous) => mergeBadgeSpotlights(previous, [spotlight]));
+    });
+
+    return () => unsubscribe();
+  }, [addListener]);
+
+  const activeBadgeSpotlight = badgeSpotlights[0] || null;
+
+  useEffect(() => {
+    if (!activeBadgeSpotlight) {
+      return;
     }
+
+    confetti({
+      particleCount: 120,
+      spread: 85,
+      startVelocity: 35,
+      origin: { y: 0.28 },
+      colors: ["#f97316", "#fb923c", "#facc15", "#ffffff"],
+    });
+  }, [activeBadgeSpotlight]);
+
+  const markBadgeNotificationRead = async (notificationId: string) => {
+    try {
+      await fetch(`/api/notifications/${notificationId}`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Failed to mark badge notification as read", error);
+    }
+  };
+
+  const dismissBadgeSpotlight = async () => {
+    if (!activeBadgeSpotlight) {
+      return;
+    }
+
+    setBadgeSpotlights((previous) =>
+      previous.filter((spotlight) => spotlight.notificationId !== activeBadgeSpotlight.notificationId),
+    );
+    await markBadgeNotificationRead(activeBadgeSpotlight.notificationId);
+  };
+
+  const openBadgeSpotlight = async () => {
+    if (!activeBadgeSpotlight) {
+      return;
+    }
+
+    setBadgeSpotlights((previous) =>
+      previous.filter((spotlight) => spotlight.notificationId !== activeBadgeSpotlight.notificationId),
+    );
+    await markBadgeNotificationRead(activeBadgeSpotlight.notificationId);
+    router.push("/donor/profile#badges-gallery");
   };
 
   const statCards = [
@@ -150,7 +267,7 @@ export default function DonorDashboard() {
     );
   }
   return (
-    <div className="max-w-6xl mx-auto space-y-12">
+    <div className="w-full space-y-12">
           
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
@@ -163,6 +280,76 @@ export default function DonorDashboard() {
               Share Surplus <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
             </Link>
           </header>
+
+          <AnimatePresence>
+            {activeBadgeSpotlight && (
+              <motion.div
+                initial={{ opacity: 0, y: -18, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -18, scale: 0.96 }}
+                className="fixed inset-x-4 top-24 z-50 md:left-auto md:right-6 md:w-[24rem]"
+              >
+                <Alert
+                  variant="success"
+                  className="overflow-hidden rounded-[2rem] border-emerald-200/80 bg-[linear-gradient(135deg,#f0fdf4_0%,#dcfce7_58%,#bbf7d0_100%)] p-4 pr-12 shadow-2xl shadow-emerald-200/70"
+                >
+                  <FiAward className="left-4 top-4 h-5 w-5 text-emerald-700" />
+
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-green-500 to-lime-400" />
+
+                  <button
+                    type="button"
+                    onClick={dismissBadgeSpotlight}
+                    className="absolute right-3 top-3 rounded-full bg-white/80 p-2 text-emerald-700 transition hover:bg-white"
+                    aria-label="Dismiss badge unlock"
+                  >
+                    <FiX className="h-4 w-4" />
+                  </button>
+
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <AlertTitle className="mb-0 text-[10px] font-black uppercase tracking-[0.28em] text-emerald-700 not-italic">
+                        Badge Unlocked
+                      </AlertTitle>
+                      {badgeSpotlights.length > 1 && (
+                        <span className="inline-flex items-center rounded-full bg-white/80 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-700">
+                          +{badgeSpotlights.length - 1} more
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="rounded-2xl border border-white/70 bg-white/70 px-3.5 py-3 shadow-sm shadow-emerald-100/80">
+                      <p className="flex items-center gap-2 text-sm font-black tracking-tight text-slate-950">
+                        <FiCheckCircle className="h-4 w-4 text-emerald-600" />
+                        {activeBadgeSpotlight.badgeName}
+                      </p>
+                      <AlertDescription className="mt-1 text-xs font-semibold leading-relaxed text-slate-600 opacity-100">
+                        {activeBadgeSpotlight.message}
+                      </AlertDescription>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700/80">
+                        <FiClock className="h-3.5 w-3.5" />
+                        {formatDistanceToNow(new Date(activeBadgeSpotlight.createdAt), {
+                          addSuffix: true,
+                        })}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={openBadgeSpotlight}
+                        className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 px-3.5 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-emerald-700"
+                      >
+                        View
+                        <FiArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </Alert>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Live Operations / OTP Section */}
           <AnimatePresence>
@@ -362,17 +549,23 @@ export default function DonorDashboard() {
 
             {/* Sidebar Cards */}
             <div className="space-y-6">
-              <div className="p-8 rounded-[3.5rem] bg-orange-600 text-white relative overflow-hidden group shadow-2xl shadow-orange-100 border-4 border-white">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 blur-3xl group-hover:scale-150 transition-transform duration-700" />
+              <div className="p-8 rounded-[3rem] border border-slate-100 bg-white relative overflow-hidden shadow-xl shadow-orange-50/30">
+                 <div className="absolute top-0 right-0 h-32 w-32 bg-orange-100/70 blur-3xl" />
                  <div className="relative z-10">
-                    <div className="w-14 h-14 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-6 border border-white/20">
-                       <Award className="w-6 h-6 text-white" />
+                    <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 border border-orange-100 text-orange-600">
+                       <UserRound className="w-6 h-6" />
                     </div>
-                    <h3 className="text-2xl font-black italic mb-4 leading-tight tracking-tighter">Impact Level <br />Pro-Donor 04</h3>
-                    <p className="text-orange-50/80 text-[10px] font-bold mb-10 leading-relaxed uppercase tracking-[0.2em]">Unlock premium donor certificates by reaching 100kg impact milestone.</p>
-                    <button className="w-full py-5 bg-white text-orange-600 font-black rounded-2xl hover:bg-slate-950 hover:text-white transition-all active:scale-95 shadow-xl shadow-orange-800/10 uppercase text-[10px] tracking-widest">
-                       Verify Ranks
-                    </button>
+                    <h3 className="text-2xl font-black italic mb-4 leading-tight tracking-tighter text-slate-950">Profile <br />Center</h3>
+                    <p className="text-slate-500 text-[10px] font-bold mb-10 leading-relaxed uppercase tracking-[0.2em]">
+                      Your account details, profile updates, and donor journey now live in one place.
+                    </p>
+                    <Link
+                      href="/donor/profile"
+                      className="w-full inline-flex items-center justify-center gap-3 py-5 bg-slate-950 text-white font-black rounded-2xl hover:bg-orange-600 transition-all active:scale-95 shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest"
+                    >
+                       Open Profile
+                       <ArrowRight className="w-4 h-4" />
+                    </Link>
                  </div>
               </div>
 

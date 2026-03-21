@@ -28,11 +28,11 @@ export async function createNotification({
     // Trigger real-time delivery via internal WS server
     try {
       const internalWsUrl = process.env.INTERNAL_WS_URL || 'http://localhost:8081';
-      fetch(`${internalWsUrl}/notify`, {
+      await fetch(`${internalWsUrl}/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, notification })
-      }).catch(() => {}); // Fire and forget
+      }).catch(() => {}); // Don't fail the main request if the WS relay is down
     } catch (e) {
       // Silently fail if WS server is down
     }

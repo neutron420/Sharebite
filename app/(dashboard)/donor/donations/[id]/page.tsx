@@ -173,7 +173,7 @@ export default function DonorDonationDetails() {
       </aside>
 
       <main className="flex-grow pl-0 md:pl-64 pt-6 pb-24 px-6 md:px-12 bg-[#FCFCFD] relative">
-         <div className="max-w-5xl mx-auto space-y-10">
+         <div className="w-full space-y-10">
             
             <button 
                onClick={() => router.push("/donor/donations")}
