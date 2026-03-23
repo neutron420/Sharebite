@@ -9,6 +9,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      maxWidth: {
+        container: "1280px",
+      },
       fontFamily: {
         sans: ["var(--font-roboto)"],
       },
@@ -69,12 +72,22 @@ module.exports = {
           from: { transform: "translateY(0)" },
           to: { transform: "translateY(calc(-100% - var(--gap)))" },
         },
+        "conveyor-left": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+        "conveyor-right": {
+          "0%": { transform: "translateX(-50%)" },
+          "100%": { transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         marquee: "marquee var(--duration) linear infinite",
         "marquee-vertical": "marquee-vertical var(--duration) linear infinite",
+        "conveyor-left": "conveyor-left 40s linear infinite",
+        "conveyor-right": "conveyor-right 40s linear infinite",
       },
     },
   },
