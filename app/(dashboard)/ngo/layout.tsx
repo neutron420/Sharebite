@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   Menu,
+  MessageSquare,
   X,
   ChevronRight,
   Loader2
@@ -63,7 +64,8 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
 
     // Listen for real-time notifications via WebSocket
     const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
-       toast.info(newNotif.title, { description: newNotif.message });
+       if (!newNotif) return;
+       toast.info(newNotif.title || "New Update", { description: newNotif.message || "You have a new notification" });
     });
 
     return () => unsubscribe();
@@ -81,6 +83,7 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
     { label: "Find Food", icon: Search, href: "/donations" },
     { label: "Complaints", icon: ShieldAlert, href: "/ngo/complaints" },
     { label: "Alerts", icon: Bell, href: "/ngo/notifications" },
+    { label: "Messages", icon: MessageSquare, href: "/ngo/messages" },
   ];
 
   if (loading) {

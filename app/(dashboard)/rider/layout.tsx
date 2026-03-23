@@ -11,6 +11,7 @@ import {
   LogOut,
   ShieldCheck,
   Menu,
+  MessageSquare,
   X,
   ChevronRight,
 } from "lucide-react";
@@ -60,7 +61,8 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
 
     // Listen for real-time notifications via WebSocket
     const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
-       toast.info(newNotif.title, { description: newNotif.message });
+       if (!newNotif) return;
+       toast.info(newNotif.title || "New Update", { description: newNotif.message || "You have a new notification" });
     });
 
     return () => unsubscribe();
@@ -76,6 +78,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
     { label: "My Missions", icon: Truck, href: "/rider/missions" }, // Assuming missions page exists or will exist
     { label: "Bounty Board", icon: Zap, href: "/rider/bounties" },
     { label: "Comms", icon: Bell, href: "/rider/notifications" },
+    { label: "Messages", icon: MessageSquare, href: "/rider/messages" },
   ];
 
   if (loading) {

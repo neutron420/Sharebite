@@ -14,6 +14,7 @@ import {
   LogOut,
   MapPin,
   Menu,
+  MessageSquare,
   Plus,
   Search,
   UserRound,
@@ -97,6 +98,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "notifications",
     href: "/donor/notifications",
   },
+  {
+    label: "Messages",
+    icon: MessageSquare,
+    id: "messages",
+    href: "/donor/messages",
+  },
 ];
 
 export default function DonorLayout({
@@ -147,8 +154,8 @@ export default function DonorLayout({
       const res = await fetch("/api/notifications", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data);
-        setUnreadCount(data.filter((notification: any) => !notification.isRead).length);
+        setNotifications(Array.isArray(data) ? data : []);
+        setUnreadCount(Array.isArray(data) ? data.filter((notification: any) => notification && !notification.isRead).length : 0);
       }
     } catch (error) {
       console.error("Failed to fetch notifications", error);
@@ -162,9 +169,11 @@ export default function DonorLayout({
     fetchNotifications();
 
     const unsubscribe = addListener("NOTIFICATION", (newNotification) => {
+      if (!newNotification) return;
       setNotifications((previous) => [newNotification, ...previous]);
       setUnreadCount((previous) => previous + 1);
       if (
+        newNotification.title &&
         typeof newNotification.title === "string" &&
         newNotification.title.includes("Badge Unlocked")
       ) {
@@ -174,7 +183,7 @@ export default function DonorLayout({
         return;
       }
 
-      toast.info(newNotification.title, { description: newNotification.message });
+      toast.info(newNotification.title || "New Update", { description: newNotification.message || "You have a new notification" });
     });
 
     return () => unsubscribe();
@@ -431,8 +440,9 @@ export default function DonorLayout({
                     </Box>
                   ) : notifications.length > 0 ? (
                     notifications.map((notification) => (
-                      <MenuItem
-                        key={notification.id}
+                      notification && (
+                        <MenuItem
+                          key={notification.id}
                         onClick={() => {
                           setNotifAnchor(null);
                           if (notification.link) {
@@ -465,6 +475,7 @@ export default function DonorLayout({
                           </Box>
                         </Stack>
                       </MenuItem>
+                      )
                     ))
                   ) : (
                     <Box className="p-8 text-center text-gray-400">
