@@ -14,6 +14,14 @@ const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 const pub = new Redis(redisUrl);
 const sub = new Redis(redisUrl);
 
+pub.on("error", (err) => {
+  console.log("Redis Pub Error:", err.message || "Redis server is not reachable");
+});
+
+sub.on("error", (err) => {
+  console.log("Redis Sub Error:", err.message || "Redis server is not reachable");
+});
+
 const wss = new WebSocketServer({ port: 8080 });
 
 if (!process.env.JWT_SECRET) {
@@ -89,7 +97,19 @@ wss.on("connection", async (ws, req) => {
               imageUrl,
               locationLat: location?.lat,
               locationLng: location?.lng,
+              isRead: false,
             },
+            include: {
+              sender: {
+                select: { id: true, name: true, imageUrl: true }
+              }
+            }
+          });
+
+          // Update conversation last updated field
+          await prisma.conversation.update({
+            where: { id: conversationId },
+            data: { updatedAt: new Date() }
           });
 
           // Publish to Redis so ANY instance can deliver it to the receiver
@@ -97,6 +117,18 @@ wss.on("connection", async (ws, req) => {
             userId: receiverId,
             payload: savedMsg,
             type: "NEW_MESSAGE"
+          }));
+        } else if (type === "TYPING_STATUS") {
+          const { receiverId, conversationId, isTyping } = msgPayload;
+          
+          pub.publish("notifications", JSON.stringify({
+            userId: receiverId,
+            type: "TYPING_INDICATOR",
+            payload: {
+              conversationId,
+              isTyping,
+              userId: userId
+            }
           }));
         }
       } catch (err) {
