@@ -25,16 +25,14 @@ export async function createNotification({
       }
     });
 
-    // Trigger real-time delivery via internal WS server
-    try {
+    // Trigger real-time delivery via internal WS server (Fire and forget for speed)
+    if (typeof window === 'undefined') { // Only on server
       const internalWsUrl = process.env.INTERNAL_WS_URL || 'http://localhost:8081';
-      await fetch(`${internalWsUrl}/notify`, {
+      fetch(`${internalWsUrl}/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, notification })
-      }).catch(() => {}); // Don't fail the main request if the WS relay is down
-    } catch (e) {
-      // Silently fail if WS server is down
+      }).catch(err => console.error("WS Relay failed:", err.message));
     }
 
     return notification;

@@ -23,6 +23,7 @@ interface Message {
     name: string;
     imageUrl?: string;
   };
+  conversationId: string;
   imageUrl?: string;
   locationLat?: number;
   locationLng?: number;

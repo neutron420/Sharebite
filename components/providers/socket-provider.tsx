@@ -55,8 +55,8 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       ws.onclose = () => {
         setIsConnected(false);
         setSocket(null);
-        console.log("WebSocket Disconnected. Reconnecting in 3s...");
-        reconnectTimeout.current = setTimeout(connect, 3000);
+        console.log("WebSocket Disconnected. Reconnecting in 1.5s...");
+        reconnectTimeout.current = setTimeout(connect, 1500);
       };
 
       ws.onerror = (err) => {

@@ -20,8 +20,11 @@ import {
   UserRound,
   Utensils,
   X,
+  ShieldCheck,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
+import confetti from "canvas-confetti";
 import {
   Badge,
   Box,
@@ -113,7 +116,7 @@ export default function DonorLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { addListener } = useSocket();
+  const { addListener, isConnected } = useSocket();
 
   const [user, setUser] = useState<DonorUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -177,6 +180,14 @@ export default function DonorLayout({
         typeof newNotification.title === "string" &&
         newNotification.title.includes("Badge Unlocked")
       ) {
+        // Trigger celebration!
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#f97316", "#fb923c", "#fdba74"]
+        });
+
         toast.success(newNotification.title, {
           description: `${newNotification.message} Open Profile to see it in your badge wall.`,
         });
@@ -396,7 +407,15 @@ export default function DonorLayout({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500 ${isConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                <span className="text-[10px] font-black uppercase tracking-tighter">
+                  {isConnected ? 'Sync Online' : 'Sync Error'}
+                </span>
+                <Zap className={`w-3 h-3 ${isConnected ? 'animate-pulse' : ''}`} />
+              </div>
+
               <DashboardRefreshButton className="shrink-0" />
 
               <IconButton

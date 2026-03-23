@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
@@ -16,7 +17,9 @@ import {
   MessageSquare,
   X,
   ChevronRight,
-  Loader2
+  Loader2,
+  Globe, // Added Globe icon
+  Zap // Added Zap icon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -57,7 +60,7 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
-  const { addListener } = useSocket();
+  const { addListener, isConnected } = useSocket(); // Destructure isConnected from useSocket
 
   useEffect(() => {
     fetchUser();
@@ -156,12 +159,23 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
             <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center font-black text-white italic">N</div>
             <span className="font-black text-sm tracking-tighter uppercase whitespace-nowrap">NGO Hub</span>
           </div>
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-slate-400 hover:text-slate-900"
-          >
-            {mobileMenuOpen ? <X /> : <Menu />}
-          </button>
+          <div className="flex items-center gap-2"> {/* Grouping the new elements and the existing button */}
+            <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500 ${isConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+              <span className="text-[10px] font-black uppercase tracking-tighter">
+                {isConnected ? 'Sync Online' : 'Sync Error'}
+              </span>
+              <Zap className={`w-3 h-3 ${isConnected ? 'animate-pulse' : ''}`} />
+            </div>
+
+            <DashboardRefreshButton className="p-2 h-9 w-9 text-slate-400 hover:text-slate-900" />
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-slate-400 hover:text-slate-900"
+            >
+              {mobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </header>
 
         {/* Mobile Menu Overlay */}

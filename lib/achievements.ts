@@ -161,76 +161,50 @@ export async function checkAndAwardBadges(donorId: string): Promise<string[]> {
     ? new Date(latestDonation.createdAt).getHours()
     : -1;
 
+  const batchAwards: Promise<any>[] = [];
+
   // 5. Check each badge criteria
   for (const badge of allBadges) {
-    if (ownedBadgeIds.has(badge.id)) continue; // Already has it
+    if (ownedBadgeIds.has(badge.id)) continue;
 
     const criteria = badge.criteria as Record<string, any> | null;
     if (!criteria) continue;
 
     let earned = false;
-
     switch (criteria.type) {
-      case "COUNT":
-        earned = totalDonations >= criteria.value;
-        break;
-      case "VERIFIED_COUNT":
-        earned = verifiedDonations >= criteria.value;
-        break;
-      case "WEIGHT":
-        earned = totalWeight >= criteria.value;
-        break;
-      case "STREAK":
-        earned = streak >= criteria.value;
-        break;
-      case "MONTHLY_COUNT":
-        earned = monthlyDonations >= criteria.value;
-        break;
-      case "TIME_EARLY":
-        earned = latestHour >= 0 && latestHour < criteria.value;
-        break;
-      case "TIME_LATE":
-        earned = latestHour >= criteria.value;
-        break;
-      case "CATEGORY_COUNT":
-        if (criteria.category === "VEG") {
-          earned = vegCount >= criteria.value;
-        }
-        break;
-      case "PERFECT_RECORD":
-        // Has 10+ donations with zero rejected requests
-        earned = totalDonations >= criteria.value; // Simplified check
-        break;
-      case "KARMA":
-        earned = donor.karmaPoints >= criteria.value;
-        break;
-      case "DIVERSE_CATEGORIES":
-        earned = distinctCategories.length >= criteria.value;
-        break;
-      case "SENIORITY":
-        earned =
-          accountAgeMonths >= (criteria.months || 6) &&
-          totalDonations >= (criteria.count || 10);
-        break;
+      case "COUNT": earned = totalDonations >= criteria.value; break;
+      case "VERIFIED_COUNT": earned = verifiedDonations >= criteria.value; break;
+      case "WEIGHT": earned = totalWeight >= criteria.value; break;
+      case "STREAK": earned = streak >= criteria.value; break;
+      case "MONTHLY_COUNT": earned = monthlyDonations >= criteria.value; break;
+      case "TIME_EARLY": earned = latestHour >= 0 && latestHour < criteria.value; break;
+      case "TIME_LATE": earned = latestHour >= criteria.value; break;
+      case "CATEGORY_COUNT": if (criteria.category === "VEG") earned = vegCount >= criteria.value; break;
+      case "KARMA": earned = donor.karmaPoints >= criteria.value; break;
+      case "DIVERSE_CATEGORIES": earned = distinctCategories.length >= criteria.value; break;
+      case "SENIORITY": earned = accountAgeMonths >= (criteria.months || 6) && totalDonations >= (criteria.count || 10); break;
+      case "PERFECT_RECORD": earned = totalDonations >= criteria.value; break;
     }
 
     if (earned) {
-      // Award the badge!
-      await prisma.userBadge.create({
-        data: { userId: donorId, badgeId: badge.id },
-      });
-
       newlyUnlocked.push(badge.name);
-
-      // Send real-time notification
-      await createNotification({
-        userId: donorId,
-        type: "SYSTEM",
-        title: `🏅 Badge Unlocked: ${badge.name}!`,
-        message: badge.description,
-        link: "/donor/profile#badges-gallery",
-      });
+      // Construct parallel awards (Batch these for speed)
+      batchAwards.push(
+        prisma.userBadge.create({ data: { userId: donorId, badgeId: badge.id } }),
+        createNotification({
+          userId: donorId,
+          type: "SYSTEM", 
+          title: `🏅 Badge Unlocked: ${badge.name}!`,
+          message: badge.description,
+          link: "/donor/profile#badges-gallery",
+        })
+      );
     }
+  }
+
+  // Execute all awards simultaneously for "Fast" response
+  if (batchAwards.length > 0) {
+    await Promise.all(batchAwards);
   }
 
   // 6. Award karma points (10 per donation, bonus for milestones)
