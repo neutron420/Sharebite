@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 
 function Footer() {
   return (
-    <footer className="py-12 px-4 md:px-6 bg-background mt-20 relative z-20 overflow-hidden">
-      <div className="container mx-auto max-w-7xl">
+    <footer className="py-12 bg-background/80 mt-20 relative z-20 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         <div className="flex flex-col md:flex-row justify-between">
           <div className="mb-8 md:mb-0">
             <Link href="/" className="flex items-center gap-2">

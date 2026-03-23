@@ -173,9 +173,17 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
   }
 
   const isActive = (href?: string, children?: typeof SIDEBAR_ITEMS[0]["children"]) => {
-    if (href && (pathname === href || pathname?.startsWith(href + "/"))) return true;
-    if (children?.some((c) => pathname === c.href.split("?")[0])) return true;
-    return false;
+    if (!pathname) return false;
+
+    // Direct route match
+    if (href && pathname === href) return true;
+
+    // If this item has explicit children, mark active when any child route is active
+    if (children?.some((c) => {
+      const childPath = c.href.split("?")[0];
+      return pathname === childPath || pathname.startsWith(childPath + "/");
+    })) return true;
+
   };
 
   const renderSidebar = () => (
