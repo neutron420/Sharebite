@@ -1,20 +1,27 @@
-FROM node:20-alpine AS base
+FROM oven/bun:1.1-alpine AS base
 
+# Install dependencies only when needed
 FROM base AS deps
 RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
 
+# Install dependencies
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+
+# Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN npx prisma generate
+# Generate Prisma client to the custom path
+RUN bun prisma generate
 
-RUN npm run build
+# Build Next.js
+RUN bun run build
 
+# Production image
 FROM base AS runner
 WORKDIR /app
 
@@ -23,18 +30,30 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
-
+# Set correct permissions
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy essential files for both Web and WS
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/lib ./lib
+COPY --from=builder /app/app/generated/prisma ./app/generated/prisma
+
+# Ensure we have node_modules for the WS server
+COPY --from=deps /app/node_modules ./node_modules
 
 USER nextjs
 
 EXPOSE 3000
+EXPOSE 8080
+EXPOSE 8081
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# Default to running the Next.js app
+CMD ["bun", "server.js"]

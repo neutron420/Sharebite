@@ -14,9 +14,13 @@ resource "aws_amplify_app" "sharebite" {
     R2_BUCKET_NAME       = var.r2_bucket_name
     R2_PUBLIC_DOMAIN     = var.r2_public_domain
     MAPBOX_TOKEN         = var.mapbox_token
-    OPENAI_API_KEY       = var.openai_api_key
-    NEXT_PUBLIC_APP_URL  = "https://master.${aws_amplify_app.sharebite.default_domain}"
+    OPENAI_API_KEY                             = var.openai_api_key
+    RESEND_API_KEY                             = var.resend_api_key
+    NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY  = var.cloudflare_turnstile_site_key
+    CLOUDFLARE_TURNSTILE_SECRET_KEY            = var.cloudflare_turnstile_secret_key
+    NEXT_PUBLIC_APP_URL                        = "https://master.${aws_amplify_app.sharebite.default_domain}"
   }
+
 
   build_spec = <<-EOT
     version: 1
@@ -24,11 +28,14 @@ resource "aws_amplify_app" "sharebite" {
       phases:
         preBuild:
           commands:
-            - npm ci
-            - npx prisma generate
+            - curl -fsSL https://bun.sh/install | bash
+            - export PATH="$HOME/.bun/bin:$PATH"
+            - bun install --frozen-lockfile
+            - bun prisma generate
         build:
           commands:
-            - npm run build
+            - export PATH="$HOME/.bun/bin:$PATH"
+            - bun run build
       artifacts:
         baseDirectory: .next
         files:
@@ -37,6 +44,7 @@ resource "aws_amplify_app" "sharebite" {
         paths:
           - node_modules/**/*
   EOT
+
 
 }
 

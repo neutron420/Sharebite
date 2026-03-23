@@ -8,7 +8,28 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env.production
+      - .env
+    environment:
+      - NODE_ENV=production
+      - INTERNAL_WS_URL=http://ws:8081
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - sharebite-network
+
+  ws:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["bun", "run", "server/ws.ts"]
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
     depends_on:
@@ -16,8 +37,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    volumes:
-      - ./.env.production:/app/.env.production
+    networks:
+      - sharebite-network
 
   db:
     image: postgres:15-alpine
@@ -35,15 +56,29 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - sharebite-network
 
   redis:
     image: redis:7-alpine
     restart: always
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - redis_data:/data
+    networks:
+      - sharebite-network
+
+networks:
+  sharebite-network:
+    driver: bridge
 
 volumes:
   postgres_data:
   redis_data:
+
