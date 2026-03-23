@@ -84,7 +84,7 @@ export default function Home() {
       {/* Premium Background Pattern */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] bg-[radial-gradient(circle_at_center,rgba(248, 80, 24, 0.08),transparent_70%)] opacity-70" /> */}
-        <Image src="/monochrome-street-food-entertainment.jpg" alt="Background Pattern" fill className="object-cover " />
+        <Image src="https://res.cloudinary.com/dabnumgog/image/upload/v1774251688/monochrome-street-food-entertainment.jpg_amdchc.jpg" alt="Background Pattern" fill className="object-cover " />
         {/* <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" /> */}
       </div>
 
@@ -105,7 +105,7 @@ export default function Home() {
             <Link href="/login" className="hover:text-orange-600 transition-colors">Portal</Link>
           </div>
 
-          <Link href="/register" className="px-8 py-3 bg-slate-950 text-white text-[12px] font rounded-2xl hover:bg-orange-600 hover:shadow-xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center gap-2">
+          <Link href="/register" className="px-8 py-3 bg-slate-950 text-white text-[12px] font rounded-2xl hover:bg-orange-600 hover:shadow-lg hover:shadow-slate-700 transition-all active:scale-95 flex items-center gap-2">
             JOIN MOVEMENT <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
