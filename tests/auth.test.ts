@@ -2,19 +2,35 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 
+process.env.JWT_SECRET = 'test_secret_key_123';
+
 // Mock dependencies
 vi.mock('@/lib/prisma', () => ({
   default: {
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
+      count: vi.fn(),
+      update: vi.fn(),
     },
+    $transaction: vi.fn().mockImplementation((cb) => cb(null)),
   },
 }));
 
 vi.mock('@/lib/auth', () => ({
   signToken: vi.fn().mockResolvedValue('mocked_token'),
   getCookieName: vi.fn().mockReturnValue('mocked_cookie'),
+  getSession: vi.fn(),
+  verifyToken: vi.fn(),
+}));
+
+vi.mock('@/lib/redis', () => ({
+  default: {
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    ensureRedisConnection: vi.fn().mockResolvedValue(true),
+  },
 }));
 
 vi.mock('next/headers', () => ({

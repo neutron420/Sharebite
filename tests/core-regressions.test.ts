@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+process.env.JWT_SECRET = 'test_secret_key_123';
+
 // 1. Mock Prisma
 vi.mock('@/lib/prisma', () => ({
   default: {
@@ -16,6 +18,7 @@ vi.mock('@/lib/prisma', () => ({
       update: vi.fn(),
       aggregate: vi.fn(),
       count: vi.fn(),
+      groupBy: vi.fn(),
     },
     pickupRequest: {
       create: vi.fn(),
@@ -29,10 +32,13 @@ vi.mock('@/lib/prisma', () => ({
     },
     userBadge: {
       findMany: vi.fn(),
+      count: vi.fn(),
+      create: vi.fn(),
     },
     auditLog: {
       create: vi.fn(),
-    }
+    },
+    $transaction: vi.fn().mockImplementation((callback) => callback(null)),
   },
 }));
 
@@ -40,6 +46,8 @@ vi.mock('@/lib/prisma', () => ({
 vi.mock('@/lib/auth', () => ({
   getSession: vi.fn(),
   getCurrentUser: vi.fn(),
+  verifyToken: vi.fn(),
+  signToken: vi.fn(),
 }));
 
 // 3. Mock Redis
@@ -48,10 +56,17 @@ vi.mock('@/lib/redis', () => ({
     zrevrange: vi.fn().mockResolvedValue([]),
     get: vi.fn(),
     set: vi.fn(),
+    del: vi.fn(),
+    ensureRedisConnection: vi.fn().mockResolvedValue(true),
   },
 }));
 
-// 4. Mock API Handlers
+// 4. Mock Notifications
+vi.mock('@/lib/notifications', () => ({
+  createNotification: vi.fn().mockResolvedValue({ id: 'notif-1' }),
+}));
+
+// 5. Mock API Handlers
 import { GET as getDonorBadges } from '@/app/api/donor/badges/route';
 import { GET as getStatsSummary } from '@/app/api/stats/summary/route';
 import { GET as getWeeklyStats } from '@/app/api/stats/weekly/route';
@@ -156,3 +171,4 @@ describe('ShareBite Core Regression Suite', () => {
   });
 
 });
+

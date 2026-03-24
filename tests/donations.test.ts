@@ -1,16 +1,50 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
+process.env.JWT_SECRET = 'test_secret_key_123';
+
 vi.mock('@/lib/prisma', () => ({
   default: {
+    user: {
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      count: vi.fn(),
+    },
     foodDonation: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+      count: vi.fn(),
     },
+    notification: {
+      createMany: vi.fn(),
+    },
+    $transaction: vi.fn().mockImplementation((cb) => cb(null)),
   },
+}));
+
+vi.mock('@/lib/auth', () => ({
+  getSession: vi.fn(),
+  signToken: vi.fn(),
+}));
+
+vi.mock('@/lib/redis', () => ({
+  default: {
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    geoadd: vi.fn(),
+    geosearch: vi.fn(),
+    ensureRedisConnection: vi.fn().mockResolvedValue(true),
+  },
+}));
+
+vi.mock('@/lib/achievements', () => ({
+  checkAndAwardBadges: vi.fn().mockResolvedValue([]),
+  awardDonationKarma: vi.fn().mockResolvedValue({}),
 }));
 
 import { GET as getDonations, POST as createDonation } from '@/app/api/donations/route';
