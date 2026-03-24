@@ -9,7 +9,7 @@ import { Phone, MessageCircle } from 'lucide-react';
 
 export function FaqsSection() {
 	return (
-		<div className="relative w-full space-y-7 pt-4 pb-24 overflow-hidden bg-slate-50">
+		<div className="relative w-full space-y-7 pt-4 pb-24 overflow-hidden bg-gradient-to-b from-orange-900/10 to-slate-900/30">
             {/* Background Orange Grid + Glow Pattern */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,100,50,0.1),transparent_70%)] opacity-70" />
@@ -18,8 +18,8 @@ export function FaqsSection() {
 
             <div className="relative z-10 mx-auto max-w-4xl space-y-12 px-6">
                 <div className="space-y-4 text-center">
-                    <h2 className="text-4xl font-semibold md:text-5xl tracking-tight text-slate-950">Frequently Asked Questions</h2>
-                    <p className="text-slate-500 max-w-2xl mx-auto font-medium text-lg leading-relaxed">
+                    <h2 className="text-4xl font-semibold md:text-5xl tracking-tight text-slate-50">Frequently Asked Questions</h2>
+                    <p className="text-slate-300 max-w-2xl mx-auto font-medium text-lg leading-relaxed">
                         Here are some common questions and answers you might encounter when jumping into ShareBite. If
                         you don't find the answer you're looking for, feel free to reach out.
                     </p>
@@ -46,7 +46,7 @@ export function FaqsSection() {
                     ))}
                 </Accordion>
                 <div className="flex flex-col items-center justify-center pt-8 gap-5 border-t border-slate-200/50">
-                    <p className="text-slate-500 font-bold uppercase text-[11px] tracking-widest">
+                    <p className="text-slate-300 font-bold uppercase text-[11px] tracking-widest">
                         Can't find what you're looking for? Contact our support agents:
                     </p>
                     <div className="flex flex-col sm:flex-row items-center gap-4">

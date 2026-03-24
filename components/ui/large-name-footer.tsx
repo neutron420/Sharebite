@@ -6,15 +6,15 @@ import { Button } from "@/components/ui/button";
 
 function Footer() {
   return (
-    <footer className="py-12 px-4 md:px-6 bg-slate-50 relative z-20 overflow-hidden border-t-0">
+    <footer className="fixed inset-0 py-12 px-4 md:px-6 bg-gradient-to-t from-orange-800/20 via-slate-900/20 to-slate-900/40 relative z-20 overflow-hidden border-t-0 w-full h-full">
       {/* Background Orange Grid + Glow Pattern */}
       <div className="absolute inset-0 z-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,100,50,0.1),transparent_70%)] opacity-70" />
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(234,88,12,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,88,12,0.07)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
       </div>
 
-      <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="flex flex-col md:flex-row justify-between">
+      <div className="mx-auto w-full relative z-10">
+        <div className="flex flex-col md:flex-row justify-center md:justify-between items-start md:items-center gap-12 md:gap-0 max-w-7xl mx-auto">
           <div className="mb-8 md:mb-0">
             <Link href="/" className="flex items-center gap-2">
               <Icons.logo className="icon-class w-8 text-orange-600" />

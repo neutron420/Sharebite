@@ -17,7 +17,6 @@ import {
   ChevronLeft,
   Menu,
   MessageSquare,
-  Plus,
   Search,
   UserRound,
   Utensils,
@@ -27,25 +26,20 @@ import {
   type LucideIcon,
   Info
 } from "lucide-react";
-import { 
-  Badge, 
-  IconButton, 
-  Typography, 
-  Box, } from "@mui/material";
-import confetti from "canvas-confetti";
 import {
   Badge,
+  IconButton,
+  Typography,
   Box,
   Chip,
   CircularProgress,
   Divider,
   Fade,
-  CircularProgress,
   Stack,
-  Chip,
   MenuItem,
   Menu as MuiMenu
 } from "@mui/material";
+import confetti from "canvas-confetti";
 
 interface DonorUser {
   id: string;
@@ -118,8 +112,6 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
-  
-  const { addListener } = useSocket();
   const [searchQuery, setSearchQuery] = useState("");
   const [notifAnchor, setNotifAnchor] = useState<null | HTMLElement>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -164,10 +156,6 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
     fetchNotifications();
 
     // Listen for real-time notifications via WebSocket
-    const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
-       setNotifications(prev => [newNotif, ...prev]);
-       setUnreadCount(prev => prev + 1);
-       toast.info(newNotif.title, { description: newNotif.message });
     const unsubscribe = addListener("NOTIFICATION", (newNotification) => {
       if (!newNotification) return;
       setNotifications((previous) => [newNotification, ...previous]);
@@ -369,7 +357,16 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                 <Zap className={`w-3 h-3 ${isConnected ? 'animate-pulse' : ''}`} />
               </div>
 
-              <DashboardRefreshButton className="shrink-0" />
+              <IconButton
+                onClick={() => {
+                  fetchUser();
+                  fetchNotifications();
+                }}
+                className="hover:bg-gray-100 text-gray-500 hover:text-orange-600 transition-colors shrink-0"
+                title="Refresh Dashboard"
+              >
+                <Zap className="h-4 w-4" />
+              </IconButton>
 
               <IconButton
                 onClick={(event) => setNotifAnchor(event.currentTarget)}
@@ -411,22 +408,22 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                       notification && (
                         <MenuItem
                           key={notification.id}
-                        onClick={() => {
-                          setNotifAnchor(null);
-                          if (n.link) router.push(n.link);
-                        }}
-                        className="py-3 px-4 hover:bg-orange-50 transition-colors whitespace-normal"
-                      >
-                         <Stack direction="row" spacing={2} alignItems="flex-start">
-                            <Box className={`mt-1 p-1.5 rounded-full ${n.type === 'ALERT' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
-                               {n.type === 'ALERT' ? <AlertTriangle className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
+                          onClick={() => {
+                            setNotifAnchor(null);
+                            if (notification.link) router.push(notification.link);
+                          }}
+                          className="py-3 px-4 hover:bg-orange-50 transition-colors whitespace-normal"
+                        >
+                          <Stack direction="row" spacing={2} alignItems="flex-start">
+                            <Box className={`mt-1 p-1.5 rounded-full ${notification.type === 'ALERT' ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500'}`}>
+                              {notification.type === 'ALERT' ? <AlertTriangle className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
                             </Box>
                             <Box>
-                               <Typography className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">{n.title}</Typography>
-                               <Typography className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</Typography>
+                              <Typography className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">{notification.title}</Typography>
+                              <Typography className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notification.message}</Typography>
                             </Box>
-                         </Stack>
-                      </MenuItem>
+                          </Stack>
+                        </MenuItem>
                       )
                     ))
                   ) : (

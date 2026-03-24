@@ -84,15 +84,15 @@ function GalleryCard({ item }: { item: (typeof items)[0] }) {
 
 export function ImpactGallery() {
   return (
-    <section className="mb-32 overflow-hidden w-full bg-white relative">
+    <section className="mb-32 overflow-hidden w-full bg-gradient-to-t from-orange-600/30 to-slate-900/20 relative">
       {/* Section Header */}
-      <div className="text-center mb-16 px-6 relative z-20">
-        <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-orange-600 mb-5">Our Impact</p>
-        <h2 className="text-4xl md:text-6xl font-medium tracking-tight text-slate-950 mb-6">
+      <div className="text-center mb-16 px-6 py-12 relative z-20">
+        <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-orange-400 mb-5">Our Impact</p>
+        <h2 className="text-4xl md:text-6xl font-medium tracking-tight text-slate-100 mb-6">
           Stories That{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500">Inspire.</span>
         </h2>
-        <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto">
+        <p className="text-slate-300 font-medium text-lg max-w-xl mx-auto">
           The faces and moments behind our mission to end hunger.
         </p>
       </div>

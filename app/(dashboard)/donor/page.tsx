@@ -19,11 +19,10 @@ import {
   Menu,
   MessageSquare,
   Navigation,
-  Plus,
   ShieldCheck,
-  MapPin,
   Truck,
-  Navigation
+  Calendar,
+  UserRound
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -42,6 +41,10 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { FiAward, FiX, FiCheckCircle, FiClock, FiArrowRight } from "react-icons/fi";
+import { useSocket } from "@/components/providers/socket-provider";
+import confetti from "canvas-confetti";
 
 interface DonorStats {
   totalDonations: number;
@@ -52,6 +55,7 @@ interface DonorStats {
 
 export default function DonorDashboard() {
   const router = useRouter();
+  const { addListener } = useSocket();
   const [stats, setStats] = useState<DonorStats | null>(null);
   const [recentItems, setRecentItems] = useState<any[]>([]);
   const [liveOps, setLiveOps] = useState<any[]>([]);
@@ -59,6 +63,33 @@ export default function DonorDashboard() {
   const [userName, setUserName] = useState("Hero");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 4;
+
+  // Placeholder implementations for badge functionality
+  const [badgeSpotlights, setBadgeSpotlights] = useState<any[]>([]);
+
+  // Placeholder types and functions
+  interface DonorNotification {
+    id: string;
+    title: string;
+    message: string;
+    createdAt: string;
+  }
+
+  const toBadgeSpotlight = (notification: any) => {
+    if (notification?.title?.includes("Badge")) {
+      return {
+        notificationId: notification.id,
+        badgeName: notification.title.replace("Badge Unlocked: ", ""),
+        message: notification.message,
+        createdAt: notification.createdAt,
+      };
+    }
+    return null;
+  };
+
+  const mergeBadgeSpotlights = (existing: any[], newOnes: any[]) => {
+    return [...existing, ...newOnes];
+  };
 
   const handleStartChat = async (donationId: string, participantId: string) => {
     try {

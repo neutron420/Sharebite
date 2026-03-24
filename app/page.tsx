@@ -101,10 +101,13 @@ export default function Home() {
             <span className="text-2xl font tracking-tighter text-slate-900">ShareBite</span>
           </div>
           
-          <div className="hidden lg:flex items-center gap-12 text-[12px] font uppercase tracking-[0.2em] text-black">
-            <a href="#features" className="hover:text-orange-600 transition-colors">Tech Stack</a>
-            <a href="#impact" className="hover:text-orange-600 transition-colors">Impact Log</a>
-            <a href="#roles" className="hover:text-orange-600 transition-colors">Coalition</a>
+          <div className="hidden lg:flex items-center gap-12 text-[12px] font uppercase tracking-[0.1em] text-black">
+            <a href="#partners" className="hover:text-orange-600 transition-colors">Partners</a>
+            <a href="#stories" className="hover:text-orange-600 transition-colors">Stories</a>
+            <a href="#features" className="hover:text-orange-600 transition-colors">Impact</a>
+            <a href="#roles" className="hover:text-orange-600 transition-colors">Roles</a>
+            <a href="#testimonial" className="hover:text-orange-600 transition-colors">Testimonial</a>
+            <a href="#faq" className="hover:text-orange-600 transition-colors">faq</a>
             <Link href="/login" className="hover:text-orange-600 transition-colors">Portal</Link>
           </div>
 
@@ -116,7 +119,7 @@ export default function Home() {
 
       <main className="relative z-10 w-full pt-56">
         {/* Refined Hero Section */}
-        <section className="px-6 flex flex-col items-center text-center max-w-5xl mx-auto">
+        <section id="partners" className="px-6 flex flex-col items-center text-center max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -168,8 +171,8 @@ export default function Home() {
           <div className="mt-32 w-full max-w-6xl">
             <p className="text-[11px] font uppercase tracking-[0.5em] text-slate-300 mb-12">Trusted Power Partners</p>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-white to-transparent z-10" />
-              <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-white to-transparent z-10" />
+              <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-slate-900 to-transparent z-10" />
+              <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-slate-900 to-transparent z-10" />
               <Marquee pauseOnHover className="[--duration:25s] py-12">
                 {partners.map((p, i) => (
                   <div key={i} className="flex items-center gap-6 mx-12 grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all cursor-default group">
@@ -185,9 +188,11 @@ export default function Home() {
         </section>
 
         {/* Epic Impact Gallery - Now natively full width outside the padded hero container */}
-        <div className="w-full">
-          <ImpactGallery />
-        </div>
+        <section id="stories">
+          <div className="w-full">
+            <ImpactGallery />
+          </div>
+        </section>
 
         {/* Polished Bento Grid */}
         <section id="features" className="px-6 py-40 max-w-7xl mx-auto">
@@ -224,10 +229,14 @@ export default function Home() {
         </section>
 
         {/* Testimonials */}
-        <TestimonialsSectionDemo />
+        <section id="testimonial">
+          <TestimonialsSectionDemo />
+        </section>
 
         {/* FAQs */}
-        <FaqsSection />
+        <section id="faq">
+          <FaqsSection />
+        </section>
       </main>
 
       <Footer />

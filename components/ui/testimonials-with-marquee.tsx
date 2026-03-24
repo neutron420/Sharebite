@@ -37,10 +37,10 @@ export function TestimonialsSection({
 
       <div className="relative z-10 mx-auto flex flex-col items-center gap-4 text-center sm:gap-16">
         <div className="flex flex-col items-center gap-4 px-4 sm:gap-8 max-w-7xl mx-auto">
-          <h2 className="max-w-[720px] text-3xl font-semibold leading-tight sm:text-5xl sm:leading-tight tracking-tight">
+          <h2 className="max-w-[720px] text-3xl text-slate-200 font-semibold leading-tight sm:text-5xl sm:leading-tight tracking-tight">
             {title}
           </h2>
-          <p className="text-md max-w-[600px] font-medium text-slate-500 sm:text-xl">
+          <p className="text-md max-w-[600px] font-medium text-slate-300 sm:text-xl">
             {description}
           </p>
         </div>
@@ -54,8 +54,8 @@ export function TestimonialsSection({
             ))}
           </Marquee>
 
-          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/4 bg-gradient-to-r from-white sm:block z-10" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/4 bg-gradient-to-l from-white sm:block z-10" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-1/4 bg-gradient-to-r from-slate-900/50 sm:block z-10" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/4 bg-gradient-to-l from-slate-900/50 sm:block z-10" />
         </div>
       </div>
     </section>
