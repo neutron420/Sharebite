@@ -221,7 +221,7 @@ export default function DonorDashboard() {
   }
 
   return (
-    <div className="w-full space-y-12">
+    <div className="max-w-7xl mx-auto space-y-12">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 underline decoration-orange-600/10 underline-offset-8">
@@ -367,12 +367,12 @@ export default function DonorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <div className="lg:col-span-2 space-y-8">
-          <div className="flex items-center justify-between px-4 border-l-4 border-slate-950">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 border-l-4 border-slate-950">
             <div>
-               <h2 className="text-3xl font-black italic tracking-tighter uppercase text-slate-950">Mission Audit Feed</h2>
-               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Comprehensive logs of all sharing operations</p>
+               <h2 className="text-2xl sm:text-3xl font-black italic tracking-tighter uppercase text-slate-950">Mission Audit Feed</h2>
+               <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Comprehensive logs of all sharing operations</p>
             </div>
-            <Link href="/donor/donations" className="px-5 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-all shadow-sm">Full Archive &rarr;</Link>
+            <Link href="/donor/donations" className="w-fit px-5 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-all shadow-sm">Full Archive &rarr;</Link>
           </div>
           <div className="space-y-4">
             {recentItems.length > 0 ? (

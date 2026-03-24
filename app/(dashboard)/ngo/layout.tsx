@@ -1,28 +1,48 @@
 
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
-  LayoutDashboard,
-  Package,
-  Search,
+  AlertTriangle,
   Bell,
+  ChevronLeft,
+  History,
+  Info,
+  LayoutDashboard,
   LogOut,
-  User,
-  ShieldCheck,
-  ShieldAlert,
+  MapPin,
   Menu,
   MessageSquare,
+  Plus,
+  Search,
+  UserRound,
+  Utensils,
   X,
-  ChevronRight,
-  Loader2,
-  Globe, // Added Globe icon
-  Zap // Added Zap icon
+  ShieldCheck,
+  Zap,
+  Package,
+  Globe,
+  type LucideIcon,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
+import confetti from "canvas-confetti";
+import {
+  Badge,
+  Box,
+  Chip,
+  CircularProgress,
+  Divider,
+  Fade,
+  IconButton,
+  Menu as MuiMenu,
+  MenuItem,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 import { useSocket } from "@/components/providers/socket-provider";
 
 interface NGOUser {
@@ -30,14 +50,81 @@ interface NGOUser {
   name: string;
   email: string;
   role: string;
+  imageUrl?: string | null;
 }
 
-export default function NGOLayout({ children }: { children: React.ReactNode }) {
+interface SidebarItem {
+  label: string;
+  icon: LucideIcon;
+  id: string;
+  href: string;
+  badge?: string;
+}
+
+const SIDEBAR_ITEMS: SidebarItem[] = [
+  {
+    label: "Ops Hub",
+    icon: LayoutDashboard,
+    id: "overview",
+    href: "/ngo",
+  },
+  {
+    label: "My Pickups",
+    icon: Package,
+    id: "requests",
+    href: "/ngo/requests",
+  },
+  {
+    label: "Find Food",
+    icon: Search,
+    id: "donations",
+    href: "/ngo/find-food",
+  },
+  {
+    label: "History",
+    icon: History,
+    id: "history",
+    href: "/ngo/history",
+  },
+  {
+    label: "Complaints",
+    icon: AlertTriangle,
+    id: "complaints",
+    href: "/ngo/complaints",
+  },
+  {
+    label: "Notifications",
+    icon: Bell,
+    id: "notifications",
+    href: "/ngo/notifications",
+  },
+  {
+    label: "Messages",
+    icon: MessageSquare,
+    id: "messages",
+    href: "/ngo/messages",
+  },
+];
+
+export default function NGOLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
+  const { addListener, isConnected } = useSocket();
+
   const [user, setUser] = useState<NGOUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [notifAnchor, setNotifAnchor] = useState<null | HTMLElement>(null);
+  const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -46,11 +133,13 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
         router.push("/login");
         return;
       }
+
       const data = await res.json();
       if (data.role !== "NGO") {
-        router.push("/login"); // Only allow NGOs
+        router.push("/login");
         return;
       }
+
       setUser(data);
     } catch {
       router.push("/login");
@@ -59,165 +148,419 @@ export default function NGOLayout({ children }: { children: React.ReactNode }) {
     }
   }, [router]);
 
-  const { addListener, isConnected } = useSocket(); // Destructure isConnected from useSocket
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setNotifLoading(true);
+      const res = await fetch("/api/notifications", { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(Array.isArray(data) ? data : []);
+        setUnreadCount(Array.isArray(data) ? data.filter((notification: any) => notification && !notification.isRead).length : 0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    } finally {
+      setNotifLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchUser();
+    fetchNotifications();
 
-    // Listen for real-time notifications via WebSocket
-    const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
-       if (!newNotif) return;
-       toast.info(newNotif.title || "New Update", { description: newNotif.message || "You have a new notification" });
+    const unsubscribe = addListener("NOTIFICATION", (newNotification) => {
+      if (!newNotification) return;
+      setNotifications((previous) => [newNotification, ...previous]);
+      setUnreadCount((previous) => previous + 1);
+      
+      // Keep existing notification toast
+      toast.info(newNotification.title || "New Update", { description: newNotification.message || "You have a new notification" });
     });
 
     return () => unsubscribe();
-  }, [fetchUser, addListener]);
+  }, [addListener, fetchNotifications, fetchUser]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
     router.push("/login");
-    toast.success("Disconnected from Ops Center");
   };
-
-  const navItems = [
-    { label: "Ops Hub", icon: LayoutDashboard, href: "/ngo" },
-    { label: "My Pickups", icon: Package, href: "/ngo/requests" },
-    { label: "Find Food", icon: Search, href: "/donations" },
-    { label: "Complaints", icon: ShieldAlert, href: "/ngo/complaints" },
-    { label: "Alerts", icon: Bell, href: "/ngo/notifications" },
-    { label: "Messages", icon: MessageSquare, href: "/ngo/messages" },
-  ];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-10 h-10 text-orange-600 animate-spin" strokeWidth={3} />
-        <p className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 animate-pulse">Syncing Ops Intelligence...</p>
+      <div className="min-h-screen bg-white flex items-center justify-center text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+          <p className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 animate-pulse">Syncing Ops Intelligence...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#FCFCFD] text-slate-950 flex  selection:bg-orange-100">
-      
-      {/* Sidebar - Desktop */}
-      <aside className="hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 border-r border-slate-100 bg-white z-50 py-10 px-6">
-        <div className="flex items-center gap-3 mb-16 px-2">
-          <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100  font-black text-white text-xl uppercase">N</div>
-          <span className="text-xl font-black tracking-tighter uppercase whitespace-nowrap">NGO Ops Hub</span>
-        </div>
+  const isActive = (href: string) => {
+    if (href === "/ngo") {
+      return pathname === href;
+    }
 
-        <nav className="flex-grow space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all group ${
-                pathname === item.href 
-                  ? 'bg-orange-600 text-white shadow-xl shadow-orange-100' 
-                  : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <item.icon className={`w-5 h-5 ${pathname === item.href ? 'text-white' : 'text-slate-400 group-hover:text-orange-600'}`} />
-              <span className={`font-black text-[11px] tracking-[0.1em] uppercase ${pathname === item.href ? 'text-white' : 'group-hover:text-slate-900'}`}>
-                {item.label}
-              </span>
-            </Link>
-          ))}
-        </nav>
+    return pathname === href || pathname?.startsWith(`${href}/`);
+  };
 
-        <div className="mt-auto space-y-4">
-          {user && (
-            <div className="px-4 py-4 rounded-3xl bg-slate-50 border border-slate-100 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-orange-600/10 flex items-center justify-center border border-orange-500/20">
-                <ShieldCheck className="w-5 h-5 text-orange-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-900 truncate">{user.name}</p>
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 truncate">Coordinator</p>
-              </div>
-            </div>
-          )}
-          
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-4 py-4 text-slate-400 hover:text-orange-600 transition-colors font-black text-xs uppercase tracking-widest"
+  const userInitials = user?.name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  const renderSidebar = () => (
+    <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+      {sidebarOpen && (
+        <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+          NGO Ops Menu
+        </p>
+      )}
+      {SIDEBAR_ITEMS.map((item) => {
+        const active = isActive(item.href);
+
+        return (
+          <Link
+            key={item.id}
+            href={item.href}
+            onClick={() => setMobileOpen(false)}
+            className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              active
+                ? "bg-orange-50 text-orange-600"
+                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+            }`}
           >
-            <LogOut className="w-5 h-5" />
-            <span>Terminate Link</span>
+            <item.icon
+              className={`h-4.5 w-4.5 shrink-0 ${
+                active ? "text-orange-600" : "text-gray-400"
+              }`}
+            />
+            {sidebarOpen && (
+              <>
+                <span className="flex-1 text-left truncate">{item.label}</span>
+                {item.badge && (
+                  <span className="text-[10px] font-semibold bg-orange-500 text-white px-1.5 py-0.5 rounded">
+                    {item.badge}
+                  </span>
+                )}
+              </>
+            )}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Mobile Sidebar */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <aside
+            className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
+              <div className="h-9 w-9 rounded-lg bg-orange-600 flex items-center justify-center">
+                <Globe className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-lg font-black tracking-tighter uppercase whitespace-nowrap text-gray-900">NGO Hub</span>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="ml-auto p-1 rounded-md text-gray-400 hover:text-gray-900"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {renderSidebar()}
+            {user && (
+              <div className="border-t border-gray-200 p-4 shrink-0 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-9 w-9 border border-orange-100">
+                    <AvatarImage src={user.imageUrl || undefined} alt={user.name} />
+                    <AvatarFallback className="bg-orange-50 text-xs font-bold text-orange-600">
+                      {userInitials || "SB"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleLogout}
+                    className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold uppercase tracking-wider text-red-600"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    Terminate Link
+                  </button>
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside
+        className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 overflow-x-hidden ${
+          sidebarOpen ? "w-64" : "w-20"
+        }`}
+      >
+        <div
+          className={`h-16 flex items-center border-b border-gray-200 shrink-0 ${
+            sidebarOpen ? "px-5 gap-3" : "px-3 justify-between"
+          }`}
+        >
+          <div
+            className={`${
+              sidebarOpen ? "h-9 w-9" : "h-8 w-8"
+            } rounded-lg bg-orange-600 flex items-center justify-center shrink-0 transition-all duration-300`}
+          >
+            <Globe
+              className={`${sidebarOpen ? "h-5 w-5" : "h-4 w-4"} text-white transition-all`}
+            />
+          </div>
+          {sidebarOpen && (
+            <span className="text-lg font-black tracking-tighter uppercase whitespace-nowrap text-gray-900 flex-1 truncate">NGO Ops Hub</span>
+          )}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 shrink-0"
+          >
+            <ChevronLeft
+              className={`h-4 w-4 transition-transform duration-300 ${
+                !sidebarOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
         </div>
+        {renderSidebar()}
+        {user && sidebarOpen && (
+          <div className="border-t border-gray-200 p-4 shrink-0">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-9 w-9 shrink-0 border border-orange-100">
+                <AvatarImage src={user.imageUrl || undefined} alt={user.name} />
+                <AvatarFallback className="bg-orange-50 text-xs font-bold text-orange-600">
+                  {userInitials || "SB"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 truncate">Coordinator</p>
+              </div>
+            </div>
+          </div>
+        )}
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen bg-white">
-        
-        {/* Mobile Header */}
-        <header className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center font-black text-white ">N</div>
-            <span className="font-black text-sm tracking-tighter uppercase whitespace-nowrap">NGO Hub</span>
-          </div>
-          <div className="flex items-center gap-2"> {/* Grouping the new elements and the existing button */}
-            <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500 ${isConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-              <span className="text-[10px] font-black uppercase tracking-tighter">
-                {isConnected ? 'Sync Online' : 'Sync Error'}
-              </span>
-              <Zap className={`w-3 h-3 ${isConnected ? 'animate-pulse' : ''}`} />
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? "lg:ml-64" : "lg:ml-20"}`}>
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
+          <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileOpen(true)}
+                className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+              <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 w-64 border border-gray-200 focus-within:ring-2 focus-within:ring-orange-500 transition-all">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Global Hub Search..."
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none w-full"
+                />
+              </div>
             </div>
 
-            <DashboardRefreshButton className="p-2 h-9 w-9 text-slate-400 hover:text-slate-900" />
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-slate-400 hover:text-slate-900"
-            >
-              {mobileMenuOpen ? <X /> : <Menu />}
-            </button>
+            <div className="flex items-center gap-4">
+              <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500 ${isConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                <span className="text-[10px] font-black uppercase tracking-tighter">
+                  {isConnected ? 'Sync Online' : 'Sync Error'}
+                </span>
+                <Zap className={`w-3 h-3 ${isConnected ? 'animate-pulse' : ''}`} />
+              </div>
+
+              <DashboardRefreshButton className="shrink-0" />
+
+              <IconButton
+                onClick={(event) => setNotifAnchor(event.currentTarget)}
+                className="hover:bg-gray-100 text-gray-500 hover:text-orange-600 transition-colors"
+              >
+                <Badge badgeContent={unreadCount} color="error" overlap="circular">
+                  <Bell className="h-4.5 w-4.5" />
+                </Badge>
+              </IconButton>
+
+              <MuiMenu
+                anchorEl={notifAnchor}
+                open={Boolean(notifAnchor)}
+                onClose={() => setNotifAnchor(null)}
+                TransitionComponent={Fade}
+                PaperProps={{
+                  sx: {
+                    width: 320,
+                    maxHeight: 400,
+                    borderRadius: "16px",
+                    mt: 1.5,
+                    boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                    border: "1px solid #f3f4f6",
+                  },
+                }}
+              >
+                <Box className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <Typography className="font-bold text-gray-900">Notifications</Typography>
+                  <Chip
+                    label={`${unreadCount} New`}
+                    size="small"
+                    className="bg-orange-50 text-orange-600 font-bold text-[10px]"
+                  />
+                </Box>
+
+                <Box className="overflow-y-auto max-h-[300px]">
+                  {notifLoading ? (
+                    <Box className="flex items-center justify-center p-8">
+                      <CircularProgress size={20} className="text-orange-500" />
+                    </Box>
+                  ) : notifications.length > 0 ? (
+                    notifications.map((notification) => (
+                      notification && (
+                        <MenuItem
+                          key={notification.id}
+                        onClick={() => {
+                          setNotifAnchor(null);
+                          if (notification.link) {
+                            router.push(notification.link);
+                          }
+                        }}
+                        className="py-3 px-4 hover:bg-orange-50 transition-colors whitespace-normal"
+                      >
+                        <Stack direction="row" spacing={2} alignItems="flex-start">
+                          <Box
+                            className={`mt-1 p-1.5 rounded-full ${
+                              notification.type === "ALERT"
+                                ? "bg-red-50 text-red-500"
+                                : "bg-blue-50 text-blue-500"
+                            }`}
+                          >
+                            {notification.type === "ALERT" ? (
+                              <AlertTriangle className="h-3.5 w-3.5" />
+                            ) : (
+                              <Info className="h-3.5 w-3.5" />
+                            )}
+                          </Box>
+                          <Box>
+                            <Typography className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">
+                              {notification.title}
+                            </Typography>
+                            <Typography className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                              {notification.message}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                      </MenuItem>
+                      )
+                    ))
+                  ) : (
+                    <Box className="p-8 text-center text-gray-400">
+                      <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                      <Typography className="text-xs">No notifications yet</Typography>
+                    </Box>
+                  )}
+                </Box>
+
+                <Divider />
+                <MenuItem
+                  onClick={() => {
+                    setNotifAnchor(null);
+                    router.push("/ngo/notifications");
+                  }}
+                  className="py-3 justify-center text-xs font-bold text-orange-600 hover:bg-orange-50"
+                >
+                  View All Activity
+                </MenuItem>
+              </MuiMenu>
+
+              {user && (
+                <>
+                  <button
+                    onClick={(event) => setProfileAnchor(event.currentTarget)}
+                    className="flex items-center gap-3 ml-2 pl-3 border-l border-gray-200 rounded-xl py-1.5 pr-1.5 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="hidden sm:block text-right">
+                      <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                      <p className="text-xs text-gray-500 uppercase font-black tracking-tighter">
+                        {user.role} OPS CENTER
+                      </p>
+                    </div>
+                    <Avatar className="h-9 w-9 border-2 border-orange-100 shadow-sm">
+                      <AvatarImage src={user.imageUrl || undefined} alt={user.name} />
+                      <AvatarFallback className="bg-gradient-to-br from-orange-500 to-orange-600 text-sm font-bold text-white">
+                        {userInitials || user.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </button>
+
+                  <MuiMenu
+                    anchorEl={profileAnchor}
+                    open={Boolean(profileAnchor)}
+                    onClose={() => setProfileAnchor(null)}
+                    TransitionComponent={Fade}
+                    PaperProps={{
+                      sx: {
+                        width: 300,
+                        borderRadius: "16px",
+                        mt: 1.5,
+                        boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+                        border: "1px solid #f3f4f6",
+                      },
+                    }}
+                  >
+                    <Box className="px-4 py-3 border-b border-gray-100">
+                      <Typography className="font-bold text-gray-900">{user.name}</Typography>
+                      <Typography className="text-xs text-gray-500 mt-0.5">{user.email}</Typography>
+                    </Box>
+                    <MenuItem
+                      disabled
+                      className="py-3 px-4 hover:bg-orange-50 transition-colors whitespace-normal"
+                    >
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Box className="p-2 rounded-full bg-orange-50 text-orange-600">
+                          <UserRound className="h-4 w-4" />
+                        </Box>
+                        <Box>
+                          <Typography className="text-sm font-semibold text-gray-900">Profile</Typography>
+                          <Typography className="text-xs text-gray-500 mt-0.5">
+                            Manage your NGO certification and details. (Coming Soon)
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </MenuItem>
+                  </MuiMenu>
+                </>
+              )}
+
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </header>
 
-        {/* Mobile Menu Overlay */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, x: -100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              className="fixed inset-0 z-50 bg-white lg:hidden pt-24 px-8 space-y-8"
-            >
-              <nav className="space-y-4">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center justify-between group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <item.icon className="w-6 h-6 text-orange-600" />
-                      <span className="text-2xl font-black uppercase tracking-tighter">{item.label}</span>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-slate-300" />
-                  </Link>
-                ))}
-              </nav>
-              <div className="pt-8 border-t border-slate-100">
-                <button 
-                  onClick={handleLogout}
-                  className="flex items-center gap-4 text-slate-400 font-black uppercase tracking-widest"
-                >
-                  <LogOut className="w-6 h-6" /> Terminate Link
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Page Content */}
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white/50">{children}</main>
       </div>
     </div>
   );
