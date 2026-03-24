@@ -44,6 +44,14 @@ jobs:
           NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY: ${{ secrets.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY }}
           CLOUDFLARE_TURNSTILE_SECRET_KEY: ${{ secrets.CLOUDFLARE_TURNSTILE_SECRET_KEY }}
 
+      - name: Run Tests
+        run: bun run test
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+
   terraform-lint:
     runs-on: ubuntu-latest
     steps:
