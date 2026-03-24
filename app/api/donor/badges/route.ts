@@ -7,9 +7,9 @@ import { syncDonorAchievements } from "@/lib/achievements";
  * GET /api/donor/badges
  * Returns the donor's karma, level, and all badges (earned + locked).
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ request });
     if (!session || session.role !== "DONOR") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

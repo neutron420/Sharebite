@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
 
-async function getWeeklyStatsHandler() {
+async function getWeeklyStatsHandler(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ request });
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const userId = session.userId as string;
