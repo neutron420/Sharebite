@@ -92,7 +92,8 @@ export default function NotificationsPage() {
         }
         const { token } = await tokenRes.json();
 
-        const ws = new WebSocket(`ws://localhost:8080?token=${token}`);
+        const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+        const ws = new WebSocket(`${wsBaseUrl}?token=${token}`);
 
         ws.onopen = () => {
           console.log("WebSocket connected");
