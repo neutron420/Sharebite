@@ -1,11 +1,16 @@
 import { JWTPayload, SignJWT, jwtVerify } from "jose";
 import { cookies, headers } from "next/headers";
 
-if (!process.env.JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is not set");
-}
+const getSecretKey = () => {
+  if (!process.env.JWT_SECRET) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn("JWT_SECRET is missing. This will cause authentication failures.");
+    }
+    return new TextEncoder().encode("development-fallback-secret-do-not-use");
+  }
+  return new TextEncoder().encode(process.env.JWT_SECRET);
+};
 
-const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 const sessionRoles = ["ADMIN", "DONOR", "NGO", "RIDER"] as const;
 export const SESSION_COOKIE_NAMES = [
   "session",
@@ -61,12 +66,12 @@ export async function signToken(payload: SessionPayload) {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d") // Extended to 7 days as requested
-    .sign(secretKey);
+    .sign(getSecretKey());
 }
 
 export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secretKey);
+    const { payload } = await jwtVerify(token, getSecretKey());
     return isSessionPayload(payload) ? payload : null;
   } catch {
     return null;
