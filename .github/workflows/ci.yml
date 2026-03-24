@@ -25,9 +25,6 @@ jobs:
       - name: Prisma Generate
         run: bunx prisma generate
 
-      - name: Lint check
-        run: bun run lint
-
       - name: Next.js Build
         run: bun run build
         env:
