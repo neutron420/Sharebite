@@ -256,6 +256,7 @@ model Message {
   imageUrl    String?
   locationLat Float?
   locationLng Float?
+  isRead      Boolean  @default(false)
 
   createdAt DateTime @default(now())
 

@@ -72,3 +72,18 @@ variable "openai_api_key" {
   type      = string
   sensitive = true
 }
+
+variable "resend_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "cloudflare_turnstile_site_key" {
+  type = string
+}
+
+variable "cloudflare_turnstile_secret_key" {
+  type      = string
+  sensitive = true
+}
+

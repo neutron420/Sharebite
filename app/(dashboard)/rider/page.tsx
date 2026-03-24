@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Package, 
   MapPin, 
@@ -17,13 +17,13 @@ import {
   Zap,
   Clock,
   ChevronRight,
-  Phone
+  Phone,
+  MessageSquare
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { useRouter } from "next/navigation";
 
 interface Task {
   id: string;
@@ -34,12 +34,16 @@ interface Task {
   donation: {
     id: string;
     title: string;
+    donorId: string;
     donor: {
+      name: string;
       address: string;
       city: string;
     };
   };
   ngo: {
+    id: string;
+    name: string;
     address: string;
     city: string;
   };
@@ -75,6 +79,26 @@ export default function RiderDashboard() {
     }
   };
 
+  const handleStartChat = async (donationId: string, participantId: string) => {
+    try {
+      const res = await fetch("/api/chat/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ donationId, participantId }),
+      });
+      
+      if (res.ok) {
+        const conversation = await res.json();
+        router.push(`/rider/messages?id=${conversation.id}`);
+      } else {
+        const error = await res.json();
+        toast.error("Failed to start chat", { description: error.message || "Unknown error" });
+      }
+    } catch (err) {
+      toast.error("Something went wrong joining the ops channel.");
+    }
+  };
+
   const handleHandover = async () => {
     if (!verifyingId || pin.length < 4) {
       toast.error("Enter the 4-digit Handover PIN");
@@ -102,8 +126,6 @@ export default function RiderDashboard() {
     }
   };
 
-
-
   const activeMission = tasks.find(t => t.riderId && (t.status === "ASSIGNED" || t.status === "ON_THE_WAY"));
   const availableBounties = tasks.filter(t => !t.riderId && t.status === "APPROVED");
 
@@ -116,44 +138,43 @@ export default function RiderDashboard() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto space-y-12">
-          
+      <div className="max-w-6xl mx-auto space-y-12 py-10 px-4">
           <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
               <div className="flex items-center gap-2 mb-3">
                  <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-green-500/80">System Online / Location Active</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2 uppercase text-black">
+              <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-2 uppercase text-black italic">
                  Mission Update
               </h1>
-              <p className="text-gray-600 font-bold ">Secure logistics & humanitarian response protocol.</p>
+              <p className="text-gray-600 font-bold italic uppercase text-[10px] tracking-widest">Secure logistics & humanitarian response protocol.</p>
             </motion.div>
           </header>
 
-          {/* Active Primary Mission */}
+          {/* Active Mission */}
           <section className="space-y-6">
-             <h2 className="text-xs font-black uppercase tracking-[0.3em] text-orange-500/50 flex items-center gap-3">
+             <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-600/50 flex items-center gap-3">
                 <Truck className="w-4 h-4" /> Primary Mission
              </h2>
 
              {activeMission ? (
                <motion.div 
-                 initial={{ opacity: 0, y: 20 }} 
-                 animate={{ opacity: 1, y: 0 }}
-                 className="bg-white border border-gray-200 rounded-[3rem] p-10 relative overflow-hidden group shadow-xl"
+                 initial={{ opacity: 0, scale: 0.98 }} 
+                 animate={{ opacity: 1, scale: 1 }}
+                 className="bg-white border-2 border-slate-100 rounded-[3.5rem] p-10 relative overflow-hidden group shadow-2xl shadow-slate-100"
                >
                  <div className="absolute top-0 right-0 w-64 h-64 bg-orange-600/5 blur-[100px]" />
                  
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
                     <div className="space-y-8">
-                       <div className="space-y-2">
-                          <Badge className="bg-orange-600 text-white border-none font-black text-[10px] px-3 py-1">
+                       <div className="space-y-3">
+                          <Badge className="bg-slate-950 text-white border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
                              {activeMission.status}
                           </Badge>
-                          <h3 className="text-4xl md:text-5xl font-black tracking-tight leading-none truncate text-black">{activeMission.donation.title}</h3>
-                          <div className="flex items-center gap-2 text-xs font-bold text-gray-600 ">
-                             Status: {activeMission.status === 'ASSIGNED' ? 'Proceed to pickup' : 'Proceed to delivery'}
+                          <h3 className="text-4xl md:text-5xl font-black tracking-tighter leading-none italic text-black uppercase">{activeMission.donation.title}</h3>
+                          <div className="flex items-center gap-2 text-[10px] font-black uppercase text-orange-600 tracking-widest">
+                             {activeMission.status === 'ASSIGNED' ? 'Objective: Pickup Food' : 'Objective: Deliver to NGO'}
                           </div>
                        </div>
 
@@ -172,95 +193,101 @@ export default function RiderDashboard() {
                     </div>
 
                     <div className="flex flex-col items-center gap-6">
-                       {activeMission.status === 'ASSIGNED' ? (
-                          <button 
-                             onClick={() => setVerifyingId(activeMission.id)}
-                             className="w-full py-8 bg-orange-600 text-white font-black rounded-3xl text-xl shadow-2xl shadow-orange-950/50 hover:bg-orange-500 transition-all active:scale-95 uppercase tracking-tighter"
-                          >
-                             Verify Handover PIN
-                          </button>
-                       ) : (
-                          <button 
-                             onClick={() => router.push(`/rider/mission/${activeMission.id}`)}
-                             className="w-full py-8 bg-black border border-white/10 text-white font-black rounded-3xl text-xl hover:bg-white hover:text-black transition-all active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-4"
-                          >
-                             Mission Brief <Navigation className="w-6 h-6" />
-                          </button>
-                       )}
+                       <button 
+                          onClick={() => {
+                             if (activeMission.status === 'ASSIGNED') {
+                                setVerifyingId(activeMission.id);
+                             } else {
+                                router.push(`/rider/mission/${activeMission.id}`);
+                             }
+                          }}
+                          className={`w-full py-8 ${activeMission.status === 'ASSIGNED' ? 'bg-orange-600 shadow-orange-200' : 'bg-slate-950 shadow-slate-200'} text-white font-black rounded-[2.5rem] text-xl shadow-2xl hover:scale-105 transition-all active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-4`}
+                       >
+                          {activeMission.status === 'ASSIGNED' ? 'Verify Handover' : 'Mission Brief'} <Navigation className="w-6 h-6" />
+                       </button>
                        
                        <div className="flex gap-4 w-full">
-                          <button className="flex-1 py-4 bg-gray-100 border border-gray-200 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase hover:bg-gray-200 transition-all text-black">
-                             <Phone className="w-4 h-4" /> Contact NGO
+                          <button 
+                             onClick={() => handleStartChat(activeMission.donationId, activeMission.ngoId)}
+                             className="flex-1 py-5 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-center gap-3 text-[10px] font-black uppercase hover:bg-slate-950 hover:text-white transition-all text-slate-400 group/msg shadow-sm"
+                          >
+                             <MessageSquare className="w-4 h-4 group-hover/msg:scale-110 transition-transform" /> Msg NGO
                           </button>
-                          <button className="flex-1 py-4 bg-gray-100 border border-gray-200 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase hover:bg-gray-200 transition-all text-black">
-                             <Phone className="w-4 h-4" /> Contact Donor
+                          <button 
+                             onClick={() => handleStartChat(activeMission.donationId, activeMission.donation.donorId)}
+                             className="flex-1 py-5 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-center gap-3 text-[10px] font-black uppercase hover:bg-slate-950 hover:text-white transition-all text-slate-400 group/msg shadow-sm"
+                          >
+                             <MessageSquare className="w-4 h-4 group-hover/msg:scale-110 transition-transform" /> Msg Donor
                           </button>
                        </div>
                     </div>
                  </div>
                </motion.div>
              ) : (
-               <div className="p-20 rounded-[3.5rem] bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center opacity-60">
-                  <Zap className="w-12 h-12 mb-4 text-gray-400" />
-                  <h3 className="text-xl font-black uppercase tracking-widest text-black">No Active Mission</h3>
-                  <p className="text-xs font-bold mt-2 text-gray-600">Check available bounties in your sector.</p>
+               <div className="p-20 rounded-[3.5rem] bg-slate-50 border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center">
+                  <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-slate-200/50">
+                     <Zap className="w-10 h-10 text-slate-200" />
+                  </div>
+                  <h3 className="text-xl font-black uppercase tracking-widest text-slate-950 mb-2 italic">Scanning Sector...</h3>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No active mission detected. Check the bounty board below.</p>
                </div>
              )}
           </section>
 
-          {/* Available Bounties */}
+          {/* Bounties */}
           <section className="space-y-6">
              <div className="flex items-center justify-between px-2">
-                <h2 className="text-xs font-black uppercase tracking-[0.3em] text-gray-400 flex items-center gap-3">
-                   <Zap className="w-4 h-4 text-orange-500" /> Regional Bounties
+                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 flex items-center gap-3">
+                   <Zap className="w-4 h-4 text-orange-600" /> Regional Bounties
                 </h2>
-                <Badge className="bg-gray-100 text-gray-400 border-none font-black text-[9px] uppercase tracking-widest">{availableBounties.length} Available</Badge>
+                <Badge className="bg-slate-50 text-slate-400 border border-slate-100 font-black text-[10px] uppercase tracking-widest px-3 py-1">{availableBounties.length} Available</Badge>
              </div>
 
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {availableBounties.map((bounty, i) => (
                   <motion.div 
                     key={bounty.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="p-8 rounded-[2.5rem] bg-gray-50 border border-gray-100 hover:border-orange-500/50 transition-all cursor-pointer group shadow-sm"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="p-10 rounded-[3rem] bg-white border border-slate-100 hover:border-orange-600/50 hover:shadow-2xl hover:shadow-orange-100/30 transition-all cursor-pointer group flex flex-col shadow-sm"
                     onClick={() => router.push(`/rider/mission/${bounty.id}`)}
                   >
-                     <div className="flex justify-between items-start mb-6">
-                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center group-hover:bg-orange-600 transition-colors border border-gray-100">
-                           <Package className="w-6 h-6 text-gray-400 group-hover:text-white" />
+                     <div className="flex justify-between items-start mb-8">
+                        <div className="w-16 h-16 bg-slate-50 rounded-[1.5rem] flex items-center justify-center group-hover:bg-orange-600 transition-all duration-500 border border-slate-100 shadow-inner shrink-0">
+                           <Package className="w-8 h-8 text-slate-200 group-hover:text-white transition-colors" />
                         </div>
-                        <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-500/10 px-3 py-1 rounded-full ">Priority</span>
+                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest bg-orange-50 px-3 py-1 rounded-full italic border border-orange-100">Live Cargo</span>
                      </div>
-                     <h4 className="text-xl font-black mb-1 truncate text-black">{bounty.donation.title}</h4>
-                     <p className="text-xs font-bold text-gray-500  mb-6 truncate">{bounty.donation.donor.address}</p>
+                     <h4 className="text-2xl font-black mb-1 truncate text-slate-950 italic uppercase tracking-tighter">{bounty.donation.title}</h4>
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-10 truncate">{bounty.donation.donor.address}</p>
                      
-                     <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+                     <div className="flex items-center justify-between pt-6 border-t border-slate-50 mt-auto">
                         <div className="flex items-center gap-2">
-                           <TrendingUp className="w-4 h-4 text-green-500" />
-                           <span className="text-[10px] font-black uppercase tracking-widest text-black/60">+50 Karma</span>
+                           <TrendingUp className="w-4 h-4 text-emerald-500" />
+                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-950">+150 KARMA</span>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:translate-x-1 group-hover:text-orange-500 transition-all" />
+                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all shadow-sm">
+                           <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </div>
                      </div>
                   </motion.div>
                 ))}
              </div>
           </section>
-
       </div>
 
       {/* Handover PIN Modal */}
       <AnimatePresence>
          {verifyingId && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-100 flex items-center justify-center p-6 bg-black/95 backdrop-blur-xl">
-               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-zinc-900 border border-white/10 rounded-[3.5rem] p-10 max-w-md w-full shadow-2xl space-y-8 text-center ">
-                  <div className="w-24 h-24 bg-orange-600 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-orange-950 animate-pulse">
-                     <ShieldCheck className="w-12 h-12 text-white" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/95 backdrop-blur-xl">
+               <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white border-4 border-white/10 rounded-[4rem] p-12 max-w-md w-full shadow-2xl space-y-8 text-center">
+                  <div className="w-24 h-24 bg-slate-950 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-slate-950/30">
+                     <ShieldCheck className="w-12 h-12 text-orange-600" />
                   </div>
-                  <div className="space-y-2">
-                     <h2 className="text-3xl font-black tracking-tight uppercase text-white">Enter Handover PIN</h2>
-                     <p className="text-white/40 font-bold text-sm">Retrieve the 4-digit code from the donor to verify supply collection.</p>
+                  <div className="space-y-3">
+                     <h2 className="text-4xl font-black tracking-tighter uppercase italic text-slate-950">Security Key</h2>
+                     <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Input the 4-digit code provided by the donor.</p>
                   </div>
 
                   <div className="space-y-10">
@@ -269,20 +296,19 @@ export default function RiderDashboard() {
                         maxLength={4}
                         placeholder="----"
                         autoFocus
-                        className="w-full text-center text-6xl font-black tracking-[0.5em] py-10 rounded-[2.5rem] bg-black border-2 border-white/5 focus:border-orange-600 focus:outline-none transition-all placeholder:text-zinc-800 uppercase shadow-inner text-white"
+                        className="w-full text-center text-6xl font-black tracking-[0.5em] py-12 rounded-[2.5rem] bg-slate-50 border-2 border-slate-100 focus:border-slate-950 focus:bg-white focus:outline-none transition-all placeholder:text-slate-200 uppercase italic shadow-inner"
                         value={pin}
                         onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                      />
-                     
                      <div className="flex gap-4">
-                        <button onClick={() => setVerifyingId(null)} className="flex-1 py-5 bg-white/5 text-white/40 font-black rounded-2xl hover:bg-white/10 transition-all uppercase text-[10px] tracking-widest">Abort</button>
+                        <button onClick={() => setVerifyingId(null)} className="flex-1 py-6 bg-slate-100 text-slate-400 font-black rounded-3xl hover:bg-slate-200 transition-all uppercase text-[10px] tracking-widest">Abort</button>
                         <button 
                            onClick={handleHandover}
                            disabled={actionLoading || pin.length < 4}
-                           className="flex-2 py-5 bg-orange-600 text-white font-black rounded-2xl hover:bg-orange-500 transition-all shadow-xl shadow-orange-900 disabled:opacity-50 uppercase text-[10px] tracking-widest flex items-center justify-center gap-3"
+                           className="flex-[2] py-6 bg-slate-950 text-white font-black rounded-3xl hover:bg-orange-600 transition-all shadow-2xl shadow-slate-950/20 disabled:opacity-50 uppercase text-[10px] tracking-widest flex items-center justify-center gap-4"
                         >
                            {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-                           Verify PIN
+                           Verify
                         </button>
                      </div>
                   </div>
@@ -294,16 +320,14 @@ export default function RiderDashboard() {
   );
 }
 
-
-
 function MissionWayPoint({ label, value, active = false }: { label: string, value: string, active?: boolean }) {
    return (
-      <div className={`p-6 rounded-3xl border transition-all ${active ? 'bg-orange-600/5 border-orange-600/30' : 'bg-gray-50 border-gray-100'}`}>
-         <div className="flex items-center gap-3 mb-2">
-            <div className={`w-2 h-2 rounded-full ${active ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]' : 'bg-gray-300'}`} />
-            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">{label}</p>
+      <div className={`p-8 rounded-[2rem] border-2 transition-all duration-500 ${active ? 'bg-orange-50 border-orange-600/20 shadow-xl shadow-orange-100/50' : 'bg-slate-50 border-slate-100'}`}>
+         <div className="flex items-center gap-3 mb-3">
+            <div className={`w-3 h-3 rounded-full ${active ? 'bg-orange-600 shadow-lg shadow-orange-300 animate-pulse' : 'bg-slate-200'}`} />
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</p>
          </div>
-         <p className="text-sm font-bold text-black truncate">{value}</p>
+         <p className="text-sm font-black text-slate-950 truncate uppercase tracking-tight">{value}</p>
       </div>
    );
 }

@@ -4,10 +4,24 @@ import { jwtVerify } from "jose";
 import { PrismaClient } from "../app/generated/prisma";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { createServer } from "http";
+import Redis from "ioredis";
 import "dotenv/config";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
+
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+const pub = new Redis(redisUrl);
+const sub = new Redis(redisUrl);
+
+pub.on("error", (err) => {
+  console.log("Redis Pub Error:", err.message || "Redis server is not reachable");
+});
+
+sub.on("error", (err) => {
+  console.log("Redis Sub Error:", err.message || "Redis server is not reachable");
+});
+
 const wss = new WebSocketServer({ port: 8080 });
 
 if (!process.env.JWT_SECRET) {
@@ -16,10 +30,40 @@ if (!process.env.JWT_SECRET) {
 
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
-// Map to track active connections per user
-const clients = new Map<string, WebSocket>();
+// Map to track active connections per user on THIS instance
+const localClients = new Map<string, WebSocket>();
 
 console.log("WebSocket server starting on ws://localhost:8080");
+
+// Subscribe to Redis notifications for cross-instance delivery
+sub.subscribe("notifications", (err) => {
+  if (err) console.error("Redis Subscribe Error:", err);
+  else console.log("Subscribed to 'notifications' channel for horizontal scaling");
+});
+
+sub.on("message", (channel, message) => {
+  if (channel === "notifications") {
+    try {
+      const { type, userId, userIds, payload, riderId, lat, lng } = JSON.parse(message);
+      
+      if (type === "RIDER_LOCATION_UPDATE" && userIds) {
+        userIds.forEach((id: string) => {
+          const ws = localClients.get(id);
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: "RIDER_LOCATION", payload: { riderId, lat, lng } }));
+          }
+        });
+      } else if (userId) {
+        const ws = localClients.get(userId);
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "NOTIFICATION", payload }));
+        }
+      }
+    } catch (err) {
+      console.error("Redis Message Error:", err);
+    }
+  }
+});
 
 wss.on("connection", async (ws, req) => {
   const { query } = parse(req.url || "", true);
@@ -34,8 +78,8 @@ wss.on("connection", async (ws, req) => {
     const { payload } = await jwtVerify(token, secretKey);
     const userId = payload.userId as string;
     
-    clients.set(userId, ws);
-    console.log(`User ${userId} connected`);
+    localClients.set(userId, ws);
+    console.log(`User ${userId} connected to this instance`);
 
     ws.on("message", async (data) => {
       try {
@@ -53,17 +97,39 @@ wss.on("connection", async (ws, req) => {
               imageUrl,
               locationLat: location?.lat,
               locationLng: location?.lng,
+              isRead: false,
             },
+            include: {
+              sender: {
+                select: { id: true, name: true, imageUrl: true }
+              }
+            }
           });
 
-          // Forward to receiver if online
-          const receiverWs = clients.get(receiverId);
-          if (receiverWs && receiverWs.readyState === WebSocket.OPEN) {
-            receiverWs.send(JSON.stringify({
-              type: "NEW_MESSAGE",
-              payload: savedMsg
-            }));
-          }
+          // Update conversation last updated field
+          await prisma.conversation.update({
+            where: { id: conversationId },
+            data: { updatedAt: new Date() }
+          });
+
+          // Publish to Redis so ANY instance can deliver it to the receiver
+          pub.publish("notifications", JSON.stringify({
+            userId: receiverId,
+            payload: savedMsg,
+            type: "NEW_MESSAGE"
+          }));
+        } else if (type === "TYPING_STATUS") {
+          const { receiverId, conversationId, isTyping } = msgPayload;
+          
+          pub.publish("notifications", JSON.stringify({
+            userId: receiverId,
+            type: "TYPING_INDICATOR",
+            payload: {
+              conversationId,
+              isTyping,
+              userId: userId
+            }
+          }));
         }
       } catch (err) {
         console.error("Message processing error:", err);
@@ -71,8 +137,8 @@ wss.on("connection", async (ws, req) => {
     });
 
     ws.on("close", () => {
-      clients.delete(userId);
-      console.log(`User ${userId} disconnected`);
+      localClients.delete(userId);
+      console.log(`User ${userId} disconnected from this instance`);
     });
 
   } catch {
@@ -80,52 +146,19 @@ wss.on("connection", async (ws, req) => {
   }
 });
 
-export async function sendNotification(userId: string, notification: Record<string, unknown>) {
-  const ws = clients.get(userId);
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: "NOTIFICATION",
-      payload: notification
-    }));
-    return true;
-  }
-  return false;
-}
-
-// Broadcast rider location to a group of users (e.g., the donor and NGO)
-export function broadcastRiderLocation(userIds: string[], riderId: string, lat: number, lng: number) {
-  const message = JSON.stringify({
-    type: "RIDER_LOCATION",
-    payload: { riderId, lat, lng }
-  });
-
-  userIds.forEach(id => {
-    const ws = clients.get(id);
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(message);
-    }
-  });
-}
-
-// Internal HTTP server for Next.js to trigger notifications
+// Internal HTTP server for Next.js to trigger notifications through Redis
 const httpServer = createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/notify') {
     let body = '';
     req.on('data', chunk => { body += chunk; });
     req.on('end', async () => {
       try {
-        const { type, userId, userIds, notification, riderId, lat, lng } = JSON.parse(body);
+        const data = JSON.parse(body);
+        // Publish trigger to all instances via Redis
+        await pub.publish("notifications", body);
         
-        if (type === "RIDER_LOCATION_UPDATE" && userIds && riderId) {
-          broadcastRiderLocation(userIds, riderId, lat, lng);
-          res.writeHead(200);
-          res.end();
-          return;
-        }
-
-        const success = await sendNotification(userId, notification);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success }));
+        res.end(JSON.stringify({ success: true, broadcasted: true }));
       } catch (err) {
         res.writeHead(400);
         res.end();
@@ -138,5 +171,6 @@ const httpServer = createServer(async (req, res) => {
 });
 
 httpServer.listen(8081, () => {
-  console.log("Internal Trigger Server running on http://localhost:8081");
+  console.log("Internal Trigger Server (Scalable) running on http://localhost:8081");
 });
+

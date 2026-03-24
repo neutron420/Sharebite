@@ -11,6 +11,7 @@ import {
   LogOut,
   ShieldCheck,
   Menu,
+  MessageSquare,
   X,
   ChevronRight,
 } from "lucide-react";
@@ -52,14 +53,15 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
     }
   }, [router]);
 
-  const { addListener } = useSocket();
+  const { addListener, isConnected } = useSocket();
 
   useEffect(() => {
     fetchUser();
 
     // Listen for real-time notifications via WebSocket
     const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
-       toast.info(newNotif.title, { description: newNotif.message });
+       if (!newNotif) return;
+       toast.info(newNotif.title || "New Update", { description: newNotif.message || "You have a new notification" });
     });
 
     return () => unsubscribe();
@@ -75,6 +77,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
     { label: "My Missions", icon: Truck, href: "/rider/missions" }, // Assuming missions page exists or will exist
     { label: "Bounty Board", icon: Zap, href: "/rider/bounties" },
     { label: "Comms", icon: Bell, href: "/rider/notifications" },
+    { label: "Messages", icon: MessageSquare, href: "/rider/messages" },
   ];
 
   if (loading) {
@@ -146,12 +149,21 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
             <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center font-black text-white ">R</div>
             <span className="font-black text-sm tracking-tighter uppercase whitespace-nowrap text-black">Rider Hub</span>
           </div>
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-gray-600 hover:text-black"
-          >
-            {mobileMenuOpen ? <X /> : <Menu />}
-          </button>
+          <div className="flex items-center gap-3">
+             <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500 ${isConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+              <span className="text-[10px] font-black uppercase tracking-tighter">
+                {isConnected ? 'Sync Online' : 'Sync Error'}
+              </span>
+              <Zap className={`w-3 h-3 ${isConnected ? 'animate-pulse' : ''}`} />
+            </div>
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-gray-600 hover:text-black"
+            >
+              {mobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </header>
 
         {/* Mobile Menu Overlay */}

@@ -24,6 +24,9 @@ import { BentoCard, BentoGrid } from "@/components/magicui/bento-grid";
 import { Footer } from "@/components/ui/large-name-footer";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { TestimonialsSectionDemo } from "@/components/blocks/demo";
+import { FaqsSection } from "@/components/ui/faqs-1";
+import { ImpactGallery } from "@/components/ui/impact-gallery";
 
 /**
  * ShareBite - The Luxury Edition
@@ -111,7 +114,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="relative z-10 w-full pt-56 pb-32">
+      <main className="relative z-10 w-full pt-56">
         {/* Refined Hero Section */}
         <section className="px-6 flex flex-col items-center text-center max-w-5xl mx-auto">
           <motion.div
@@ -181,6 +184,11 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Epic Impact Gallery - Now natively full width outside the padded hero container */}
+        <div className="w-full">
+          <ImpactGallery />
+        </div>
+
         {/* Polished Bento Grid */}
         <section id="features" className="px-6 py-40 max-w-7xl mx-auto">
           <div className="text-center mb-28">
@@ -214,6 +222,12 @@ export default function Home() {
              Initialize Profile <ArrowRight className="inline ml-2 group-hover:translate-x-3 transition-transform" />
           </Link>
         </section>
+
+        {/* Testimonials */}
+        <TestimonialsSectionDemo />
+
+        {/* FAQs */}
+        <FaqsSection />
       </main>
 
       <Footer />

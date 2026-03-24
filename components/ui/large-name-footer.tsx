@@ -6,8 +6,14 @@ import { Button } from "@/components/ui/button";
 
 function Footer() {
   return (
-    <footer className="w-full py-12 bg-gradient-to-t from-orange-500/10 to-slate-500/30 mt-20 relative z-20 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
+    <footer className="py-12 px-4 md:px-6 bg-slate-50 relative z-20 overflow-hidden border-t-0">
+      {/* Background Orange Grid + Glow Pattern */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,100,50,0.1),transparent_70%)] opacity-70" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(234,88,12,0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgba(234,88,12,0.07)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+      </div>
+
+      <div className="container mx-auto max-w-7xl relative z-10">
         <div className="flex flex-col md:flex-row justify-between">
           <div className="mb-8 md:mb-0">
             <Link href="/" className="flex items-center gap-2">

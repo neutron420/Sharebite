@@ -16,11 +16,14 @@ import {
   ChevronDown,
   ChevronLeft,
   Menu,
-  X,
+  MessageSquare,
+  Plus,
   Search,
-  Settings,
-  ShieldCheck,
+  UserRound,
   Utensils,
+  X,
+  ShieldCheck,
+  Zap,
   type LucideIcon,
   Info
 } from "lucide-react";
@@ -28,7 +31,13 @@ import {
   Badge, 
   IconButton, 
   Typography, 
-  Box, 
+  Box, } from "@mui/material";
+import confetti from "canvas-confetti";
+import {
+  Badge,
+  Box,
+  Chip,
+  CircularProgress,
   Divider,
   Fade,
   CircularProgress,
@@ -91,11 +100,19 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "notifications", 
     href: "/donor/notifications" 
   },
+  {
+    label: "Messages",
+    icon: MessageSquare,
+    id: "messages",
+    href: "/donor/messages",
+  },
 ];
 
 export default function DonorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { addListener, isConnected } = useSocket();
+
   const [user, setUser] = useState<DonorUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -134,8 +151,8 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
       const res = await fetch("/api/notifications", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data);
-        setUnreadCount(data.filter((n: any) => !n.isRead).length);
+        setNotifications(Array.isArray(data) ? data : []);
+        setUnreadCount(Array.isArray(data) ? data.filter((notification: any) => notification && !notification.isRead).length : 0);
       }
     } catch (err) {
       console.error("Failed to fetch notifications", err);
@@ -151,6 +168,30 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
        setNotifications(prev => [newNotif, ...prev]);
        setUnreadCount(prev => prev + 1);
        toast.info(newNotif.title, { description: newNotif.message });
+    const unsubscribe = addListener("NOTIFICATION", (newNotification) => {
+      if (!newNotification) return;
+      setNotifications((previous) => [newNotification, ...previous]);
+      setUnreadCount((previous) => previous + 1);
+      if (
+        newNotification.title &&
+        typeof newNotification.title === "string" &&
+        newNotification.title.includes("Badge Unlocked")
+      ) {
+        // Trigger celebration!
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#f97316", "#fb923c", "#fdba74"]
+        });
+
+        toast.success(newNotification.title, {
+          description: `${newNotification.message} Open Profile to see it in your badge wall.`,
+        });
+        return;
+      }
+
+      toast.info(newNotification.title || "New Update", { description: newNotification.message || "You have a new notification" });
     });
 
     return () => unsubscribe();
@@ -318,9 +359,20 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <IconButton 
-                onClick={(e) => setNotifAnchor(e.currentTarget)}
+
+            <div className="flex items-center gap-4">
+              <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500 ${isConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                <span className="text-[10px] font-black uppercase tracking-tighter">
+                  {isConnected ? 'Sync Online' : 'Sync Error'}
+                </span>
+                <Zap className={`w-3 h-3 ${isConnected ? 'animate-pulse' : ''}`} />
+              </div>
+
+              <DashboardRefreshButton className="shrink-0" />
+
+              <IconButton
+                onClick={(event) => setNotifAnchor(event.currentTarget)}
                 className="hover:bg-gray-100 text-gray-500 hover:text-orange-600 transition-colors"
               >
                 <Badge badgeContent={unreadCount} color="error" overlap="circular">
@@ -355,9 +407,10 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                        <CircularProgress size={20} className="text-orange-500" />
                     </Box>
                   ) : notifications.length > 0 ? (
-                    notifications.map((n) => (
-                      <MenuItem 
-                        key={n.id} 
+                    notifications.map((notification) => (
+                      notification && (
+                        <MenuItem
+                          key={notification.id}
                         onClick={() => {
                           setNotifAnchor(null);
                           if (n.link) router.push(n.link);
@@ -374,6 +427,7 @@ export default function DonorLayout({ children }: { children: React.ReactNode })
                             </Box>
                          </Stack>
                       </MenuItem>
+                      )
                     ))
                   ) : (
                     <Box className="p-8 text-center text-gray-400">
