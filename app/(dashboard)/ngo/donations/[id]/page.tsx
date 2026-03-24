@@ -84,7 +84,7 @@ export default function NgoDonationDetail() {
 
   return (
     <div className="min-h-screen bg-[#FCFCFD] text-slate-950 flex selection:bg-orange-100 italic">
-      <main className="flex-grow max-w-5xl mx-auto px-6 py-12 space-y-12">
+      <main className="flex-grow w-full px-6 py-12 space-y-12">
         <button 
            onClick={() => router.push("/ngo")}
            className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-orange-600 transition-colors"

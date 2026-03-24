@@ -44,7 +44,7 @@ function Counter({ value, direction = "up" }: { value: number, direction?: "up" 
 
 import Marquee from "@/components/magicui/marquee";
 import { BentoCard, BentoGrid } from "@/components/magicui/bento-grid";
-import { Footer } from "@/components/ui/large-name-footer";
+import { Footerdemo as Footer } from "@/components/ui/footer-section";
 import { cn } from "@/lib/utils";
 import { TestimonialsSectionDemo } from "@/components/blocks/demo";
 import { FaqsSection } from "@/components/ui/faqs-1";
