@@ -210,12 +210,12 @@ export default function DonationsPage() {
             <thead>
               <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <th className="px-6 py-4">Donation</th>
-                <th className="px-6 py-4">Donor</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Location</th>
+                <th className="px-6 py-4 hidden md:table-cell">Donor</th>
+                <th className="px-6 py-4 hidden lg:table-cell">Category</th>
+                <th className="px-6 py-4 hidden sm:table-cell">Location</th>
                 <th className="px-6 py-4">Qty</th>
                 <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4 hidden lg:table-cell">Date</th>
                 <th className="px-6 py-4">Actions</th>
               </tr>
             </thead>
@@ -237,16 +237,16 @@ export default function DonationsPage() {
                         <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{d.title}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 hidden md:table-cell">
                       <p className="text-sm text-gray-900">{d.donor.name}</p>
                       <p className="text-xs text-gray-500">{d.donor.email}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 hidden lg:table-cell">
                       <span className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-700">
                         {formatCategory(d.category)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 hidden sm:table-cell">
                       <div className="flex items-center gap-1.5 text-sm text-gray-600">
                         <MapPin className="h-3.5 w-3.5 text-gray-400" />
                         {d.city}
@@ -258,7 +258,7 @@ export default function DonationsPage() {
                         <StatusIcon className="h-3 w-3" />{d.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{formatDate(d.createdAt)}</td>
+                    <td className="px-6 py-4 hidden lg:table-cell text-sm text-gray-500">{formatDate(d.createdAt)}</td>
                     <td className="px-6 py-4">
                       <button onClick={() => setSelectedDonation(d)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900">
                         <Eye className="h-4 w-4" />
@@ -322,7 +322,7 @@ export default function DonationsPage() {
                 <h3 className="text-xl font-bold text-gray-900">{selectedDonation.title}</h3>
                 <p className="text-gray-600 mt-2">{selectedDonation.description}</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-white/40 backdrop-blur-md rounded-lg p-4 border border-white/20 shadow-sm">
                   <p className="text-xs text-gray-500 uppercase">Donor</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{selectedDonation.donor.name}</p>

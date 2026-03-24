@@ -192,6 +192,17 @@ async function getDonationsHandler(request: Request) {
             },
           },
         },
+        reviews: {
+          include: {
+            reviewer: {
+              select: {
+                name: true,
+                imageUrl: true,
+                role: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",

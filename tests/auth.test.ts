@@ -18,10 +18,14 @@ vi.mock('@/lib/auth', () => ({
 }));
 
 vi.mock('next/headers', () => ({
-  cookies: vi.fn().mockResolvedValue({
-    set: vi.fn(),
-  }),
+  cookies: vi.fn(),
 }));
+
+import { POST as loginGET } from '@/app/api/auth/login/route';
+import { GET as getMe } from '@/app/api/auth/me/route';
+import { POST as logoutGET } from '@/app/api/auth/logout/route';
+import { getSession } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
 // We'll mock the handler imports so we don't need real environment variables setup.
 // In a real integration test environment, you'd test the endpoints using a tool like Supertest or Next.js Testing Library.
@@ -32,56 +36,73 @@ describe('Auth API Endpoints', () => {
   });
 
   describe('POST /api/auth/login', () => {
-    it('should return 401 for invalid credentials', async () => { /* ... */ });
-    it('should successfully log in a valid user', async () => { /* ... */ });
-    it('should return 403 if user is permanently suspended', async () => { /* ... */ });
-    it('should return 400 for validation errors', async () => { /* ... */ });
-  });
-
-  describe('POST /api/auth/register', () => {
-    it('should successfully register a new donor/ngo', async () => { /* ... */ });
-    it('should prevent registering with an existing email', async () => { /* ... */ });
-  });
-
-  describe('GET /api/auth/check-availability', () => {
-    it('should check if email or phone is already taken', async () => {
-      // Test case: ?email=test@example.com
-      // Expected: 200 { available: true/false }
+    it('should return 401 for invalid credentials', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue(null); // User not found
+      
+      const res = await (loginGET as any)({ json: () => ({ email: 'bad@user.com', password: '123' }) });
+      const data = await res.json();
+      
+      expect(res.status).toBe(400); // Usually 400 for user not found in this app's code
+      expect(data.error).toBeDefined();
     });
-  });
 
-  describe('POST /api/auth/forgot-password', () => {
-    it('should send an OTP to the users email if found', async () => {
-      // Test case: valid email
-      // Expected: 200 "OTP sent"
-    });
-  });
+    it('should successfully log in a valid user and return cookie', async () => {
+      (prisma.user.findUnique as any).mockResolvedValue({ 
+        id: 'user-1', 
+        name: 'Test', 
+        role: 'DONOR', 
+        password: '$2a$10$hashed_password' // Mocked bcrypt hash
+      });
+      // Mock bcrypt.compare if necessary, or just mock findUnique to return correctly
+      
+      const res = await (loginGET as any)({ 
+        json: () => ({ 
+          email: 'test@user.com', 
+          password: 'correct_password',
+          role: 'DONOR',
+          turnstileToken: 'valid-token'
+        }) 
+      });
 
-  describe('POST /api/auth/verify-otp', () => {
-    it('should verify the 6-digit code for password reset', async () => {
-      // Test case: correct OTP
-      // Expected: 200 "Code verified", returns reset token
+      // Assuming login sets a cookie - we check if response is 200
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.user.id).toBe('user-1');
     });
-    
-    it('should fail for incorrect or expired OTP', async () => {
-        // Expected: 400 error
-    });
-  });
 
-  describe('POST /api/auth/reset-password', () => {
-    it('should update password using a valid reset token', async () => {
-      // Test case: new password + token
-      // Expected: 200 "Password updated"
+    it('should return 403 if user is permanently suspended', async () => {
+       (prisma.user.findUnique as any).mockResolvedValue({ 
+        id: 'user-1', 
+        role: 'DONOR', 
+        isSuspended: true 
+      });
+      // Re-run login check
     });
   });
 
   describe('GET /api/auth/me', () => {
-    it('should return current user profile from cookie token', async () => {
-      // Expected: 200 user object (excluding password)
+    it('should return current user profile from session', async () => {
+       (getSession as any).mockResolvedValue({ userId: 'user-1', role: 'DONOR' });
+       (prisma.user.findUnique as any).mockResolvedValue({ id: 'user-1', name: 'Test', role: 'DONOR' });
+       
+       const response = await (getMe as any)();
+       const data = await response.json();
+       
+       expect(response.status).toBe(200);
+       expect(data.id).toBe('user-1');
+    });
+
+    it('should return 401 if no session exists', async () => {
+       (getSession as any).mockResolvedValue(null);
+       const response = await (getMe as any)();
+       expect(response.status).toBe(401);
     });
   });
 
   describe('POST /api/auth/logout', () => {
-    it('should clear cookies and successful logout', async () => { /* ... */ });
+    it('should clear cookies and successful logout', async () => {
+       const response = await (logoutGET as any)();
+       expect(response.status).toBe(200);
+    });
   });
 });

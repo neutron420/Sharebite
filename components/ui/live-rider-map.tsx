@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Loader2 } from "lucide-react";
+import { Loader2, Navigation, MapPin, Truck, Clock } from "lucide-react";
 import { useSocket } from "@/components/providers/socket-provider";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
@@ -26,22 +26,22 @@ interface DirectionsResponse {
   }>;
 }
 
-interface RiderLocationResponse {
-  lat?: number | null;
-  lng?: number | null;
-  offline?: boolean;
-}
-
-type RouteGeoJson = {
-  type: "Feature";
-  properties: Record<string, never>;
-  geometry: {
-    type: "LineString";
-    coordinates: [number, number][];
-  };
-};
-
 const DEFAULT_CENTER: [number, number] = [77.209, 28.613];
+
+// Helper to calculate bearing between two points
+const getBearing = (start: [number, number], end: [number, number]) => {
+  const startLat = (start[1] * Math.PI) / 180;
+  const startLng = (start[0] * Math.PI) / 180;
+  const endLat = (end[1] * Math.PI) / 180;
+  const endLng = (end[0] * Math.PI) / 180;
+
+  const y = Math.sin(endLng - startLng) * Math.cos(endLat);
+  const x =
+    Math.cos(startLat) * Math.sin(endLat) -
+    Math.sin(startLat) * Math.cos(endLat) * Math.cos(endLng - startLng);
+  const brng = (Math.atan2(y, x) * 180) / Math.PI;
+  return (brng + 360) % 360;
+};
 
 export default function LiveRiderMap({ 
   riderId, 
@@ -53,30 +53,26 @@ export default function LiveRiderMap({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const riderMarker = useRef<mapboxgl.Marker | null>(null);
+  const riderLocation = useRef<[number, number]>(donorCoords || DEFAULT_CENTER);
+  
   const [loading, setLoading] = useState(true);
   const [routeStats, setRouteStats] = useState<{ distance: string, duration: string } | null>(null);
   const { addListener } = useSocket();
 
-  const fetchRoute = useCallback(async (m: mapboxgl.Map) => {
-    if (!donorCoords || !ngoCoords || !mapboxgl.accessToken) {
-      setRouteStats(null);
-      return;
-    }
+  const fetchRoute = useCallback(async (m: mapboxgl.Map, start: [number, number], end: [number, number]) => {
+    if (!mapboxgl.accessToken) return;
     
     try {
       const query = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${donorCoords[0]},${donorCoords[1]};${ngoCoords[0]},${ngoCoords[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
         { method: "GET" }
       );
       const json: DirectionsResponse = await query.json();
       const data = json.routes?.[0];
 
-      if (!data) {
-        setRouteStats(null);
-        return;
-      }
+      if (!data) return;
 
-      const geojson: RouteGeoJson = {
+      const geojson: any = {
         type: "Feature",
         properties: {},
         geometry: {
@@ -95,16 +91,28 @@ export default function LiveRiderMap({
             type: "geojson",
             data: geojson,
           },
-          layout: {
-            "line-join": "round",
-            "line-cap": "round",
-          },
+          layout: { "line-join": "round", "line-cap": "round" },
           paint: {
-            "line-color": "#ea580c",
-            "line-width": 5,
-            "line-opacity": 0.75,
+            "line-color": "#f97316",
+            "line-width": 6,
+            "line-opacity": 0.8,
+            "line-dasharray": [0, 2], // Create a "dotted" or "glowing" path effect
           },
         });
+
+        // Add an "animated" glow layer beneath
+        m.addLayer({
+            id: "route-glow",
+            type: "line",
+            source: { type: "geojson", data: geojson },
+            layout: { "line-join": "round", "line-cap": "round" },
+            paint: {
+              "line-color": "#f97316",
+              "line-width": 12,
+              "line-opacity": 0.15,
+              "line-blur": 8
+            },
+          }, "route");
       }
 
       setRouteStats({
@@ -114,7 +122,38 @@ export default function LiveRiderMap({
     } catch (err) {
       console.error("Failed to fetch route:", err);
     }
-  }, [donorCoords, ngoCoords]);
+  }, []);
+
+  const animateMarker = useCallback((newPos: [number, number]) => {
+    if (!riderMarker.current || !map.current) return;
+
+    const startPos = riderLocation.current;
+    const bearing = getBearing(startPos, newPos);
+    
+    // Rotate the marker element
+    const el = riderMarker.current.getElement();
+    const truckIcon = el.querySelector('.truck-icon') as HTMLElement;
+    if (truckIcon) {
+      truckIcon.style.transform = `rotate(${bearing}deg)`;
+    }
+
+    // Smooth transition using Mapbox's ease mode or interpolation
+    // For simplicity and "real-time" feel, we let Mapbox handle center and we just set position
+    riderMarker.current.setLngLat(newPos);
+    riderLocation.current = newPos;
+
+    map.current.easeTo({
+      center: newPos,
+      duration: 1200,
+      essential: true
+    });
+
+    // Update dynamic route based on status
+    const target = status === "ASSIGNED" ? donorCoords : ngoCoords;
+    if (target) {
+      void fetchRoute(map.current, newPos, target);
+    }
+  }, [donorCoords, ngoCoords, status, fetchRoute]);
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxgl.accessToken) {
@@ -122,14 +161,13 @@ export default function LiveRiderMap({
       return;
     }
 
-    setLoading(true);
-
     const nextMap = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      zoom: 12,
+      style: "mapbox://styles/mapbox/light-v11", // Cleaner, modern light theme
+      zoom: 14,
       center: donorCoords || DEFAULT_CENTER,
-      attributionControl: false
+      attributionControl: false,
+      pitch: 45 // 3D Perspective
     });
 
     map.current = nextMap;
@@ -141,128 +179,111 @@ export default function LiveRiderMap({
       // Add Donor Marker
       if (donorCoords) {
         const el = document.createElement('div');
-        el.innerHTML = '<div class="p-2 bg-orange-600 rounded-full border-2 border-white shadow-lg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>';
+        el.className = 'marker-donor';
+        el.innerHTML = '<div class="p-2.5 bg-orange-600 rounded-2xl border-2 border-white shadow-xl scale-110"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>';
         new mapboxgl.Marker(el).setLngLat(donorCoords).addTo(m);
       }
 
       // Add NGO Marker
       if (ngoCoords) {
         const el = document.createElement('div');
-        el.innerHTML = '<div class="p-2 bg-blue-600 rounded-full border-2 border-white shadow-lg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><path d="m9 22 3-6 3 6"/><path d="m9 2 3 6 3-6"/></svg></div>';
+        el.className = 'marker-ngo';
+        el.innerHTML = '<div class="p-2.5 bg-indigo-600 rounded-2xl border-2 border-white shadow-xl scale-110"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.91A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.79 1.09L21 9"/></svg></div>';
         new mapboxgl.Marker(el).setLngLat(ngoCoords).addTo(m);
       }
 
-      // Initial Route
-      void fetchRoute(m);
-
-      // Rider Marker setup
+      // Initial Rider Marker
       const riderEl = document.createElement('div');
+      riderEl.className = 'rider-marker-container';
       riderEl.innerHTML = `
-        <div class="relative">
-          <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-black px-2 py-1 rounded whitespace-nowrap border border-white/20 uppercase tracking-tighter">
+        <div class="relative flex flex-col items-center">
+          <div class="mb-2 bg-gray-900/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/20 shadow-lg whitespace-nowrap uppercase tracking-wider">
             ${riderName}
           </div>
-          <div class="p-3 bg-white rounded-2xl border-2 border-orange-600 shadow-2xl animate-bounce">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 18H3c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2v9c0 1.1-.9 2-2 2h-2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M15 6h5l3 3v7h-2"/></svg>
+          <div class="truck-icon p-3.5 bg-white rounded-[1.25rem] border-2 border-orange-500 shadow-2xl transition-transform duration-500 ease-out">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M9 18h6"/><path d="M19 18a1 1 0 0 0 1-1v-5l-3-3h-3v9"/><path d="M16 13.5h4.5"/></svg>
           </div>
+          <div class="absolute -bottom-2 w-4 h-4 bg-orange-500/20 rounded-full blur-md animate-ping" />
         </div>
       `;
       riderMarker.current = new mapboxgl.Marker(riderEl)
-        .setLngLat(donorCoords ?? ngoCoords ?? DEFAULT_CENTER)
+        .setLngLat(donorCoords ?? DEFAULT_CENTER)
         .addTo(m);
+
+      // Initial Route
+      const target = status === "ASSIGNED" ? donorCoords : ngoCoords;
+      if (target) {
+        void fetchRoute(m, donorCoords || DEFAULT_CENTER, target);
+      }
     });
 
     return () => {
       riderMarker.current = null;
       nextMap.remove();
-      if (map.current === nextMap) {
-        map.current = null;
-      }
+      map.current = null;
     };
-  }, [donorCoords, fetchRoute, ngoCoords, riderName]);
+  }, [donorCoords, fetchRoute, ngoCoords, riderName, status]);
 
-  // Main Socket Listener for live tracking
+  // Real-time Update Listener
   useEffect(() => {
-    if (!riderId || status === "COLLECTED" || status === "COMPLETED") return;
+    if (!riderId || status === "COMPLETED") return;
 
     const unsubscribe = addListener("RIDER_LOCATION", (data) => {
       if (data.riderId === riderId && typeof data.lng === "number" && typeof data.lat === "number") {
-        riderMarker.current?.setLngLat([data.lng, data.lat]);
-        if (map.current) {
-          map.current.easeTo({ center: [data.lng, data.lat], duration: 800 });
-        }
+        animateMarker([data.lng, data.lat]);
       }
     });
 
     return () => unsubscribe();
-  }, [riderId, status, addListener]);
-
-  // Poll for Rider Location as a fallback
-  useEffect(() => {
-    if (!riderId || status === "COLLECTED" || status === "COMPLETED") return;
-
-    let cancelled = false;
-
-    const pollLocation = async () => {
-      try {
-        const res = await fetch(`/api/rider/location?riderId=${riderId}`);
-        if (res.ok) {
-          const data: RiderLocationResponse = await res.json();
-          if (
-            !cancelled &&
-            !data.offline &&
-            typeof data.lng === "number" &&
-            typeof data.lat === "number"
-          ) {
-            riderMarker.current?.setLngLat([data.lng, data.lat]);
-            if (map.current) {
-              map.current.easeTo({ center: [data.lng, data.lat], duration: 1000 });
-            }
-          }
-        }
-      } catch {}
-    };
-
-    const interval = window.setInterval(pollLocation, 30000); 
-    void pollLocation();
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
-  }, [riderId, status]);
+  }, [riderId, status, addListener, animateMarker]);
 
   return (
-    <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/5 bg-zinc-900 group">
+    <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden bg-gray-100 group shadow-inner border border-gray-100">
       {loading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
-          <Loader2 className="w-8 h-8 text-orange-600 animate-spin mb-3" />
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Linking Logistics...</p>
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/60 backdrop-blur-xl">
+          <Loader2 className="w-10 h-10 text-orange-500 animate-spin mb-4" />
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-500 animate-pulse">Synchronizing GPS...</p>
         </div>
       )}
       
-      <div ref={mapContainer} className="w-full h-full grayscale-[0.2] contrast-[1.1]" />
+      <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Strategic Stat Overlays */}
-      <div className="absolute top-6 left-6 right-6 z-10 flex flex-col gap-3">
-         <div className="flex justify-between items-start">
-            <div className="bg-black/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 flex items-center gap-3">
-               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-               <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{status} Activity</span>
-            </div>
+      {/* HUD Info Box */}
+      {routeStats && (
+        <div className="absolute bottom-10 left-10 right-10 z-10">
+          <div className="max-w-md mx-auto bg-white/90 backdrop-blur-2xl p-5 rounded-[2rem] border border-gray-100 shadow-2xl flex items-center justify-between gap-6 overflow-hidden relative">
+             <div className="absolute top-0 left-0 w-1 h-full bg-orange-500" />
+             
+             <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600">
+                   <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Estimated ETA</p>
+                   <p className="text-xl font-bold font-mono tracking-tight text-gray-900">{routeStats.duration}</p>
+                </div>
+             </div>
 
-            {routeStats && (
-               <div className="flex gap-2">
-                  <div className="bg-orange-600 px-4 py-2 rounded-xl shadow-xl flex flex-col items-center">
-                     <span className="text-[8px] font-black uppercase text-orange-100 tracking-tighter">Distance</span>
-                     <span className="text-sm font-black text-white leading-none">{routeStats.distance}</span>
-                  </div>
-                  <div className="bg-slate-950 px-4 py-2 rounded-xl shadow-xl flex flex-col items-center border border-white/10">
-                     <span className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">ETA</span>
-                     <span className="text-sm font-black text-orange-500 leading-none">{routeStats.duration}</span>
-                  </div>
-               </div>
-            )}
+             <div className="h-10 w-px bg-gray-200" />
+
+             <div className="flex items-center gap-4 text-right">
+                <div className="sm:block hidden">
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Distance</p>
+                   <p className="text-xl font-bold font-mono tracking-tight text-gray-900">{routeStats.distance}</p>
+                </div>
+                <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+                   <Navigation className="w-6 h-6" />
+                </div>
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Connection Status Badge */}
+      <div className="absolute top-8 left-8">
+         <div className="bg-gray-900/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3 shadow-xl">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-white/90">Sector Uplink Active</span>
          </div>
       </div>
     </div>

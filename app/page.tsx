@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Heart, 
   Truck, 
@@ -17,7 +17,9 @@ import {
   Star,
   MapPin,
   Utensils,
-  Play
+  Play,
+  Menu,
+  X
 } from "lucide-react";
 import { useInView, useSpring, useTransform } from "framer-motion";
 
@@ -102,6 +104,8 @@ export default function Home() {
     },
   ];
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div className="relative min-h-screen bg-white text-slate-950 flex flex-col items-center selection:bg-orange-100 overflow-hidden">
       
@@ -113,25 +117,55 @@ export default function Home() {
 
       {/* Broad & Premium Navbar */}
       <nav className="fixed top-8 z-50 w-[95%] max-w-7xl">
-        <div className="mx-auto rounded-[2rem] border border-orange-100 bg-white/60 backdrop-blur-2xl px-8 py-4 flex items-center justify-between shadow-[0_10px_40px_rgba(0,0,0,0.04)]">
+        <div className="mx-auto rounded-[2rem] border border-orange-100 bg-white/60 backdrop-blur-2xl px-6 sm:px-8 py-4 flex items-center justify-between shadow-[0_10px_40px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="w-10 h-10 bg-orange-600 rounded-2xl shadow-[0_8px_20px_rgba(234,88,12,0.2)] flex items-center justify-center group-hover:rotate-6 transition-all">
               <Heart className="w-5 h-5 text-white" fill="white" />
             </div>
-            <span className="text-2xl font-medium tracking-tighter text-slate-900">ShareBite</span>
+            <span className="text-xl sm:text-2xl font-medium tracking-tighter text-slate-900 uppercase italic underline decoration-orange-600/10">ShareBite</span>
           </div>
           
-          <div className="hidden lg:flex items-center gap-12 text-[12px] font-medium uppercase tracking-[0.2em] text-slate-400">
+          <div className="hidden lg:flex items-center gap-12 text-[11px] font-black uppercase tracking-[0.25em] text-slate-400">
             <a href="#features" className="hover:text-orange-600 transition-colors">Tech Stack</a>
             <a href="#impact" className="hover:text-orange-600 transition-colors">Impact Log</a>
             <a href="#roles" className="hover:text-orange-600 transition-colors">Coalition</a>
             <Link href="/login" className="hover:text-orange-600 transition-colors">Portal</Link>
           </div>
 
-          <Link href="/register" className="px-8 py-3 bg-slate-950 text-white text-[12px] font-medium rounded-2xl hover:bg-orange-600 hover:shadow-xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center gap-2">
-            JOIN MOVEMENT <ChevronRight className="w-4 h-4" />
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/register" className="hidden sm:flex px-8 py-3 bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-orange-600 hover:shadow-xl hover:shadow-orange-100 transition-all active:scale-95 items-center gap-2">
+              JOIN MOVEMENT <ChevronRight className="w-4 h-4" />
+            </Link>
+            <button 
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900"
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="absolute top-24 left-0 right-0 p-4 lg:hidden"
+            >
+              <div className="bg-white/90 backdrop-blur-2xl border border-orange-100 rounded-[2.5rem] p-8 shadow-2xl space-y-8 flex flex-col items-center">
+                <div className="flex flex-col items-center gap-6 text-[12px] font-black uppercase tracking-[0.3em] text-slate-400 w-full text-center">
+                  <a href="#features" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 border-b border-slate-100 w-full">Tech Stack</a>
+                  <a href="#impact" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 border-b border-slate-100 w-full">Impact Log</a>
+                  <a href="#roles" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 border-b border-slate-100 w-full">Coalition</a>
+                  <Link href="/login" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 border-b border-slate-100 w-full">Portal Access</Link>
+                  <Link href="/register" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 w-full text-orange-600">Start Delivering</Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       <main className="relative z-10 w-full pt-56">
