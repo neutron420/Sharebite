@@ -19,7 +19,8 @@ import {
   Layers,
   Heart,
   Soup,
-  ArrowLeft
+  ArrowLeft,
+  Camera
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,7 @@ export default function DonatePage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -471,77 +473,125 @@ export default function DonatePage() {
                                     <p className="relative inline-block bg-white pr-3 text-[10px] font-black uppercase tracking-widest text-slate-300">or set manually</p>
                                  </div>
 
-                                 <Input 
-                                    type="datetime-local" 
-                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold px-4 text-[13px] uppercase tracking-wider transition-all cursor-pointer"
-                                    value={formData.expiryTime}
-                                    onChange={(e) => {
-                                       updateFormData("expiryTime", e.target.value);
-                                       setSelectedPriority(null); // Clear priority if user manually edits
-                                    }}
-                                 />
+                                 <div className="relative group">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-100 group-focus-within:border-orange-200 transition-all pointer-events-none">
+                                       <Calendar className="w-5 h-5" />
+                                    </div>
+                                    <Input 
+                                       type="datetime-local" 
+                                       className="pl-16 h-16 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black text-xs transition-all cursor-pointer w-full appearance-none pr-4"
+                                       value={formData.expiryTime}
+                                       onChange={(e) => {
+                                          updateFormData("expiryTime", e.target.value);
+                                          setSelectedPriority(null); // Clear priority if user manually edits
+                                       }}
+                                    />
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[10px] font-black uppercase text-orange-600/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                                       Tap to Change
+                                    </div>
+                                 </div>
                                  <p className="text-[10px] font-bold text-orange-600 ml-1 opacity-70">Avoid wasting food, set a realistic safety buffer.</p>
                               </div>
 
-                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                                  <div className="space-y-3">
                                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup Start</Label>
-                                    <Input 
-                                       type="datetime-local" 
-                                       className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold px-4 text-[13px] uppercase tracking-wider transition-all cursor-pointer"
-                                       value={formData.pickupStartTime}
-                                       onChange={(e) => updateFormData("pickupStartTime", e.target.value)}
-                                    />
+                                    <div className="relative group">
+                                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 transition-colors group-focus-within:text-orange-600" />
+                                       <Input 
+                                          type="datetime-local" 
+                                          className="pl-12 h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold text-[13px] transition-all cursor-pointer w-full"
+                                          value={formData.pickupStartTime}
+                                          onChange={(e) => updateFormData("pickupStartTime", e.target.value)}
+                                       />
+                                    </div>
                                  </div>
                                  <div className="space-y-3">
                                     <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup End</Label>
-                                    <Input 
-                                       type="datetime-local" 
-                                       className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold px-4 text-[13px] uppercase tracking-wider transition-all cursor-pointer"
-                                       value={formData.pickupEndTime}
-                                       onChange={(e) => updateFormData("pickupEndTime", e.target.value)}
-                                    />
+                                    <div className="relative group">
+                                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 transition-colors group-focus-within:text-orange-600" />
+                                       <Input 
+                                          type="datetime-local" 
+                                          className="pl-12 h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold text-[13px] transition-all cursor-pointer w-full"
+                                          value={formData.pickupEndTime}
+                                          onChange={(e) => updateFormData("pickupEndTime", e.target.value)}
+                                       />
+                                    </div>
                                  </div>
                               </div>
 
-                              <div className="pt-8">
-                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Visual Proof (Optional)</Label>
-                                 <div 
-                                    onClick={() => !uploadingImage && fileInputRef.current?.click()}
-                                    className={cn(
-                                       "mt-3 w-full h-40 border-2 border-dashed rounded-3xl flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden relative",
-                                       formData.imageUrl ? 'border-orange-200 bg-orange-50/30' : 'border-slate-100 hover:border-orange-300'
-                                    )}
-                                 >
-                                    <input 
-                                       type="file" accept="image/*" className="hidden" 
-                                       ref={fileInputRef} 
-                                       onChange={handleFileUpload}
-                                       disabled={uploadingImage}
-                                    />
-                                    {uploadingImage ? (
-                                       <div className="flex flex-col items-center gap-2 text-orange-600">
-                                          <Loader2 className="w-8 h-8 animate-spin" strokeWidth={3} />
-                                          <span className="font-black text-[10px] uppercase tracking-widest">Uploading...</span>
-                                       </div>
-                                    ) : formData.imageUrl ? (
-                                       <>
-                                          <img src={(previewUrl || formData.imageUrl) as string} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Food" />
-                                          <div className="relative z-10 flex flex-col items-center gap-1">
-                                             <div className="p-2 bg-white rounded-full shadow-lg">
-                                                <Check className="w-5 h-5 text-green-600" strokeWidth={4} />
-                                             </div>
-                                             <span className="font-black text-[10px] uppercase bg-white/90 px-3 py-1 rounded-full shadow-sm">Photo Set</span>
-                                          </div>
-                                       </>
-                                    ) : (
-                                       <div className="flex flex-col items-center gap-1 text-slate-300">
-                                          <UploadCloud className="w-8 h-8 mb-1" />
-                                          <p className="font-black text-[10px] uppercase tracking-widest text-center">Tap to snap a photo</p>
-                                          <p className="text-[9px] font-bold opacity-50">Helps NGOs verify quality</p>
-                                       </div>
-                                    )}
+                              <div className="pt-8 space-y-4">
+                                 <div className="flex items-center justify-between">
+                                   <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Visual Proof (Optional)</Label>
+                                   {formData.imageUrl && (
+                                     <button 
+                                       onClick={() => updateFormData("imageUrl", "")} 
+                                       className="text-[10px] font-black text-red-500 uppercase tracking-widest"
+                                     >
+                                       Remove
+                                     </button>
+                                   )}
                                  </div>
+                                 
+                                 <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                       type="button"
+                                       onClick={() => !uploadingImage && cameraInputRef.current?.click()}
+                                       className={cn(
+                                          "flex flex-col items-center justify-center gap-2 p-6 rounded-3xl border-2 transition-all",
+                                          formData.imageUrl ? "border-slate-100 bg-slate-50/50" : "border-orange-100 bg-orange-50/20 text-orange-600 shadow-lg shadow-orange-100/50"
+                                       )}
+                                    >
+                                       <Camera className="w-6 h-6" />
+                                       <span className="text-[10px] font-black uppercase tracking-widest">Take Photo</span>
+                                    </button>
+                                    <button
+                                       type="button"
+                                       onClick={() => !uploadingImage && fileInputRef.current?.click()}
+                                       className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl border-2 border-slate-100 bg-slate-50/50 text-slate-400 hover:border-orange-200 hover:text-orange-600 transition-all"
+                                    >
+                                       <UploadCloud className="w-6 h-6" />
+                                       <span className="text-[10px] font-black uppercase tracking-widest">Gallery</span>
+                                    </button>
+                                 </div>
+
+                                 <input 
+                                   type="file" accept="image/*" capture="environment" className="hidden" 
+                                   ref={cameraInputRef} 
+                                   onChange={handleFileUpload}
+                                   disabled={uploadingImage}
+                                 />
+                                 <input 
+                                   type="file" accept="image/*" className="hidden" 
+                                   ref={fileInputRef} 
+                                   onChange={handleFileUpload}
+                                   disabled={uploadingImage}
+                                 />
+
+                                 {formData.imageUrl && (
+                                    <motion.div
+                                       initial={{ opacity: 0, scale: 0.95 }}
+                                       animate={{ opacity: 1, scale: 1 }}
+                                       className="relative w-full h-48 rounded-[2rem] overflow-hidden border-2 border-orange-200 shadow-xl"
+                                    >
+                                       <img src={(previewUrl || formData.imageUrl) as string} className="w-full h-full object-cover" alt="Preview" />
+                                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-5">
+                                          <div className="flex items-center gap-2 text-white">
+                                             <div className="p-1.5 bg-green-500 rounded-full">
+                                                <Check className="w-3 h-3" strokeWidth={5} />
+                                             </div>
+                                             <span className="text-[10px] font-black uppercase tracking-widest">Photo ready for deployment</span>
+                                          </div>
+                                       </div>
+                                    </motion.div>
+                                 )}
+                                 
+                                 {uploadingImage && (
+                                    <div className="flex items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                                       <Loader2 className="w-5 h-5 animate-spin text-orange-600 mr-3" />
+                                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Syncing visual data...</span>
+                                    </div>
+                                 )}
                               </div>
                            </div>
                         </div>
@@ -575,6 +625,28 @@ export default function DonatePage() {
                                     onChange={(e) => updateFormData("pickupLocation", e.target.value)}
                                  />
                                  <p className="text-[10px] font-bold text-slate-400 italic">This will be shown to the approved NGO only.</p>
+                              </div>
+
+                              {/* Mobile Map Integrated - Precise Ops Targeting */}
+                              <div className="lg:hidden pt-4">
+                                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-3 block">Tactical Pin Pointing</Label>
+                                 <div className="h-72 rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl relative bg-slate-100 ring-1 ring-slate-100">
+                                    <LocationPicker 
+                                       onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
+                                          setFormData(prev => ({
+                                             ...prev,
+                                             pickupLocation: data.address,
+                                             city: data.city,
+                                             state: data.state,
+                                             district: data.district,
+                                             pincode: data.pincode,
+                                             latitude: data.latitude,
+                                             longitude: data.longitude
+                                          }));
+                                          toast.success(`Position Locked: ${data.city}`);
+                                       }}
+                                    />
+                                 </div>
                               </div>
 
                               <div className="p-6 bg-orange-50/50 rounded-3xl border border-orange-100/50 mt-10">
@@ -675,25 +747,6 @@ export default function DonatePage() {
             )}
          </div>
 
-         {/* Mobile Map Button if on mobile in step 2 */}
-         {currentStep === 2 && (
-            <div className="lg:hidden absolute bottom-24 right-6 left-6 h-64 bg-slate-200 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white">
-               <LocationPicker 
-                  onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
-                     setFormData(prev => ({
-                        ...prev,
-                        pickupLocation: data.address,
-                        city: data.city,
-                        state: data.state,
-                        district: data.district,
-                        pincode: data.pincode,
-                        latitude: data.latitude,
-                        longitude: data.longitude
-                     }));
-                  }}
-               />
-            </div>
-         )}
       </div>
    );
 }

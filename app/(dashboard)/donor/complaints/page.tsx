@@ -163,7 +163,7 @@ export default function DonorComplaintsPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-10 space-y-8">
+    <div className="w-full py-10 space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -176,20 +176,22 @@ export default function DonorComplaintsPage() {
 
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-6 py-3.5 bg-slate-950 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl active:scale-95"
+          className="flex items-center justify-center gap-2 px-8 py-4 bg-orange-600 text-white font-black rounded-[1.5rem] text-[11px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-2xl shadow-orange-100 active:scale-95 group border-2 border-orange-500/50"
         >
-          <MessageSquarePlus className="w-4 h-4" /> File Complaint
+          <MessageSquarePlus className="w-5 h-5 group-hover:rotate-12 transition-transform" strokeWidth={3} /> 
+          Rapid File Complaint
         </button>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex bg-slate-50 p-1.5 rounded-2xl w-full sm:w-auto">
+      {/* Filter Tabs - Optimized for Mobile Thumb Swiping */}
+      <div className="flex bg-slate-50/80 backdrop-blur-sm p-1.5 rounded-[1.5rem] w-full sm:w-auto overflow-x-auto scrollbar-hide border border-slate-100/50">
         {["ALL", "PENDING", "RESOLVED", "DISMISSED"].map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-              filter === s ? "bg-white text-orange-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+            className={`flex-1 min-w-[100px] py-3 px-5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              filter === s ? "bg-white text-orange-600 shadow-[0_8px_20px_-4px_rgba(249,115,22,0.15)] ring-1 ring-orange-100" : "text-slate-400 hover:text-slate-600"
             }`}
           >
             {s === "ALL" ? "All" : s === "PENDING" ? "Under Review" : s === "RESOLVED" ? "Resolved" : "Dismissed"}
@@ -227,32 +229,38 @@ export default function DonorComplaintsPage() {
                 transition={{ delay: i * 0.05 }}
                 className="p-6 rounded-[2rem] bg-white border border-slate-100 hover:border-orange-200/50 transition-all shadow-sm hover:shadow-lg hover:shadow-orange-50/50 group"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 shrink-0 border border-red-100">
-                      <AlertTriangle className="w-5 h-5" />
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-6">
+                  <div className="flex items-start gap-4 w-full">
+                    <div className="w-14 h-14 rounded-3xl bg-red-50 flex items-center justify-center text-red-500 shrink-0 border-2 border-red-100 shadow-inner">
+                      <AlertTriangle className="w-6 h-6" strokeWidth={2.5} />
                     </div>
-                    <div>
-                      <h4 className="font-black text-base tracking-tight">Against: {report.ngo.name}</h4>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <Badge className={`${cfg.color} border-2 font-black text-[9px] flex items-center gap-1.5 px-3 py-1 rounded-full uppercase`}>
+                          {cfg.icon} {cfg.label}
+                        </Badge>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                          {formatDistanceToNow(new Date(report.createdAt))} AGO
+                        </span>
+                      </div>
+                      <h4 className="font-black text-lg tracking-tight text-slate-900 mb-1">Target: {report.ngo.name}</h4>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-4">
                         {report.ngo.email}
                       </p>
-                      <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <p className="text-xs font-black text-orange-600 uppercase tracking-wider mb-1">Reason</p>
-                        <p className="text-sm font-bold text-slate-700">{report.reason}</p>
+                      
+                      <div className="p-5 bg-slate-50 rounded-[1.5rem] border border-slate-100 shadow-inner group-hover:bg-orange-50/30 transition-colors">
+                        <div className="flex items-center gap-2 mb-3">
+                           <div className="w-1.5 h-1.5 rounded-full bg-orange-600 animate-pulse" />
+                           <p className="text-[11px] font-black text-orange-600 uppercase tracking-[0.2em]">Offense Report</p>
+                        </div>
+                        <p className="text-sm font-black text-slate-800 leading-tight">{report.reason}</p>
                         {report.details && (
-                          <p className="text-xs text-slate-500 mt-2 leading-relaxed">{report.details}</p>
+                          <div className="mt-3 pt-3 border-t border-slate-200/50">
+                             <p className="text-xs font-bold text-slate-500 leading-relaxed italic">{report.details}</p>
+                          </div>
                         )}
                       </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    <Badge className={`${cfg.color} border font-black text-[10px] flex items-center gap-1.5 px-3 py-1`}>
-                      {cfg.icon} {cfg.label}
-                    </Badge>
-                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                      {formatDistanceToNow(new Date(report.createdAt))} ago
-                    </span>
                   </div>
                 </div>
               </motion.div>

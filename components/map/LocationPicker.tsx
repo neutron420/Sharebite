@@ -154,8 +154,8 @@ export default function LocationPicker({ onLocationSelect, initialCoords }: Loca
 
   return (
     <div className="location-picker-container w-full h-full relative rounded-xl overflow-hidden shadow-2xl border border-white/20 min-h-[400px]">
-      {/* Search Bar Overlay - Fixed Top Right with High Presence */}
-      <div className="absolute top-8 right-8 z-30 flex flex-col gap-2 w-full max-w-[320px] sm:max-w-[400px]">
+      {/* Search Bar Overlay - Fixed Top Left with High Presence */}
+      <div className="absolute top-8 left-8 z-30 flex flex-col gap-2 w-full max-w-[420px]">
         <div className="relative group/search">
           <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none z-10">
             <Search className="h-5 w-5 text-slate-400 group-focus-within/search:text-orange-600 transition-all group-focus-within/search:scale-110" strokeWidth={3} />

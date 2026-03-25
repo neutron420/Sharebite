@@ -11,6 +11,13 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "ShareBite",
   description: "The world's most sophisticated food-sharing engine.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  themeColor: "#f97316",
 };
 
 import { Toaster } from "sonner";

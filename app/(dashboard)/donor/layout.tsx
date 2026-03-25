@@ -39,6 +39,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 import { useSocket } from "@/components/providers/socket-provider";
 
@@ -274,7 +275,10 @@ export default function DonorLayout({
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden">
+      {/* Decorative tactical background - Intelligence Grid */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03]" 
+           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -589,7 +593,46 @@ export default function DonorLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white/50">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-28 lg:pb-6 relative z-10">{children}</main>
+
+        {/* Mobile Bottom Navigation - Floating Premium Design */}
+        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">
+          <nav className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 shadow-2xl shadow-slate-950/40 flex items-center justify-between">
+            {[
+              { icon: LayoutDashboard, href: "/donor", label: "Hub" },
+              { icon: Bell, href: "/donor/notifications", label: "Alerts" },
+              { icon: Plus, href: "/donor/donate", label: "Share", primary: true },
+              { icon: MessageSquare, href: "/donor/messages", label: "Chat" },
+              { icon: UserRound, href: "/donor/profile", label: "Profile" },
+            ].map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 px-3 py-2 rounded-[1.5rem] transition-all relative",
+                    active ? "text-orange-500" : "text-slate-400"
+                  )}
+                >
+                  {item.primary ? (
+                    <div className="bg-orange-600 p-4 rounded-full shadow-2xl shadow-orange-600/40 scale-125 -mt-10 mb-2 border-4 border-slate-900">
+                      <item.icon className="h-6 w-6 text-white" />
+                    </div>
+                  ) : (
+                    <>
+                      <item.icon className={cn("h-5 w-5 transition-transform", active && "scale-110")} />
+                      <span className="text-[8px] font-black uppercase tracking-[0.15em]">{item.label}</span>
+                      {active && (
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-orange-500 rounded-full" />
+                      )}
+                    </>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </div>
   );

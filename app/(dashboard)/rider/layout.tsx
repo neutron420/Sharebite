@@ -38,6 +38,7 @@ import {
 import { useSocket } from "@/components/providers/socket-provider";
 import { toast } from "sonner";
 import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
+import { cn } from "@/lib/utils";
 
 interface RiderUser {
   id: string;
@@ -246,7 +247,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden">
+      {/* Mission Grid Background */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03]" 
+           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
@@ -421,7 +425,46 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-28 lg:pb-6 relative z-10">{children}</main>
+
+        {/* Mobile Bottom Navigation - Rider Tactical Deck */}
+        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">
+          <nav className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 shadow-2xl shadow-slate-950/40 flex items-center justify-between">
+            {[
+              { icon: LayoutDashboard, href: "/rider", label: "Grid" },
+              { icon: Truck, href: "/rider/missions", label: "Missions" },
+              { icon: Zap, href: "/rider/bounties", label: "Bounties", primary: true },
+              { icon: MessageSquare, href: "/rider/messages", label: "Chat" },
+              { icon: Bell, href: "/rider/notifications", label: "Comms" },
+            ].map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 px-3 py-2 rounded-[1.5rem] transition-all relative",
+                    active ? "text-orange-500" : "text-slate-400"
+                  )}
+                >
+                  {item.primary ? (
+                    <div className="bg-orange-600 p-4 rounded-full shadow-2xl shadow-orange-600/40 scale-125 -mt-10 mb-2 border-4 border-slate-900">
+                      <item.icon className="h-6 w-6 text-white" />
+                    </div>
+                  ) : (
+                    <>
+                      <item.icon className={cn("h-5 w-5 transition-transform", active && "scale-110")} />
+                      <span className="text-[8px] font-black uppercase tracking-[0.15em]">{item.label}</span>
+                      {active && (
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-orange-500 rounded-full" />
+                      )}
+                    </>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
       </div>
     </div>
   );
