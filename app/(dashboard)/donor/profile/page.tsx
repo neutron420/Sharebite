@@ -256,7 +256,7 @@ export default function DonorProfilePage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-10">
+    <div className="w-full space-y-10">
       <section className="relative overflow-hidden rounded-[3rem] border border-orange-100 bg-[linear-gradient(135deg,#ffffff_0%,#fff7ed_42%,#ffedd5_100%)] p-8 md:p-10 text-slate-950 shadow-2xl shadow-orange-100/70">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(249,115,22,0.18),_transparent_34%),radial-gradient(circle_at_bottom_left,_rgba(251,191,36,0.18),_transparent_38%)]" />
         <div className="relative z-10 grid gap-8 lg:grid-cols-[1.4fr_0.9fr]">

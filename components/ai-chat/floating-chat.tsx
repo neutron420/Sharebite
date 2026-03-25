@@ -10,7 +10,7 @@ export function FloatingAiChat() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed inset-x-2 bottom-4 z-50 flex flex-col items-end gap-4 sm:inset-x-auto sm:bottom-6 sm:right-6">
+    <div className="fixed inset-x-2 bottom-28 z-50 flex flex-col items-end gap-4 sm:inset-x-auto sm:bottom-6 sm:right-6">
       {isOpen && (
         <div className="mb-2 w-full sm:w-auto animate-in fade-in zoom-in-95 slide-in-from-bottom-10 duration-300 transform-gpu shadow-2xl rounded-3xl overflow-hidden">
           <AiAssistantCard onClose={() => setIsOpen(false)} />

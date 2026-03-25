@@ -256,7 +256,7 @@ export default function DonorDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12">
+    <div className="w-full space-y-12">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
           <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 underline decoration-orange-600/10 underline-offset-8">
