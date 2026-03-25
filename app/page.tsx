@@ -45,7 +45,7 @@ function Counter({ value, direction = "up" }: { value: number, direction?: "up" 
 }
 
 import Marquee from "@/components/magicui/marquee";
-import { BentoCard, BentoGrid } from "@/components/magicui/bento-grid";
+import { BentoGrid, BentoItem } from "@/components/ui/bento-grid";
 import { Footerdemo as Footer } from "@/components/ui/footer-section";
 import { cn } from "@/lib/utils";
 import { TestimonialsSectionDemo } from "@/components/blocks/demo";
@@ -65,42 +65,42 @@ export default function Home() {
     { name: "ARTI FOUNDATION", img: "/artifoundation.png" },
   ];
 
-  const features = [
+  const features: BentoItem[] = [
     {
-      Icon: ShieldCheck,
-      name: "Military Grade Security",
+      icon: <ShieldCheck className="w-6 h-6" />,
+      title: "Military Grade Security",
       description: "Secure 4-digit PIN verification ensures food reaches the right hands every single time.",
-      href: "#",
-      cta: "Verify security",
-      className: "col-span-3 lg:col-span-1",
-      background: <div className="absolute inset-0 bg-orange-50/50" />,
+      meta: "Encrypted",
+      status: "Verified",
+      tags: ["Security", "Pin"],
+      colSpan: 1,
     },
     {
-      Icon: Truck,
-      name: "Real-Time Fleet Dispatch",
+      icon: <Truck className="w-6 h-6" />,
+      title: "Real-Time Fleet Dispatch",
       description: "Track your rescue hero in real-time across the city with zero-latency GPS updates.",
-      href: "#",
-      cta: "Live tracking",
-      className: "col-span-3 lg:col-span-2",
-      background: <div className="absolute inset-0 bg-gradient-to-br from-orange-100/20 to-amber-100/20" />,
+      meta: "Live GPS",
+      status: "Active",
+      tags: ["Logistics", "Fleet"],
+      colSpan: 2,
     },
     {
-      Icon: Zap,
-      name: "Sub-Second Matching",
+      icon: <Zap className="w-6 h-6" />,
+      title: "Sub-Second Matching",
       description: "Our high-speed matching engine connects donors to the nearest NGOs in milliseconds.",
-      href: "#",
-      cta: "Explore tech",
-      className: "col-span-3 lg:col-span-2",
-      background: <div className="absolute inset-0 bg-orange-50/30" />,
+      meta: "0.2ms Latency",
+      status: "Ultra Fast",
+      tags: ["Matchmaking", "Speed"],
+      colSpan: 2,
     },
     {
-      Icon: Users,
-      name: "Community Legacy",
+      icon: <Users className="w-6 h-6" />,
+      title: "Community Legacy",
       description: "Earn Karma points and build your community legacy. Transform waste into hope.",
-      href: "#",
-      cta: "Join leaderboard",
-      className: "col-span-3 lg:col-span-1",
-      background: <div className="absolute inset-0 bg-amber-50/50" />,
+      meta: "Karma Protocol",
+      status: "Social",
+      tags: ["Community", "Impact"],
+      colSpan: 1,
     },
   ];
 
@@ -256,11 +256,7 @@ export default function Home() {
             <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto">Engineered for absolute reliability, transparency, and global scale.</p>
           </div>
           
-          <BentoGrid className="auto-rows-[25rem]">
-            {features.map((feature) => (
-              <BentoCard key={feature.name} {...feature} />
-            ))}
-          </BentoGrid>
+          <BentoGrid items={features} />
         </section>
 
         {/* Roles Section - Premium Orange Gradient */}
