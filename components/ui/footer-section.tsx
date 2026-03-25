@@ -11,7 +11,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Facebook, Instagram, Linkedin, Moon, Send, Sun, Twitter } from "lucide-react"
+import { Moon, Send, Sun } from "lucide-react"
+import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa"
 
 function Footerdemo() {
   const [isDarkMode, setIsDarkMode] = React.useState(false)
@@ -91,7 +92,7 @@ function Footerdemo() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" className="rounded-full border-orange-100 bg-white/50 backdrop-blur-md hover:bg-orange-600 hover:text-white transition-all shadow-sm">
-                      <Facebook className="h-4 w-4" />
+                      <FaFacebook className="h-4 w-4" />
                       <span className="sr-only">Facebook</span>
                     </Button>
                   </TooltipTrigger>
@@ -104,7 +105,7 @@ function Footerdemo() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" className="rounded-full border-orange-100 bg-white/50 backdrop-blur-md hover:bg-orange-600 hover:text-white transition-all shadow-sm">
-                      <Twitter className="h-4 w-4" />
+                      <FaTwitter className="h-4 w-4" />
                       <span className="sr-only">Twitter</span>
                     </Button>
                   </TooltipTrigger>
@@ -117,7 +118,7 @@ function Footerdemo() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" className="rounded-full border-orange-100 bg-white/50 backdrop-blur-md hover:bg-orange-600 hover:text-white transition-all shadow-sm">
-                      <Instagram className="h-4 w-4" />
+                      <FaInstagram className="h-4 w-4" />
                       <span className="sr-only">Instagram</span>
                     </Button>
                   </TooltipTrigger>
@@ -130,7 +131,7 @@ function Footerdemo() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" className="rounded-full border-orange-100 bg-white/50 backdrop-blur-md hover:bg-orange-600 hover:text-white transition-all shadow-sm">
-                      <Linkedin className="h-4 w-4" />
+                      <FaLinkedin className="h-4 w-4" />
                       <span className="sr-only">LinkedIn</span>
                     </Button>
                   </TooltipTrigger>
