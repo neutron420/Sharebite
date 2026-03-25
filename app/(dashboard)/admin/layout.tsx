@@ -230,75 +230,77 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return false;
   };
 
-  const renderSidebar = () => (
-    <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-      <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Menu</p>
-      {SIDEBAR_ITEMS.map((item) => {
-        const hasChildren = item.children && item.children.length > 0;
-        const isExpanded = expandedMenus.includes(item.id);
-        const active = isActive(item.href, item.children);
+  const renderSidebar = (isMobile = false) => {
+    // Mobile always behaves as open
+    const openState = isMobile ? true : sidebarOpen;
+    return (
+      <nav className="flex-1 overflow-x-hidden overflow-y-auto py-4 px-3 space-y-1">
+        <div className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${openState ? "max-h-8 opacity-100 mb-2" : "max-h-0 opacity-0 mb-0"}`}>
+          <p className="px-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">Menu</p>
+        </div>
+        {SIDEBAR_ITEMS.map((item) => {
+          const hasChildren = item.children && item.children.length > 0;
+          const isExpanded = expandedMenus.includes(item.id);
+          const active = isActive(item.href, item.children);
 
-        return (
-          <div key={item.id}>
-            {hasChildren ? (
-              <button
-                onClick={() => toggleMenu(item.id)}
-                className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  active ? "bg-orange-50 text-orange-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                <item.icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-orange-600" : "text-gray-400"}`} />
-                {sidebarOpen && (
-                  <>
+          return (
+            <div key={item.id}>
+              {hasChildren ? (
+                <button
+                  onClick={() => toggleMenu(item.id)}
+                  className={`group w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                    active ? "bg-orange-50 text-orange-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
+                  <item.icon className={`h-4.5 w-4.5 shrink-0 transition-colors ${active ? "text-orange-600" : "text-gray-400"}`} />
+                  <div className={`flex items-center flex-1 overflow-hidden transition-all duration-300 whitespace-nowrap ${openState ? "opacity-100 w-[180px] ml-3" : "opacity-0 w-0 ml-0"}`}>
                     <span className="flex-1 text-left truncate">{item.label}</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                  </>
-                )}
-              </button>
-            ) : (
-              <Link
-                href={item.href || "#"}
-                onClick={() => setMobileOpen(false)}
-                className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  active ? "bg-orange-50 text-orange-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
-              >
-                <item.icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-orange-600" : "text-gray-400"}`} />
-                {sidebarOpen && (
-                  <>
+                    <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  </div>
+                </button>
+              ) : (
+                <Link
+                  href={item.href || "#"}
+                  onClick={() => setMobileOpen(false)}
+                  className={`group w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                    active ? "bg-orange-50 text-orange-600" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
+                  <item.icon className={`h-4.5 w-4.5 shrink-0 transition-colors ${active ? "text-orange-600" : "text-gray-400"}`} />
+                  <div className={`flex items-center overflow-hidden transition-all duration-300 whitespace-nowrap ${openState ? "opacity-100 w-[180px] ml-3" : "opacity-0 w-0 ml-0"}`}>
                     <span className="flex-1 text-left truncate">{item.label}</span>
                     {item.badge && (
-                      <span className="text-[10px] font-semibold bg-orange-500 text-white px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-semibold bg-orange-500 text-white px-1.5 py-0.5 rounded ml-2">
                         {item.badge}
                       </span>
                     )}
-                  </>
-                )}
-              </Link>
-            )}
-            {hasChildren && isExpanded && sidebarOpen && (
-              <div className="ml-5 mt-1 space-y-0.5 border-l border-gray-200 pl-4">
-                {item.children!.map((child) => (
-                  <Link
-                    key={child.id}
-                    href={child.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={`block w-full text-left px-3 py-2 rounded-md text-[13px] transition-all duration-150 ${
-                      pathname === child.href.split("?")[0]
-                        ? "text-orange-600 bg-orange-50 font-medium"
-                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-                    }`}
-                  >
-                    {child.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </nav>
-  );
+                  </div>
+                </Link>
+              )}
+              {hasChildren && (
+                <div className={`ml-8 space-y-0.5 border-l border-gray-200 pl-4 overflow-hidden transition-all duration-300 ${isExpanded && openState ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0 mt-0"}`}>
+                  {item.children!.map((child) => (
+                    <Link
+                      key={child.id}
+                      href={child.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`block w-full text-left px-3 py-2 rounded-md text-[13px] transition-all duration-150 whitespace-nowrap truncate ${
+                        pathname === child.href.split("?")[0]
+                          ? "text-orange-600 bg-orange-50 font-medium"
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+                      }`}
+                    >
+                      {child.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
@@ -316,7 +318,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {renderSidebar()}
+            {renderSidebar(true)}
             {user && (
               <div className="border-t border-gray-200 p-4 shrink-0">
                 <div className="flex items-center gap-3">
@@ -335,24 +337,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {/* Desktop sidebar */}
-      <aside className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 ${sidebarOpen ? "w-64" : "w-20"}`}>
-        <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
-          <div className="h-9 w-9 rounded-lg bg-orange-500 flex items-center justify-center shrink-0">
-            <Utensils className="h-5 w-5 text-white" />
+      <aside className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 overflow-x-hidden ${sidebarOpen ? "w-64" : "w-20"}`}>
+        <div className={`h-16 flex items-center border-b border-gray-200 shrink-0 transition-all duration-300 ${sidebarOpen ? "px-5 gap-3" : "px-3 justify-between"}`}>
+          <div className={`rounded-lg bg-orange-500 flex items-center justify-center shrink-0 transition-all duration-300 ${sidebarOpen ? "h-9 w-9" : "h-10 w-10 mx-auto"}`}>
+            <Utensils className={`text-white transition-all duration-300 ${sidebarOpen ? "h-5 w-5" : "h-5 w-5"}`} />
           </div>
-          {sidebarOpen && <span className="text-lg font-bold text-gray-900 flex-1">ShareBite</span>}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100">
+          <div className={`flex items-center overflow-hidden transition-all duration-300 whitespace-nowrap ${sidebarOpen ? "w-[120px] opacity-100" : "w-0 opacity-0"}`}>
+            <span className="text-lg font-bold text-gray-900 flex-1 truncate">ShareBite</span>
+          </div>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 shrink-0">
             <ChevronLeft className={`h-4 w-4 transition-transform duration-300 ${!sidebarOpen ? "rotate-180" : ""}`} />
           </button>
         </div>
-        {renderSidebar()}
-        {user && sidebarOpen && (
-          <div className="border-t border-gray-200 p-4 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+        {renderSidebar(false)}
+        {user && (
+          <div className="border-t border-gray-200 p-4 shrink-0 overflow-hidden">
+            <div className={`flex items-center transition-all duration-300 ${sidebarOpen ? "gap-3" : "gap-0"}`}>
+              <div className={`rounded-full bg-orange-50 flex items-center justify-center shrink-0 transition-all duration-300 ${sidebarOpen ? "h-9 w-9" : "h-10 w-10 mx-auto"}`}>
                 <ShieldCheck className="h-4 w-4 text-orange-600" />
               </div>
-              <div className="flex-1 min-w-0">
+              <div className={`flex-1 min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? "opacity-100 w-[150px]" : "opacity-0 w-0"}`}>
                 <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
                 <p className="text-xs text-gray-500 truncate">{user.email}</p>
               </div>

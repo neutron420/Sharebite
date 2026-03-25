@@ -212,47 +212,48 @@ export default function NGOLayout({
     .map((part) => part[0]?.toUpperCase())
     .join("");
 
-  const renderSidebar = () => (
-    <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-      {sidebarOpen && (
-        <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-          NGO Ops Menu
-        </p>
-      )}
-      {SIDEBAR_ITEMS.map((item) => {
-        const active = isActive(item.href);
+  const renderSidebar = (isMobile = false) => {
+    const openState = isMobile ? true : sidebarOpen;
+    return (
+      <nav className="flex-1 overflow-x-hidden overflow-y-auto py-4 px-3 space-y-1">
+        <div className={`overflow-hidden transition-all duration-300 whitespace-nowrap ${openState ? "max-h-8 opacity-100 mb-2" : "max-h-0 opacity-0 mb-0"}`}>
+          <p className="px-3 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+            NGO Ops Menu
+          </p>
+        </div>
+        {SIDEBAR_ITEMS.map((item) => {
+          const active = isActive(item.href);
 
-        return (
-          <Link
-            key={item.id}
-            href={item.href}
-            onClick={() => setMobileOpen(false)}
-            className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
-              active
-                ? "bg-orange-50 text-orange-600"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
-          >
-            <item.icon
-              className={`h-4.5 w-4.5 shrink-0 ${
-                active ? "text-orange-600" : "text-gray-400"
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              className={`group w-full flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                active
+                  ? "bg-orange-50 text-orange-600"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
-            />
-            {sidebarOpen && (
-              <>
+            >
+              <item.icon
+                className={`h-4.5 w-4.5 shrink-0 transition-colors ${
+                  active ? "text-orange-600" : "text-gray-400"
+                }`}
+              />
+              <div className={`flex items-center overflow-hidden transition-all duration-300 whitespace-nowrap ${openState ? "opacity-100 w-[180px] ml-3" : "opacity-0 w-0 ml-0"}`}>
                 <span className="flex-1 text-left truncate">{item.label}</span>
                 {item.badge && (
-                  <span className="text-[10px] font-semibold bg-orange-500 text-white px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-semibold bg-orange-500 text-white px-1.5 py-0.5 rounded ml-2">
                     {item.badge}
                   </span>
                 )}
-              </>
-            )}
-          </Link>
-        );
-      })}
-    </nav>
-  );
+              </div>
+            </Link>
+          );
+        })}
+      </nav>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden">
@@ -279,7 +280,7 @@ export default function NGOLayout({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {renderSidebar()}
+            {renderSidebar(true)}
             {user && (
               <div className="border-t border-gray-200 p-4 shrink-0 space-y-4">
                 <div className="flex items-center gap-3">
@@ -322,17 +323,17 @@ export default function NGOLayout({
           }`}
         >
           <div
-            className={`${
-              sidebarOpen ? "h-9 w-9" : "h-8 w-8"
-            } rounded-lg bg-orange-600 flex items-center justify-center shrink-0 transition-all duration-300`}
+            className={`rounded-lg bg-orange-600 flex items-center justify-center shrink-0 transition-all duration-300 ${
+              sidebarOpen ? "h-9 w-9 mx-0" : "h-10 w-10 mx-auto"
+            }`}
           >
             <Globe
-              className={`${sidebarOpen ? "h-5 w-5" : "h-4 w-4"} text-white transition-all`}
+              className={`text-white transition-all duration-300 ${sidebarOpen ? "h-5 w-5" : "h-5 w-5"}`}
             />
           </div>
-          {sidebarOpen && (
-            <span className="text-lg font-black tracking-tighter uppercase whitespace-nowrap text-gray-900 flex-1 truncate">NGO Ops Hub</span>
-          )}
+          <div className={`flex items-center overflow-hidden transition-all duration-300 whitespace-nowrap ${sidebarOpen ? "w-[120px] opacity-100" : "w-0 opacity-0"}`}>
+            <span className="text-lg font-black tracking-tighter uppercase text-gray-900 flex-1 truncate">NGO Ops Hub</span>
+          </div>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 shrink-0"
@@ -344,17 +345,17 @@ export default function NGOLayout({
             />
           </button>
         </div>
-        {renderSidebar()}
-        {user && sidebarOpen && (
-          <div className="border-t border-gray-200 p-4 shrink-0">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-9 w-9 shrink-0 border border-orange-100">
+        {renderSidebar(false)}
+        {user && (
+          <div className="border-t border-gray-200 p-4 shrink-0 overflow-hidden">
+            <div className={`flex items-center transition-all duration-300 ${sidebarOpen ? "gap-3" : "gap-0"}`}>
+              <Avatar className={`shrink-0 border border-orange-100 transition-all duration-300 ${sidebarOpen ? "h-9 w-9" : "h-10 w-10 mx-auto"}`}>
                 <AvatarImage src={user.imageUrl || undefined} alt={user.name} />
                 <AvatarFallback className="bg-orange-50 text-xs font-bold text-orange-600">
                   {userInitials || "SB"}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
+              <div className={`flex-1 min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap ${sidebarOpen ? "opacity-100 w-[150px]" : "opacity-0 w-0"}`}>
                 <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 truncate">Coordinator</p>
               </div>
