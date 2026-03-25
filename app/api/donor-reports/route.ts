@@ -5,7 +5,7 @@ import { withSecurity } from "@/lib/api-handler";
 
 async function postDonorReportHandler(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ request });
     // RBAC check (NGOs/Admins only)
     if (!session || (session.role !== "NGO" && session.role !== "ADMIN")) {
       return NextResponse.json(

@@ -48,12 +48,27 @@ const items = [
     url: "https://res.cloudinary.com/dabnumgog/image/upload/v1774259602/1191f22f107db5d7b111fa85c2532a6f.jpg_pohdau.jpg",
     title: "Sustainable Hope",
     quote: "Redistributing abundance to create a profoundly better world.",
+  },
+  {
+    url: "https://res.cloudinary.com/dabnumgog/image/upload/v1774339746/bd324b3cd42980caa74b2fd2e095b2ff.jpg_ettzff.jpg",
+    title: "Global Reach",
+    quote: "Expanding operations beyond borders to eradicate hunger entirely.",
+  },
+  {
+    url: "https://res.cloudinary.com/dabnumgog/image/upload/v1774339746/5b4c61381a83b72daffb10a3a8bd738c.jpg_o5csdm.jpg",
+    title: "Silent Operations",
+    quote: "Flawless and silent handover ensuring respect and dignity.",
+  },
+  {
+    url: "https://res.cloudinary.com/dabnumgog/image/upload/v1774339746/05749487c759ec46f67314e8e8783477.jpg_casa0c.jpg",
+    title: "Generosity Engine",
+    quote: "Powering the pulse of community-driven surplus rescue.",
   }
 ];
 
 // Splitting items for top and bottom rows to create visual variety
-const row1Items = items.slice(0, 5);
-const row2Items = items.slice(4, 9); // Small overlap to keep rows filled beautifully
+const row1Items = items.slice(0, 6);
+const row2Items = items.slice(6, 12);
 
 function GalleryCard({ item }: { item: (typeof items)[0] }) {
   return (

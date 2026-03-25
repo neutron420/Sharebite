@@ -55,5 +55,9 @@ EXPOSE 8081
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Default to running the Next.js app
-CMD ["bun", "server.js"]
+# Copy the start script
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh
+
+# Default to running the start script
+CMD ["./start.sh"]

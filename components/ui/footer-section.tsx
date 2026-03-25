@@ -32,8 +32,8 @@ function Footerdemo() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_100%,#000_70%,transparent_100%)]" />
       </div>
 
-      <div className="container mx-auto px-4 py-12 md:px-6 lg:px-8 relative z-10">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+      <div className="w-full px-8 py-16 md:px-16 lg:px-24 xl:px-32 relative z-10">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-16 xl:gap-20">
           <div className="relative">
             <h2 className="mb-4 text-3xl font-bold tracking-tight dark:text-white">Stay Connected</h2>
             <p className="mb-6 text-muted-foreground dark:text-white transition-colors">

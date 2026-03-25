@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
 
-async function getNotificationsHandler() {
+async function getNotificationsHandler(request: Request) {
   try {
-    const session = await getSession();
+    const session = await getSession({ request });
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const notifications = await prisma.notification.findMany({
@@ -21,9 +21,9 @@ async function getNotificationsHandler() {
 }
 
 // Mark all as read
-async function markAllAsReadHandler() {
+async function markAllAsReadHandler(request: Request) {
     try {
-      const session = await getSession();
+      const session = await getSession({ request });
       if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   
       await prisma.notification.updateMany({

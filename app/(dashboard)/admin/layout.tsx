@@ -167,7 +167,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         if (!tokenRes.ok) return;
         const { token } = await tokenRes.json();
 
-        ws = new WebSocket(`ws://localhost:8080?token=${token}`);
+        const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+        ws = new WebSocket(`${wsBaseUrl}?token=${token}`);
         
         ws.onmessage = (event) => {
           const data = JSON.parse(event.data);
