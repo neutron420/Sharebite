@@ -37,6 +37,7 @@ import {
 } from "@mui/material";
 import { useSocket } from "@/components/providers/socket-provider";
 import { toast } from "sonner";
+import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 
 interface RiderUser {
   id: string;

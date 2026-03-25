@@ -25,7 +25,7 @@ function Footerdemo() {
   }, [isDarkMode])
 
   return (
-    <footer className="relative border-t bg-background text-foreground transition-colors duration-300 overflow-hidden">
+    <footer className="relative w-full border-t bg-background/70 text-foreground dark:text-white transition-colors duration-600 overflow-hidden">
       {/* Premium Background Pattern - Matching Landing Page */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[radial-gradient(circle_at_center,rgba(255,100,50,0.1),transparent_70%)]" />
@@ -35,15 +35,15 @@ function Footerdemo() {
       <div className="container mx-auto px-4 py-12 md:px-6 lg:px-8 relative z-10">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="relative">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight">Stay Connected</h2>
-            <p className="mb-6 text-muted-foreground transition-colors">
+            <h2 className="mb-4 text-3xl font-bold tracking-tight dark:text-white">Stay Connected</h2>
+            <p className="mb-6 text-muted-foreground dark:text-white transition-colors">
               Join our newsletter for the latest updates and exclusive mission logs.
             </p>
             <form className="relative" onSubmit={(e) => e.preventDefault()}>
               <Input
                 type="email"
                 placeholder="Enter your email"
-                className="pr-12 backdrop-blur-sm bg-white/50 border-orange-100 focus:border-orange-500 focus:ring-orange-500 transition-all font-bold"
+                className="pr-12 backdrop-blur-sm {bg-white/50 border-orange-100 focus:border-orange-500 focus:ring-orange-500 transition-all font-bold"
               />
               <Button
                 type="submit"
@@ -56,8 +56,8 @@ function Footerdemo() {
             </form>
           </div>
           <div>
-            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40">Support Links</h3>
-            <nav className="space-y-3 text-sm font-bold text-slate-500">
+            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40 dark:text-white">Support Links</h3>
+            <nav className="space-y-3 text-sm font-bold text-slate-500 dark:text-white">
               <a href="#" className="block transition-colors hover:text-orange-600 hover:ml-1 transition-all">
                 The Giver
               </a>
@@ -76,8 +76,8 @@ function Footerdemo() {
             </nav>
           </div>
           <div>
-            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40">Command Center</h3>
-            <address className="space-y-3 text-sm not-italic font-bold text-slate-500">
+            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40 dark:text-white">Command Center</h3>
+            <address className="space-y-3 text-sm not-italic font-bold text-slate-500 dark:text-white">
               <p>ShareBite Global Logistics</p>
               <p>77 Tech Avenue, Silicon Valley</p>
               <p>Secure: (123) 456-7890</p>
@@ -85,7 +85,7 @@ function Footerdemo() {
             </address>
           </div>
           <div className="relative">
-            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40">Coalition Channels</h3>
+            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40 dark:text-white">Coalition Channels</h3>
             <div className="mb-6 flex space-x-4">
               <TooltipProvider>
                 <Tooltip>
@@ -148,7 +148,7 @@ function Footerdemo() {
                 onCheckedChange={setIsDarkMode}
                 className="data-[state=checked]:bg-orange-600"
               />
-              <Moon className={`h-4 w-4 ${isDarkMode ? 'text-blue-500' : 'text-slate-400'}`} />
+              <Moon className={`h-4 w-4 ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`} />
               <Label htmlFor="dark-mode" className="sr-only">
                 Toggle dark mode
               </Label>
@@ -156,10 +156,10 @@ function Footerdemo() {
           </div>
         </div>
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-orange-100/10 pt-8 text-center md:flex-row">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-600 dark:text-white">
             © 2026 SHAREBITE LOGISTICS COALITION. ALL MIGRATIONS SECURE.
           </p>
-          <nav className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-slate-300">
+          <nav className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white">
             <a href="#" className="transition-colors hover:text-orange-600">
               Protocol Privacy
             </a>
