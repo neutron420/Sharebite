@@ -26,6 +26,7 @@ import { useInView, useSpring, useTransform } from "framer-motion";
 function Counter({ value, direction = "up" }: { value: number, direction?: "up" | "down" }) {
   const ref = React.useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [mounted, setMounted] = useState(false);
 
   const spring = useSpring(0, {
     mass: 1,
@@ -34,14 +35,20 @@ function Counter({ value, direction = "up" }: { value: number, direction?: "up" 
   });
 
   const display = useTransform(spring, (current) => Math.round(current).toLocaleString());
+  const [displayValue, setDisplayValue] = useState("0");
 
   useEffect(() => {
+    setMounted(true);
     if (isInView) {
       spring.set(value);
     }
   }, [isInView, spring, value]);
 
-  return <motion.span ref={ref}>{display}</motion.span>;
+  useEffect(() => {
+    return display.on("change", (v) => setDisplayValue(v));
+  }, [display]);
+
+  return <motion.span ref={ref} suppressHydrationWarning>{mounted ? displayValue : "0"}</motion.span>;
 }
 
 import Marquee from "@/components/magicui/marquee";
