@@ -33,7 +33,7 @@ export default async function proxy(request: NextRequest) {
   }
 
   // 2. Global Auth Protection
-  const protectedPaths = ["/api/admin", "/api/donor", "/api/ngo", "/api/rider", "/api/chat", "/api/notifications", "/api/requests", "/api/reports"];
+  const protectedPaths = ["/api/admin", "/api/donor", "/api/ngo", "/api/rider", "/api/notifications", "/api/requests", "/api/reports"];
   const isProtected = protectedPaths.some(p => pathname.startsWith(p));
 
   if (isProtected) {
