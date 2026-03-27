@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Marquee from "@/components/magicui/marquee";
+import { Translate } from "@/components/ui/translate";
 
 const items = [
   {
@@ -87,10 +88,10 @@ function GalleryCard({ item }: { item: (typeof items)[0] }) {
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-5">
         <span className="inline-block px-3 py-1 rounded-full bg-orange-600 text-white text-[9px] font-bold uppercase tracking-[0.2em] mb-2 backdrop-blur-md">
-          {item.title}
+          <Translate>{item.title}</Translate>
         </span>
         <p className="text-white/95 text-[15px] font-medium leading-[1.3] max-w-xs drop-shadow-lg">
-          &ldquo;{item.quote}&rdquo;
+          &ldquo;<Translate>{item.quote}</Translate>&rdquo;
         </p>
       </div>
     </div>
@@ -102,13 +103,13 @@ export function ImpactGallery() {
     <section className="mb-32 overflow-hidden w-full bg-white relative">
       {/* Section Header */}
       <div className="text-center mb-16 px-6 relative z-20">
-        <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-orange-600 mb-5">Our Impact</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-orange-600 mb-5"><Translate>Our Impact</Translate></p>
         <h2 className="text-4xl md:text-6xl font-medium tracking-tight text-slate-950 mb-6">
-          Stories That{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500">Inspire.</span>
+          <Translate>Stories That</Translate>{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-500"><Translate>Inspire.</Translate></span>
         </h2>
         <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto">
-          The faces and moments behind our mission to end hunger.
+          <Translate>The faces and moments behind our mission to end hunger.</Translate>
         </p>
       </div>
 

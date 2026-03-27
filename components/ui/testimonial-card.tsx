@@ -9,7 +9,7 @@ export interface TestimonialAuthor {
 
 export interface TestimonialCardProps {
   author: TestimonialAuthor
-  text: string
+  text: React.ReactNode
   href?: string
   className?: string
 }

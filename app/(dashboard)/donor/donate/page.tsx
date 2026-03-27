@@ -479,7 +479,7 @@ export default function DonatePage() {
                                     </div>
                                     <Input 
                                        type="datetime-local" 
-                                       className="pl-16 h-16 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black text-xs transition-all cursor-pointer w-full appearance-none pr-4"
+                                       className="pl-16 h-16 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black text-sm transition-all cursor-pointer w-full pr-4"
                                        value={formData.expiryTime}
                                        onChange={(e) => {
                                           updateFormData("expiryTime", e.target.value);
@@ -493,29 +493,62 @@ export default function DonatePage() {
                                  <p className="text-[10px] font-bold text-orange-600 ml-1 opacity-70">Avoid wasting food, set a realistic safety buffer.</p>
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                              {/* Refined Pickup Logistics - Strategic Time Windows */}
+                              <div className="space-y-6 pt-4 border-t border-slate-50">
                                  <div className="space-y-3">
-                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup Start</Label>
+                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup Date <span className="text-orange-500">*</span></Label>
                                     <div className="relative group">
-                                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 transition-colors group-focus-within:text-orange-600" />
+                                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 transition-colors group-focus-within:text-orange-600 pointer-events-none" />
                                        <Input 
-                                          type="datetime-local" 
-                                          className="pl-12 h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold text-[13px] transition-all cursor-pointer w-full"
-                                          value={formData.pickupStartTime}
-                                          onChange={(e) => updateFormData("pickupStartTime", e.target.value)}
+                                          type="date" 
+                                          required
+                                          onClick={(e) => e.currentTarget.showPicker?.()}
+                                          className="pl-12 h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black text-sm transition-all cursor-pointer w-full"
+                                          value={formData.pickupStartTime.split('T')[0] || ""}
+                                          onChange={(e) => {
+                                             const newDate = e.target.value;
+                                             const startTime = formData.pickupStartTime.split('T')[1] || "12:00";
+                                             const endTime = formData.pickupEndTime.split('T')[1] || "15:00";
+                                             updateFormData("pickupStartTime", `${newDate}T${startTime}`);
+                                             updateFormData("pickupEndTime", `${newDate}T${endTime}`);
+                                          }}
                                        />
+                                       <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[9px] font-black uppercase text-orange-600/40">Select Day</div>
                                     </div>
                                  </div>
-                                 <div className="space-y-3">
-                                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Pickup End</Label>
-                                    <div className="relative group">
-                                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 transition-colors group-focus-within:text-orange-600" />
-                                       <Input 
-                                          type="datetime-local" 
-                                          className="pl-12 h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-bold text-[13px] transition-all cursor-pointer w-full"
-                                          value={formData.pickupEndTime}
-                                          onChange={(e) => updateFormData("pickupEndTime", e.target.value)}
-                                       />
+
+                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-3">
+                                       <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">From (Start)</Label>
+                                       <div className="relative group">
+                                          <Timer className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 transition-colors group-focus-within:text-orange-600 pointer-events-none" />
+                                          <Input 
+                                             type="time" 
+                                             onClick={(e) => e.currentTarget.showPicker?.()}
+                                             className="pl-12 h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black text-sm transition-all cursor-pointer w-full"
+                                             value={formData.pickupStartTime.split('T')[1] || ""}
+                                             onChange={(e) => {
+                                                const date = formData.pickupStartTime.split('T')[0] || new Date().toISOString().split('T')[0];
+                                                updateFormData("pickupStartTime", `${date}T${e.target.value}`);
+                                             }}
+                                          />
+                                       </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                       <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">To (End)</Label>
+                                       <div className="relative group">
+                                          <Timer className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-orange-400 transition-colors group-focus-within:text-orange-600 pointer-events-none" />
+                                          <Input 
+                                             type="time" 
+                                             onClick={(e) => e.currentTarget.showPicker?.()}
+                                             className="pl-12 h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black text-sm transition-all cursor-pointer w-full"
+                                             value={formData.pickupEndTime.split('T')[1] || ""}
+                                             onChange={(e) => {
+                                                const date = formData.pickupEndTime.split('T')[0] || new Date().toISOString().split('T')[0];
+                                                updateFormData("pickupEndTime", `${date}T${e.target.value}`);
+                                             }}
+                                          />
+                                       </div>
                                     </div>
                                  </div>
                               </div>
