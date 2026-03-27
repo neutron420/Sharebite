@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { 
   Bell, 
   ArrowRight, 
@@ -53,7 +53,7 @@ export default function UpdateSubscription() {
     sessionStorage.setItem("updates-dismissed-v2", "true");
   };
 
-  const detailVariants = {
+  const detailVariants: Variants = {
     hidden: { opacity: 0, height: 0, marginTop: 0 },
     visible: {
       opacity: 1,

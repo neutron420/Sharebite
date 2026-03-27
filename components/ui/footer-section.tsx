@@ -14,6 +14,8 @@ import {
 import { Moon, Send, Sun } from "lucide-react"
 import { FaFacebook, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/fa"
 
+import { Translate } from "@/components/ui/translate"
+
 function Footerdemo() {
   const [isDarkMode, setIsDarkMode] = React.useState(false)
 
@@ -36,9 +38,9 @@ function Footerdemo() {
       <div className="w-full px-8 py-16 md:px-16 lg:px-24 xl:px-32 relative z-10">
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-16 xl:gap-20">
           <div className="relative">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight">Stay Connected</h2>
+            <h2 className="mb-4 text-3xl font-bold tracking-tight"><Translate>Stay Connected</Translate></h2>
             <p className="mb-6 text-muted-foreground transition-colors">
-              Join our newsletter for the latest updates and exclusive mission logs.
+              <Translate>Join our newsletter for the latest updates and exclusive mission logs.</Translate>
             </p>
             <form className="relative" onSubmit={(e) => e.preventDefault()}>
               <Input
@@ -52,41 +54,41 @@ function Footerdemo() {
                 className="absolute right-1 top-1 h-8 w-8 rounded-full bg-orange-600 text-white transition-transform hover:scale-110 active:scale-95 shadow-lg shadow-orange-100"
               >
                 <Send className="h-4 w-4" />
-                <span className="sr-only">Subscribe</span>
+                <span className="sr-only"><Translate>Subscribe</Translate></span>
               </Button>
             </form>
           </div>
           <div>
-            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40">Support Links</h3>
+            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40"><Translate>Support Links</Translate></h3>
             <nav className="space-y-3 text-sm font-bold text-slate-500">
               <a href="#" className="block transition-colors hover:text-orange-600 hover:ml-1 transition-all">
-                The Giver
+                <Translate>The Giver</Translate>
               </a>
               <a href="#" className="block transition-colors hover:text-orange-600 hover:ml-1 transition-all">
-                The Anchor
+                <Translate>The Anchor</Translate>
               </a>
               <a href="#" className="block transition-colors hover:text-orange-600 hover:ml-1 transition-all">
-                The Fleet
+                <Translate>The Fleet</Translate>
               </a>
               <a href="#" className="block transition-colors hover:text-orange-600 hover:ml-1 transition-all">
-                Mission Impact
+                <Translate>Mission Impact</Translate>
               </a>
               <a href="#" className="block transition-colors hover:text-orange-600 hover:ml-1 transition-all">
-                Portal Support
+                <Translate>Portal Support</Translate>
               </a>
             </nav>
           </div>
           <div>
-            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40">Command Center</h3>
+            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40"><Translate>Command Center</Translate></h3>
             <address className="space-y-3 text-sm not-italic font-bold text-slate-500">
-              <p>ShareBite Global Logistics</p>
-              <p>77 Tech Avenue, Silicon Valley</p>
-              <p>Secure: (123) 456-7890</p>
-              <p>Signal: nexus@sharebite.ai</p>
+              <p><Translate>ShareBite Global Logistics</Translate></p>
+              <p><Translate>77 Tech Avenue, Silicon Valley</Translate></p>
+              <p><Translate>Secure: (123) 456-7890</Translate></p>
+              <p><Translate>Signal: nexus@sharebite.ai</Translate></p>
             </address>
           </div>
           <div className="relative">
-            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40">Coalition Channels</h3>
+            <h3 className="mb-4 text-lg font-semibold tracking-tight uppercase text-xs italic opacity-40"><Translate>Coalition Channels</Translate></h3>
             <div className="mb-6 flex space-x-4">
               <TooltipProvider>
                 <Tooltip>
@@ -97,7 +99,7 @@ function Footerdemo() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>ShareBite on Facebook</p>
+                    <p><Translate>ShareBite on Facebook</Translate></p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -110,7 +112,7 @@ function Footerdemo() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Relay on Twitter/X</p>
+                    <p><Translate>Relay on Twitter/X</Translate></p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -123,7 +125,7 @@ function Footerdemo() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Visual Log on Instagram</p>
+                    <p><Translate>Visual Log on Instagram</Translate></p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -136,7 +138,7 @@ function Footerdemo() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Operational LinkedIn</p>
+                    <p><Translate>Operational LinkedIn</Translate></p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -158,17 +160,17 @@ function Footerdemo() {
         </div>
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-orange-100/10 pt-8 text-center md:flex-row">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300">
-            © 2026 SHAREBITE LOGISTICS COALITION. ALL MIGRATIONS SECURE.
+            <Translate>© 2026 SHAREBITE LOGISTICS COALITION. ALL MIGRATIONS SECURE.</Translate>
           </p>
           <nav className="flex gap-8 text-[10px] font-black uppercase tracking-widest text-slate-300">
             <a href="#" className="transition-colors hover:text-orange-600">
-              Protocol Privacy
+              <Translate>Protocol Privacy</Translate>
             </a>
             <a href="#" className="transition-colors hover:text-orange-600">
-              Terms of Engagement
+              <Translate>Terms of Engagement</Translate>
             </a>
             <a href="#" className="transition-colors hover:text-orange-600">
-              Cookie Vault
+              <Translate>Cookie Vault</Translate>
             </a>
           </nav>
         </div>

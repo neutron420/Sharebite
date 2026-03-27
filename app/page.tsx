@@ -57,7 +57,11 @@ import { Footerdemo as Footer } from "@/components/ui/footer-section";
 import { cn } from "@/lib/utils";
 import { TestimonialsSectionDemo } from "@/components/blocks/demo";
 import { FaqsSection } from "@/components/ui/faqs-1";
+
 import { ImpactGallery } from "@/components/ui/impact-gallery";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { Translate } from "@/components/ui/translate";
+import { Header } from "@/components/navbar";
 
 /**
  * ShareBite - The Luxury Edition
@@ -75,8 +79,8 @@ export default function Home() {
   const features: BentoItem[] = [
     {
       icon: <ShieldCheck className="w-6 h-6" />,
-      title: "Military Grade Security",
-      description: "Secure 4-digit PIN verification ensures food reaches the right hands every single time.",
+      title: <Translate>Military Grade Security</Translate>,
+      description: <Translate>Secure 4-digit PIN verification ensures food reaches the right hands every single time.</Translate>,
       meta: "Encrypted",
       status: "Verified",
       tags: ["Security", "Pin"],
@@ -84,8 +88,8 @@ export default function Home() {
     },
     {
       icon: <Truck className="w-6 h-6" />,
-      title: "Real-Time Fleet Dispatch",
-      description: "Track your rescue hero in real-time across the city with zero-latency GPS updates.",
+      title: <Translate>Real-Time Fleet Dispatch</Translate>,
+      description: <Translate>Track your rescue hero in real-time across the city with zero-latency GPS updates.</Translate>,
       meta: "Live GPS",
       status: "Active",
       tags: ["Logistics", "Fleet"],
@@ -93,8 +97,8 @@ export default function Home() {
     },
     {
       icon: <Zap className="w-6 h-6" />,
-      title: "Sub-Second Matching",
-      description: "Our high-speed matching engine connects donors to the nearest NGOs in milliseconds.",
+      title: <Translate>Sub-Second Matching</Translate>,
+      description: <Translate>Our high-speed matching engine connects donors to the nearest NGOs in milliseconds.</Translate>,
       meta: "0.2ms Latency",
       status: "Ultra Fast",
       tags: ["Matchmaking", "Speed"],
@@ -102,16 +106,14 @@ export default function Home() {
     },
     {
       icon: <Users className="w-6 h-6" />,
-      title: "Community Legacy",
-      description: "Earn Karma points and build your community legacy. Transform waste into hope.",
+      title: <Translate>Community Legacy</Translate>,
+      description: <Translate>Earn Karma points and build your community legacy. Transform waste into hope.</Translate>,
       meta: "Karma Protocol",
       status: "Social",
       tags: ["Community", "Impact"],
       colSpan: 1,
     },
   ];
-
-  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="relative min-h-screen bg-white text-slate-950 flex flex-col items-center selection:bg-orange-100 overflow-hidden">
@@ -122,58 +124,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
       </div>
 
-      {/* Broad & Premium Navbar */}
-      <nav className="fixed top-8 z-50 w-[95%] max-w-7xl">
-        <div className="mx-auto rounded-[2rem] border border-orange-100 bg-white/60 backdrop-blur-2xl px-6 sm:px-8 py-4 flex items-center justify-between shadow-[0_10px_40px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-10 h-10 bg-orange-600 rounded-2xl shadow-[0_8px_20px_rgba(234,88,12,0.2)] flex items-center justify-center group-hover:rotate-6 transition-all">
-              <Heart className="w-5 h-5 text-white" fill="white" />
-            </div>
-            <span className="text-xl sm:text-2xl font-medium tracking-tighter text-slate-900 uppercase italic underline decoration-orange-600/10">ShareBite</span>
-          </div>
-          
-          <div className="hidden lg:flex items-center gap-12 text-[11px] font-black uppercase tracking-[0.25em] text-slate-400">
-            <a href="#features" className="hover:text-orange-600 transition-colors">Tech Stack</a>
-            <a href="#impact" className="hover:text-orange-600 transition-colors">Impact Log</a>
-            <a href="#roles" className="hover:text-orange-600 transition-colors">Coalition</a>
-            <Link href="/login" className="hover:text-orange-600 transition-colors">Portal</Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <Link href="/register" className="hidden sm:flex px-8 py-3 bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-orange-600 hover:shadow-xl hover:shadow-orange-100 transition-all active:scale-95 items-center gap-2">
-              JOIN MOVEMENT <ChevronRight className="w-4 h-4" />
-            </Link>
-            <button 
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden p-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900"
-            >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        <AnimatePresence>
-          {menuOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="absolute top-24 left-0 right-0 p-4 lg:hidden"
-            >
-              <div className="bg-white/90 backdrop-blur-2xl border border-orange-100 rounded-[2.5rem] p-8 shadow-2xl space-y-8 flex flex-col items-center">
-                <div className="flex flex-col items-center gap-6 text-[12px] font-black uppercase tracking-[0.3em] text-slate-400 w-full text-center">
-                  <a href="#features" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 border-b border-slate-100 w-full">Tech Stack</a>
-                  <a href="#impact" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 border-b border-slate-100 w-full">Impact Log</a>
-                  <a href="#roles" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 border-b border-slate-100 w-full">Coalition</a>
-                  <Link href="/login" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 border-b border-slate-100 w-full">Portal Access</Link>
-                  <Link href="/register" onClick={() => setMenuOpen(false)} className="hover:text-orange-600 transition-colors py-2 w-full text-orange-600">Start Delivering</Link>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
+      <Header />
 
       <main className="relative z-10 w-full pt-56">
         {/* Refined Hero Section */}
@@ -187,7 +138,7 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-600"></span>
             </span>
-            Active Logistics in <Counter value={12} /> Major Cities
+            <Translate>Active Logistics in</Translate> <Counter value={12} /> <Translate>Major Cities</Translate>
           </motion.div>
 
           <motion.h1 
@@ -196,9 +147,9 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-5xl md:text-[80px] font-medium tracking-tight leading-[0.95] mb-10 text-slate-950"
           >
-            Zero Waste. <br />
+            <Translate>Zero Waste.</Translate> <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 ">
-               Unlimited Hope.
+               <Translate>Unlimited Hope.</Translate>
             </span>
           </motion.h1>
 
@@ -208,7 +159,7 @@ export default function Home() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-base md:text-lg text-slate-500 max-w-2xl mb-14 font-medium leading-relaxed"
           >
-            The world&apos;s most sophisticated food-sharing engine. We connect high-volume donors with NGOs and professional riders to eliminate hunger with sub-second precision.
+            <Translate>The world's most sophisticated food-sharing engine. We connect high-volume donors with NGOs and professional riders to eliminate hunger with sub-second precision.</Translate>
           </motion.p>
 
           <motion.div
@@ -218,16 +169,16 @@ export default function Home() {
             className="flex flex-col sm:flex-row gap-5"
           >
             <Link href="/register" className="px-12 py-5 bg-orange-600 text-white font-medium text-lg rounded-[1.5rem] hover:bg-orange-700 hover:shadow-2xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center gap-3">
-              Start Donating <ArrowRight className="w-5 h-5" />
+              <Translate>Start Donating</Translate> <ArrowRight className="w-5 h-5" />
             </Link>
             <Link href="#features" className="px-12 py-5 bg-white border border-slate-200 text-slate-950 font-medium text-lg rounded-[1.5rem] hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-3">
-              Watch Impact <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600"><Play className="w-3 h-3 fill-current" /></div>
+              <Translate>Watch Impact</Translate> <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600"><Play className="w-3 h-3 fill-current" /></div>
             </Link>
           </motion.div>
 
           {/* Luxury Marquee */}
           <div className="mt-32 w-full max-w-6xl">
-            <p className="text-[11px] font-medium uppercase tracking-[0.5em] text-slate-300 mb-12">Trusted Power Partners</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.5em] text-slate-300 mb-12"><Translate>Trusted Power Partners</Translate></p>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-white to-transparent z-10" />
               <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-white to-transparent z-10" />
@@ -241,6 +192,7 @@ export default function Home() {
                          width={180}
                          height={180}
                          className="object-contain w-full h-full" 
+                         priority={i < 3}
                        />
                      </div>
                      <span className="text-sm sm:text-lg font-medium uppercase tracking-[0.2em] text-slate-800">{p.name}</span>
@@ -259,8 +211,8 @@ export default function Home() {
         {/* Polished Bento Grid */}
         <section id="features" className="px-6 py-40 max-w-7xl mx-auto">
           <div className="text-center mb-28">
-            <h2 className="text-4xl md:text-7xl font-medium tracking-tight mb-8">Platform of <span className="text-orange-600 ">Prestige.</span></h2>
-            <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto">Engineered for absolute reliability, transparency, and global scale.</p>
+            <h2 className="text-4xl md:text-7xl font-medium tracking-tight mb-8"><Translate>Platform of</Translate> <span className="text-orange-600 "><Translate>Prestige.</Translate></span></h2>
+            <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto"><Translate>Engineered for absolute reliability, transparency, and global scale.</Translate></p>
           </div>
           
           <BentoGrid items={features} />
@@ -271,18 +223,18 @@ export default function Home() {
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
           
           <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-20 relative z-10">
-            <RoleItem luxury title="The Giver" desc="Transform surplus into status. Posting handles everything from logistics to detailed impact reports." />
-            <RoleItem luxury title="The Anchor" desc="Empower your NGO with a high-fidelity dashboard to manage cities of surplus food." />
-            <RoleItem luxury title="The Fleet" desc="Step into the driver's seat of change. Deliver smiles and earn elite Karma rewards." />
+            <RoleItem luxury title={<Translate>The Giver</Translate>} desc={<Translate>Transform surplus into status. Posting handles everything from logistics to detailed impact reports.</Translate>} />
+            <RoleItem luxury title={<Translate>The Anchor</Translate>} desc={<Translate>Empower your NGO with a high-fidelity dashboard to manage cities of surplus food.</Translate>} />
+            <RoleItem luxury title={<Translate>The Fleet</Translate>} desc={<Translate>Step into the driver's seat of change. Deliver smiles and earn elite Karma rewards.</Translate>} />
           </div>
         </section>
 
         {/* Minimalist CTA */}
         <section className="px-6 py-48 text-center">
-          <h2 className="text-5xl md:text-[100px] font-medium tracking-tighter mb-14 text-slate-950 ">Ready to Lead?</h2>
-          <p className="text-lg text-slate-400 mb-16 max-w-lg mx-auto font-medium">Join <Counter value={12000} />+ pioneers redefining food security. Experience the future of sharing.</p>
+          <h2 className="text-5xl md:text-[100px] font-medium tracking-tighter mb-14 text-slate-950 "><Translate>Ready to Lead?</Translate></h2>
+          <p className="text-lg text-slate-400 mb-16 max-w-lg mx-auto font-medium"><Translate>Join 12,000+ pioneers redefining food security. Experience the future of sharing.</Translate></p>
           <Link href="/register" className="px-20 py-8 bg-slate-950 text-white font-medium text-2xl rounded-[2rem] hover:bg-orange-600 hover:-translate-y-2 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] active:scale-95 group">
-             Initialize Profile <ArrowRight className="inline ml-2 group-hover:translate-x-3 transition-transform" />
+             <Translate>Initialize Profile</Translate> <ArrowRight className="inline ml-2 group-hover:translate-x-3 transition-transform" />
           </Link>
         </section>
 
@@ -298,14 +250,14 @@ export default function Home() {
   );
 }
 
-function RoleItem({ title, desc, luxury = false }: { title: string, desc: string, luxury?: boolean }) {
+function RoleItem({ title, desc, luxury = false }: { title: any, desc: any, luxury?: boolean }) {
   return (
     <div className="space-y-6 group cursor-default">
        <div className="h-0.5 w-12 bg-white group-hover:w-full transition-all duration-700" />
        <h3 className="text-4xl font-medium tracking-tight text-white">{title}</h3>
        <p className="text-white/80 font-medium leading-relaxed">{desc}</p>
        <button className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-widest text-white/90 hover:text-white transition-colors">
-         Explore Role <ChevronRight className="w-4 h-4" />
+         <Translate>Explore Role</Translate> <ChevronRight className="w-4 h-4" />
        </button>
     </div>
   );

@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 
 export interface BentoItem {
-    title: string;
-    description: string;
+    title: React.ReactNode;
+    description: React.ReactNode;
     icon: React.ReactNode;
     status?: string;
     tags?: string[];

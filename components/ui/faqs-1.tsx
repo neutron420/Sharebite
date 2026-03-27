@@ -6,6 +6,7 @@ import {
 	AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Phone, MessageCircle } from 'lucide-react';
+import { Translate } from '@/components/ui/translate';
 
 export function FaqsSection() {
 	return (
@@ -18,10 +19,9 @@ export function FaqsSection() {
 
             <div className="relative z-10 mx-auto max-w-4xl space-y-12 px-6">
                 <div className="space-y-4 text-center">
-                    <h2 className="text-4xl font-semibold md:text-5xl tracking-tight text-slate-950">Frequently Asked Questions</h2>
+                    <h2 className="text-4xl font-semibold md:text-5xl tracking-tight text-slate-950"><Translate>Frequently Asked Questions</Translate></h2>
                     <p className="text-slate-500 max-w-2xl mx-auto font-medium text-lg leading-relaxed">
-                        Here are some common questions and answers you might encounter when jumping into ShareBite. If
-                        you don't find the answer you're looking for, feel free to reach out.
+                        <Translate>Here are some common questions and answers you might encounter when jumping into ShareBite. If you don't find the answer you're looking for, feel free to reach out.</Translate>
                     </p>
                 </div>
                 <Accordion
@@ -37,24 +37,24 @@ export function FaqsSection() {
                             className="relative border-slate-100 px-4 last:border-b-0"
                         >
                             <AccordionTrigger className="py-5 text-lg font-semibold text-slate-800 leading-6 hover:no-underline hover:text-orange-600 transition-colors">
-                                {item.title}
+                                <Translate>{item.title}</Translate>
                             </AccordionTrigger>
                             <AccordionContent className="text-slate-500 pb-5 font-medium leading-relaxed text-base">
-                                {item.content}
+                                <Translate>{item.content}</Translate>
                             </AccordionContent>
                         </AccordionItem>
                     ))}
                 </Accordion>
                 <div className="flex flex-col items-center justify-center pt-8 gap-5 border-t border-slate-200/50">
                     <p className="text-slate-500 font-bold uppercase text-[11px] tracking-widest">
-                        Can't find what you're looking for? Contact our support agents:
+                        <Translate>Can't find what you're looking for? Contact our support agents:</Translate>
                     </p>
                     <div className="flex flex-col sm:flex-row items-center gap-4">
                         <a href="tel:+1234567890" className="flex items-center gap-3 px-8 py-4 bg-slate-950 text-white rounded-2xl hover:bg-orange-600 transition-all font-semibold shadow-lg hover:-translate-y-1 group">
-                            <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" /> <span className="tracking-tight">Phone Support</span>
+                            <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" /> <span className="tracking-tight"><Translate>Phone Support</Translate></span>
                         </a>
                         <a href="https://wa.me/1234567890" className="flex items-center gap-3 px-8 py-4 bg-[#25D366] text-white rounded-2xl hover:bg-[#1ebe57] transition-all font-semibold shadow-lg hover:-translate-y-1 group">
-                            <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" /> <span className="tracking-tight">WhatsApp Link</span>
+                            <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" /> <span className="tracking-tight"><Translate>WhatsApp Link</Translate></span>
                         </a>
                     </div>
                 </div>

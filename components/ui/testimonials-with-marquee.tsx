@@ -3,11 +3,11 @@ import { TestimonialCard, TestimonialAuthor } from "@/components/ui/testimonial-
 import Marquee from "@/components/magicui/marquee"
 
 interface TestimonialsSectionProps {
-  title: string
-  description: string
+  title: React.ReactNode
+  description: React.ReactNode
   testimonials: Array<{
     author: TestimonialAuthor
-    text: string
+    text: React.ReactNode
     href?: string
   }>
   className?: string

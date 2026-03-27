@@ -11,7 +11,11 @@ import {
   Truck,
   ShieldCheck,
   TrendingUp,
+  Mic,
+  MicOff,
+  Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,17 +27,28 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icons } from "@/components/ui/icons";
+import { useTranslationStore } from "@/lib/translation-store";
 
 interface AiAssistantCardProps {
   onClose?: () => void;
 }
 
 export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
+  const { currentLanguage } = useTranslationStore();
   const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
+    transport: new DefaultChatTransport({ 
+      api: '/api/chat',
+      body: {
+        language: currentLanguage
+      }
+    }),
   });
   const [input, setInput] = useState("");
-  const isLoading = status === "streaming" || status === "submitted";
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const isLoading = status === "streaming" || status === "submitted" || isTranscribing;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -63,6 +78,66 @@ export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await handleVoiceUpload(audioBlob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast.info("Recording...");
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      toast.error("Could not access microphone");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleVoiceUpload = async (blob: Blob) => {
+    setIsTranscribing(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", blob, "recording.webm");
+
+      const response = await fetch("/api/chat/voice", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Transcription failed");
+
+      const data = await response.json();
+      if (data.text && data.text.trim()) {
+        sendMessage({ text: data.text });
+      }
+    } catch (err) {
+      console.error("Transcription error:", err);
+      toast.error("Failed to process voice message");
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
   const formatAssistantText = (text: string, role: string) => {
     if (role !== "assistant") {
       return text;
@@ -80,7 +155,7 @@ export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
   };
 
   return (
-    <Card className="flex h-[min(78vh,700px)] min-h-[560px] w-[min(92vw,480px)] flex-col gap-4 p-4 shadow-2xl bg-background border-border/50 rounded-3xl overflow-hidden">
+    <Card className="flex h-[min(82vh,700px)] sm:h-[min(78vh,700px)] min-h-[520px] w-[calc(100vw-24px)] sm:w-[480px] flex-col gap-4 p-3 sm:p-4 shadow-2xl bg-background border-border/50 rounded-3xl overflow-hidden">
       <div className="flex flex-row items-center justify-between p-0">
         <div className="flex items-center gap-2.5">
           <div className="flex size-9 items-center justify-center rounded-xl bg-orange-50 border border-orange-100">
@@ -213,19 +288,39 @@ export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
                     handleSubmit();
                   }
                 }}
-                className="min-h-[44px] max-h-[120px] resize-none border-none py-3 ps-4 pe-12 shadow-none focus-visible:ring-0 bg-muted/30 rounded-2xl text-sm"
+                className="min-h-[44px] max-h-[120px] resize-none border-none py-3 ps-4 pe-22 sm:pe-20 shadow-none focus-visible:ring-0 bg-muted/30 rounded-2xl text-sm"
                 rows={1}
               />
 
-              <Button
-                className="absolute end-1.5 bottom-1.5 size-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all"
-                size="icon"
-                type="submit"
-                onClick={() => handleSubmit()}
-                disabled={!input.trim() || isLoading}
-              >
-                <SendHorizontal className="size-4" />
-              </Button>
+              <div className="absolute end-1.5 bottom-1.5 flex items-center gap-1.5 sm:gap-1">
+                <Button
+                  className={cn(
+                    "size-9 sm:size-8 rounded-xl transition-all",
+                    isRecording 
+                      ? "bg-red-500 hover:bg-red-600 animate-pulse text-white" 
+                      : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                  )}
+                  size="icon"
+                  onClick={isRecording ? stopRecording : startRecording}
+                  disabled={isLoading && !isRecording}
+                >
+                  {isRecording ? <MicOff className="size-5 sm:size-4" /> : <Mic className="size-5 sm:size-4" />}
+                </Button>
+
+                <Button
+                  className="size-9 sm:size-8 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl transition-all"
+                  size="icon"
+                  type="submit"
+                  onClick={() => handleSubmit()}
+                  disabled={!input.trim() || isLoading}
+                >
+                  {isTranscribing ? (
+                    <Loader2 className="size-5 sm:size-4 animate-spin" />
+                  ) : (
+                    <SendHorizontal className="size-5 sm:size-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
 

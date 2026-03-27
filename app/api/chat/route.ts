@@ -1,5 +1,10 @@
-import { openai } from "@ai-sdk/openai";
+import { createGroq } from "@ai-sdk/groq";
 import { streamText, convertToModelMessages } from "ai";
+import prisma from "@/lib/prisma";
+
+const groq = createGroq({
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 export const maxDuration = 30;
 
@@ -139,11 +144,53 @@ Every reply must stay plain text without markdown symbols.
 Every reply should end with one practical next step the user can take now in ShareBite.`;
 
 export async function POST(req: Request) {
-  const { messages = [] } = await req.json();
+  const { messages = [], language = 'en' } = await req.json();
+
+  // Get language name for the prompt
+  const langMap: Record<string, string> = {
+    'en': 'English',
+    'hi': 'Hindi',
+    'bn': 'Bengali',
+    'te': 'Telugu',
+    'mr': 'Marathi',
+    'ta': 'Tamil',
+    'gu': 'Gujarati',
+    'kn': 'Kannada',
+    'ml': 'Malayalam',
+    'pa': 'Punjabi',
+    'es': 'Spanish',
+    'fr': 'French',
+    'de': 'German',
+    'zh': 'Chinese',
+    'ja': 'Japanese'
+  };
+  const targetLanguage = langMap[language] || 'English';
+
+  // Fetch real-time context from the database to improve accuracy
+  const [userCount, donationCount, ngoCount, donorCount] = await Promise.all([
+    prisma.user.count(),
+    prisma.foodDonation.count(),
+    prisma.user.count({ where: { role: 'NGO' } }),
+    prisma.user.count({ where: { role: 'DONOR' } }),
+  ]);
+
+  const dynamicContext = `
+CURRENT PLATFORM STATS (REAL-TIME):
+- Total Registered Users: ${userCount}
+- Active Food Donations: ${donationCount}
+- Registered NGOs: ${ngoCount}
+- Registered Donors: ${donorCount}
+
+MANDATORY LANGUAGE RULE:
+The user has selected ${targetLanguage}. You MUST respond entirely in ${targetLanguage}. 
+Even if the user types in English, you must translate your helpful guidance into ${targetLanguage} while keeping the technical ShareBite terms clear.
+
+Use this data to answer questions about platform activity accurately. If the user asks about someone being registered or how many donations are live, refer to these numbers.
+`;
 
   const result = streamText({
-    model: openai("gpt-4o-mini"),
-    system: SYSTEM_PROMPT,
+    model: groq("llama-3.3-70b-versatile"), // Powerful model for better reasoning
+    system: SYSTEM_PROMPT + dynamicContext,
     messages: await convertToModelMessages(messages),
   });
 
