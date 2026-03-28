@@ -1,4 +1,4 @@
-FROM oven/bun:latest-alpine AS base
+FROM oven/bun:alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
