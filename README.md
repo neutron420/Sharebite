@@ -1,104 +1,337 @@
-# ShareBite - Food Donation & Hunger Help Platform
+# ShareBite
 
-[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Cloudflare R2](https://img.shields.io/badge/Cloudflare_R2-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com/products/r2/)
-[![Bun](https://img.shields.io/badge/Bun-000000?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh/)
+ShareBite is a full-stack food rescue platform built to move surplus food from donors to NGOs as quickly and transparently as possible. The application combines a polished public site, role-based dashboards, operational APIs, real-time notifications, map-driven discovery, and optional rider logistics into one system.
 
-ShareBite is a full-stack platform designed to bridge the gap between food donors (restaurants, hotels, event organizers) and NGOs/Volunteers. Our mission is to reduce food waste and ensure that surplus food reaches those who need it most.
+The codebase is organized around four main actors:
 
----
+- `DONOR` users publish and manage food donations.
+- `NGO` users discover food, request pickups, and complete collection.
+- `RIDER` users handle optional last-mile pickup and delivery.
+- `ADMIN` users verify organizations, review activity, moderate issues, and monitor platform health.
 
-## Features
+## Documentation
 
-### Role-Based Access Control
-- **DONOR**: Post surplus food donations, manage listings, and approve pickup requests.
-- **NGO**: Browse available food in real-time, request pickups, and track collected donations.
-- **ADMIN**: Monitor platform activity, moderate users, and manage system health.
+- [Architecture Guide](./architecture.md)
+- [Workflow Guide](./workflow.md)
+- [API Test Notes](./tests/README.md)
 
-### Core Functionality
-- **Real-time Donation Posting**: Donors can list food with quantity, category, and expiry data.
-- **Geolocation Support**: Find nearby donations using precise latitude and longitude coordinates.
-- **Media Support**: High-quality food images stored securely on Cloudflare R2.
-- **Intuitive Lifecycle**: Track donations from AVAILABLE to REQUESTED to APPROVED to COLLECTED.
-- **Review System**: Build community trust through peer-to-peer ratings and feedback.
+## What The Platform Includes
 
----
+- Role-based authentication and dashboards for donors, NGOs, riders, and admins
+- Food donation publishing with category, quantity, weight, expiry, pickup window, and map coordinates
+- NGO request and fulfillment flows, including direct handover and rider-assisted delivery
+- Real-time notifications and messaging over a dedicated websocket server
+- Redis-backed rate limiting, OTP storage, geospatial donation lookup, rider location, and karma leaderboard
+- Cloudflare R2 presigned uploads for food images and delivery proof
+- AI support chat and voice transcription endpoints using Groq
+- Translation support and map-based interfaces for multilingual, location-aware usage
+- Admin tools for users, requests, reviews, reports, logs, bugs, verification, and operational stats
+- Karma, badges, and leaderboard mechanics for donor and rider engagement
 
-## Tech Stack
+## Stack
 
-- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router)
-- **Database**: [PostgreSQL](https://www.postgresql.org/) (Hosted on [Neon](https://neon.tech/))
-- **ORM**: [Prisma](https://www.prisma.io/)
-- **Authentication**: JWT-based Secure Auth
-- **Styling**: [Tailwind CSS 4.0](https://tailwindcss.com/)
-- **Storage**: [Cloudflare R2](https://www.cloudflare.com/products/r2/) (S3 Compatible)
-- **Runtime**: [Bun](https://bun.sh/)
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 16 App Router, React 19, TypeScript |
+| Styling | Tailwind CSS, Radix UI, custom UI components, Framer Motion |
+| Backend | Next.js route handlers, standalone websocket server with `ws` |
+| Database | PostgreSQL via Prisma 7 and `@prisma/adapter-pg` |
+| Realtime and cache | Redis with `ioredis` |
+| File storage | Cloudflare R2 via S3-compatible APIs |
+| Maps | Mapbox GL |
+| AI features | Groq via AI SDK, Groq Whisper transcription |
+| Email | Resend |
+| Bot protection | Cloudflare Turnstile |
+| Testing | Vitest |
+| Packaging and runtime | Bun, Docker, Docker Compose |
+| Infra as code | Terraform for AWS ECS/Fargate, ALB, networking, and domain wiring |
 
----
+## Repository Layout
 
-## Project Structure
-
-```bash
-├── app/               # Next.js App Router (Pages, Components, API)
-├── prisma/            # Database Schema & Migrations
-│   ├── schema.prisma  # Core Data Models
-│   └── migrations/    # Versioned DB Changes
-├── public/            # Static Assets
-└── components/        # Reusable UI Components
+```text
+sharebite/
+|-- app/                   # App Router pages, layouts, route groups, and API handlers
+|   |-- (auth)/            # Public login, register, and password recovery pages
+|   |-- (dashboard)/       # Role-specific dashboard experiences
+|   |-- api/               # Route handlers for auth, donations, requests, chat, admin, etc.
+|   |-- demo/              # Demo pages
+|   `-- terms/             # Role-specific terms pages
+|-- components/            # Reusable UI, chat, map, support, and provider components
+|-- lib/                   # Shared auth, Prisma, Redis, storage, notifications, validation, and helpers
+|-- prisma/                # Prisma schema, migrations, and badge seeding
+|-- public/                # Static assets
+|-- server/                # Standalone websocket server and background worker scripts
+|-- terraform/             # AWS deployment infrastructure
+|-- tests/                 # Route and behavior-oriented Vitest suites
+|-- Dockerfile             # Container image build
+|-- docker-compose.yml     # Multi-service local stack
+|-- proxy.ts               # Global API auth, RBAC, and CORS handling
+`-- start.sh               # Container startup script
 ```
 
----
+## Route Map
 
-## Getting Started
+### Public and shared pages
 
-### 1. Prerequisites
-Ensure you have [Bun](https://bun.sh/) installed on your machine.
+- `/` public landing page
+- `/login`, `/register`, `/forgot-password`
+- `/donations` shared browsing area
+- `/terms/*` role-specific terms pages
+- `/demo/*` experimental or presentation pages
 
-### 2. Clone the Repository
-```bash
-git clone https://github.com/your-username/sharebite.git
-cd sharebite
+### Dashboard areas
+
+- `/donor/*` donor dashboard, profile, donations, NGOs, messages, notifications, complaints
+- `/ngo/*` NGO dashboard, find-food, requests, history, messages, notifications, complaints
+- `/rider/*` rider dashboard, bounties, missions, notifications, settings
+- `/admin/*` admin dashboard, users, requests, donations, reviews, reports, logs, map, verification, bugs, settings
+
+### API areas
+
+- `/api/auth/*` registration, login, logout, session lookup, OTP verification, password reset, token fetch
+- `/api/donations/*` donation CRUD and cleanup
+- `/api/requests/*` pickup requests, approval, rider assignment, handover, delivery, verification
+- `/api/chat/*` AI support, conversations, messages, read state, voice transcription
+- `/api/admin/*` admin dashboards and moderation endpoints
+- `/api/upload/*` authenticated presigned upload endpoints
+- `/api/public/stats` public impact stats
+- `/api/leaderboard` karma leaderboard
+- `/api/translate` translation proxy
+- `/api/bugs`, `/api/reports`, `/api/donor-reports`, `/api/reviews`, `/api/notifications`
+
+## System Snapshot
+
+```text
+Browser
+  |
+  v
+Next.js App Router UI
+  |
+  +--> Next.js API routes ----------------------------+
+  |                                                   |
+  |                                                   +--> PostgreSQL via Prisma
+  |                                                   +--> Redis for rate limits, geo, OTP, leaderboard, rider location
+  |                                                   +--> Cloudflare R2 for uploads
+  |                                                   +--> Groq for AI chat and transcription
+  |                                                   +--> Resend for password reset email
+  |                                                   +--> RapidAPI translation provider
+  |
+  +--> /api/auth/token --> websocket connection ------> server/ws.ts
+                                                        |
+                                                        +--> Redis pub/sub fan-out
+                                                        +--> real-time notifications, chat, typing, rider tracking
 ```
 
-### 3. Environment Setup
-Create a .env file in the root directory and add your credentials:
-```env
-DATABASE_URL="your_postgresql_connection_string"
-R2_BUCKET_NAME="your_bucket_name"
-# Add other necessary keys here
-```
+## Core Domain Model
 
-### 4. Install Dependencies
+The Prisma schema centers on a few important entities:
+
+- `User`: base identity model with role, verification state, profile, location, strikes, suspension, and rider availability
+- `FoodDonation`: donor-created donation record with food details, status, timing, and pickup location
+- `PickupRequest`: NGO request lifecycle, optional rider assignment, handover PIN, proof, and timestamps
+- `Notification`: persistent in-app alerts for request status, new donations, bug responses, and system events
+- `Conversation` and `Message`: one-to-one operational chat around donations
+- `Review`: post-transaction trust signal tied to a donation
+- `AuditLog`, `Report`, `DonorReport`, `Violation`: admin moderation and governance records
+- `Badge` and `UserBadge`: donor recognition and achievement tracking
+- `BugReport` and `BugResponse`: user support issue intake and admin replies
+
+## Status Model
+
+Two status systems work together:
+
+- `FoodDonation.status`: `AVAILABLE`, `REQUESTED`, `APPROVED`, `COLLECTED`, `EXPIRED`
+- `PickupRequest.status`: `PENDING`, `APPROVED`, `REJECTED`, `ASSIGNED`, `ON_THE_WAY`, `COMPLETED`
+
+In the current code, most operational progress is tracked on `PickupRequest.status`, while `FoodDonation.status` is actively moved through `AVAILABLE`, `APPROVED`, and `COLLECTED`.
+
+## Environment Variables
+
+The project does not currently ship with a committed `.env.example`, so this table is the practical setup reference derived from the codebase.
+
+| Variable | Required | Used for |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | PostgreSQL connection for Prisma and worker processes |
+| `JWT_SECRET` | Yes | Session token signing and verification |
+| `REDIS_URL` | Recommended | Rate limiting, OTP storage, geo search, leaderboard, rider location, websocket fan-out |
+| `NEXT_PUBLIC_APP_URL` | Recommended | Allowed origin for API CORS handling in `proxy.ts` |
+| `NEXT_PUBLIC_WS_URL` | Recommended | Browser websocket base URL |
+| `INTERNAL_WS_URL` | Recommended | Internal HTTP relay from app server to websocket server |
+| `R2_ACCOUNT_ID` | Yes for uploads | Cloudflare R2 endpoint construction |
+| `R2_ACCESS_KEY_ID` | Yes for uploads | Cloudflare R2 credentials |
+| `R2_SECRET_ACCESS_KEY` | Yes for uploads | Cloudflare R2 credentials |
+| `R2_BUCKET_NAME` | Yes for uploads | Bucket used for signed uploads |
+| `R2_PUBLIC_DOMAIN` | Yes for uploads | Public base URL for uploaded objects |
+| `NEXT_PUBLIC_MAPBOX_TOKEN` | Recommended | Map rendering in donor, NGO, and rider interfaces |
+| `GROQ_API_KEY` | Optional | AI support chat and voice transcription |
+| `RESEND_API_KEY` | Optional | Forgot-password email delivery |
+| `RAPIDAPI_KEY` | Optional | Translation API access |
+| `RAPIDAPI_HOST` | Optional | Translation API host |
+| `NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY` | Recommended | Browser Turnstile widget |
+| `CLOUDFLARE_TURNSTILE_SECRET_KEY` | Recommended | Server-side Turnstile verification |
+| `NODE_ENV` | Recommended | Runtime mode for cookies and logging behavior |
+
+## Local Development
+
+### Prerequisites
+
+- Bun installed locally
+- PostgreSQL available, or the `db` service from Docker Compose
+- Redis available, or the `redis` service from Docker Compose
+
+### 1. Install dependencies
+
 ```bash
 bun install
 ```
 
-### 5. Database Setup
+### 2. Create `.env`
+
+Add the environment variables listed above. At minimum you should supply:
+
+```env
+DATABASE_URL=postgresql://...
+JWT_SECRET=replace-this
+REDIS_URL=redis://127.0.0.1:6379
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_WS_URL=ws://localhost:8080
+INTERNAL_WS_URL=http://localhost:8081
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=
+R2_PUBLIC_DOMAIN=
+NEXT_PUBLIC_MAPBOX_TOKEN=
+GROQ_API_KEY=
+RESEND_API_KEY=
+RAPIDAPI_KEY=
+RAPIDAPI_HOST=
+NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=
+CLOUDFLARE_TURNSTILE_SECRET_KEY=
+```
+
+### 3. Prepare the database
+
 ```bash
 bunx prisma generate
 bunx prisma migrate dev
 ```
 
-### 6. Run the Application
+Optional seed step for badge data:
+
 ```bash
-bun dev
+bun run prisma/seed-badges.ts
 ```
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
----
+### 4. Run supporting services
 
-## Scalability Roadmap
-- **PostGIS**: Advanced spatial queries for radius-based search.
-- **Background Jobs**: Automated expiry status updates using Cron.
-- **Real-time Notifications**: WebSockets for instant pickup request alerts.
+If you do not already have PostgreSQL and Redis running locally:
 
----
+```bash
+docker compose up db redis -d
+```
 
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
+### 5. Run the app
+
+Start the web app and websocket server in separate terminals:
+
+```bash
+bun run dev
+```
+
+```bash
+bun run ws
+```
+
+If you want the expiry alert worker running as well:
+
+```bash
+bun run server/watchtower.ts
+```
+
+Then open `http://localhost:3000`.
+
+## Docker And Compose
+
+The repository includes a multi-service Compose setup with:
+
+- `web` for the Next.js application
+- `ws` for the dedicated websocket and internal relay server
+- `db` for PostgreSQL
+- `redis` for cache and realtime coordination
+
+Bring the full stack up with:
+
+```bash
+docker compose up --build
+```
+
+### Important runtime note
+
+The committed `start.sh` currently starts `server/ws.ts` and then runs `bun run dev` for the web application. That is convenient for iterative environments, but it is not a typical hardened production launch path. The image itself is built with standalone output, so if you want a stricter production runtime, update the startup command to use the built server rather than the dev server.
+
+## Testing
+
+Run the suite with:
+
+```bash
+bun run test
+```
+
+Available test coverage currently targets API and behavior-heavy areas such as:
+
+- authentication
+- donations
+- requests
+- donor and NGO flows
+- admin actions
+- notifications
+- uploads
+- leaderboard
+- reports and reviews
+- regression checks
+
+Linting can be run with:
+
+```bash
+bun run lint
+```
+
+## Deployment
+
+### Docker image
+
+The `Dockerfile` builds a standalone Next.js output, copies the generated Prisma client, includes the websocket server files, and exposes ports `3000`, `8080`, and `8081`.
+
+### Terraform
+
+The `terraform/` directory defines an AWS-oriented deployment shape with:
+
+- ECS Fargate service
+- ECR repository
+- ALB listeners and target groups
+- VPC and network resources
+- domain wiring
+- environment variable injection for the app runtime
+
+The ECS definition is set up to expose both the web port and websocket port through the load balancer.
+
+## Notable Implementation Notes
+
+- `proxy.ts` handles CORS, API route protection, and an extra admin-only guard for `/api/admin/*`.
+- `lib/auth.ts` resolves sessions across role-specific cookies and tries to infer the preferred role from the request path.
+- `withSecurity()` applies rate limiting and security headers around many route handlers. If Redis is unavailable, rate limiting fails open rather than taking the API down.
+- Donation geo-indexing, rider location, leaderboard, OTP storage, and websocket pub/sub all depend on Redis.
+- `server/watchtower.ts` exists as a background worker for urgent expiry alerts, but it is not part of the default `package.json` scripts.
+- The registration route currently allows direct admin registration. That may be acceptable for internal use, but most production deployments would gate admin creation behind an invite or secret.
+
+## Suggested Reading Order
+
+1. [README](./README.md) for setup and repo orientation
+2. [Architecture Guide](./architecture.md) for the technical layout
+3. [Workflow Guide](./workflow.md) for lifecycle and operations
+4. [API Test Notes](./tests/README.md) for test context
 
 ## License
-This project is licensed under the MIT License.
+
+No license file is currently committed in this repository. If you plan to open-source the project, add a top-level license file and update this section.
