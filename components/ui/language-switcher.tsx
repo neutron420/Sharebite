@@ -9,6 +9,13 @@ import { cn } from "@/lib/utils";
 export const LanguageSwitcher = () => {
     const { currentLanguage, setLanguage } = useTranslationStore();
     const [isOpen, setIsOpen] = useState(false);
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return <div className="h-10 w-10 sm:w-24 bg-slate-50/50 animate-pulse rounded-2xl" />;
 
     const current = languages.find(l => l.code === currentLanguage) || languages[0];
 

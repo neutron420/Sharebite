@@ -169,6 +169,7 @@ export default function RegisterPage() {
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
   const [checkingPhone, setCheckingPhone] = useState(false);
   const [phoneAvailable, setPhoneAvailable] = useState<boolean | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyInputRef = useRef<HTMLInputElement>(null);
@@ -178,6 +179,7 @@ export default function RegisterPage() {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phoneNumber: "",
     city: "",
     address: "",
@@ -189,11 +191,43 @@ export default function RegisterPage() {
     imageUrl: "",
     verificationDoc: "",
     donorType: "",
+    hasAgreedToTerms: false,
   });
 
-  const updateFormData = (field: string, value: string | Role) => {
+  const updateFormData = (field: string, value: string | Role | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem("sharebite_register_form");
+    if (savedData) {
+      const parsed = JSON.parse(savedData);
+      setFormData(prev => ({ 
+        ...prev, 
+        ...parsed, 
+        password: "", // Security: Don't restore passwords
+        hasAgreedToTerms: false 
+      }));
+    }
+    const savedStep = localStorage.getItem("sharebite_register_step");
+    if (savedStep) {
+      setCurrentStep(parseInt(savedStep));
+    }
+    setIsHydrated(true);
+  }, []);
+
+  // Save to localStorage
+  useEffect(() => {
+    if (isHydrated) {
+      const { password, confirmPassword, hasAgreedToTerms, ...safeData } = formData;
+      localStorage.setItem("sharebite_register_form", JSON.stringify(safeData));
+      localStorage.setItem("sharebite_register_step", currentStep.toString());
+    }
+  }, [formData, currentStep, isHydrated]);
+
+  // Clear storage on successful submission (in handleSubmit)
+  // [already added below in handleSubmit]
 
   // Debounced email check
   useEffect(() => {
@@ -296,6 +330,8 @@ export default function RegisterPage() {
       }
       setSuccess("Mission Ready! Your account has been authenticated and initialized.");
       toast.success("Account created successfully!");
+      localStorage.removeItem("sharebite_register_form");
+      localStorage.removeItem("sharebite_register_step");
       // Short delay for visual feedback of the premium alert
       setTimeout(() => {
         router.push("/login?registered=true");
@@ -310,16 +346,19 @@ export default function RegisterPage() {
     switch (currentStep) {
       case 0: return formData.role !== null;
       case 1: 
-        const basicInfo = formData.name.trim() !== "" && formData.email.trim() !== "" && formData.password.length >= 6;
+        const basicInfo = formData.name.trim() !== "" && 
+                         formData.email.trim() !== "" && 
+                         formData.password.length >= 6 && 
+                         formData.password === formData.confirmPassword;
         if (formData.role === "DONOR") {
           return basicInfo && formData.donorType !== "";
         }
         return basicInfo;
       case 2:
         if (formData.role === "NGO" || formData.role === "RIDER") {
-          return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.verificationDoc.trim() !== "";
+          return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.verificationDoc.trim() !== "" && formData.hasAgreedToTerms;
         }
-        return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "";
+        return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.hasAgreedToTerms;
       default: return true;
     }
   };
@@ -328,6 +367,13 @@ export default function RegisterPage() {
 
   // For Step 2 (map step), we use a wider layout
   const isMapStep = currentStep === 2;
+
+  if (!isHydrated) return <div className="min-h-screen w-full flex items-center justify-center bg-orange-50/50">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-10 w-10 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+      <span className="text-xs uppercase tracking-[0.2em] font-black text-orange-600 animate-pulse">Initializing Interface...</span>
+    </div>
+  </div>;
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
@@ -607,7 +653,10 @@ export default function RegisterPage() {
                           value={formData.password}
                           onChange={(e) => updateFormData("password", e.target.value)}
                           placeholder="Min 6 characters"
-                          className="h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500"
+                          className={cn(
+                            "h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500",
+                            formData.password.length > 0 && formData.password.length < 6 && "border-red-300 focus:border-red-500 focus:ring-red-500"
+                          )}
                         />
                         <button
                           type="button"
@@ -617,6 +666,34 @@ export default function RegisterPage() {
                           {isPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
+                      {formData.password.length > 0 && formData.password.length < 6 && (
+                        <p className="text-[10px] text-red-500 font-medium mt-1">Armor must be at least 6 characters!</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Confirm Password <span className="text-orange-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type={isPasswordVisible ? "text" : "password"}
+                          value={formData.confirmPassword}
+                          onChange={(e) => updateFormData("confirmPassword", e.target.value)}
+                          placeholder="Re-enter password"
+                          className={cn(
+                            "h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500 transition-all",
+                            formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && "border-red-400 focus:border-red-500 focus:ring-red-500 bg-red-50/30"
+                          )}
+                        />
+                      </div>
+                      {formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && (
+                        <p className="text-[10px] text-red-500 font-bold mt-1 animate-pulse">Passwords do not match!</p>
+                      )}
+                      {formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword && (
+                        <p className="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Passwords synchronized!
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -747,6 +824,31 @@ export default function RegisterPage() {
                           </div>
                         )}
                       </div>
+                    </div>
+                    {/* Terms and Conditions Checkbox */}
+                    <div className="pt-2">
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <div className="relative flex items-center mt-0.5">
+                          <input
+                            type="checkbox"
+                            checked={formData.hasAgreedToTerms}
+                            onChange={(e) => updateFormData("hasAgreedToTerms", e.target.checked)}
+                            className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-gray-50 checked:border-orange-500 checked:bg-orange-500 transition-all focus:ring-2 focus:ring-orange-200 focus:outline-none"
+                          />
+                          <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
+                        </div>
+                        <span className="text-xs text-gray-500 leading-relaxed font-medium">
+                          I have read and agree to the{" "}
+                          <Link 
+                            href={`/terms/${(formData.role || "DONOR").toLowerCase()}`} 
+                            target="_blank"
+                            className="text-orange-600 hover:text-orange-700 font-bold underline underline-offset-2 transition-colors"
+                          >
+                            Terms and Conditions
+                          </Link>{" "}
+                          for {formData.role === "NGO" ? "NGO Hubs" : formData.role === "RIDER" ? "Riders" : "Donors"}.
+                        </span>
+                      </label>
                     </div>
                   </div>
 

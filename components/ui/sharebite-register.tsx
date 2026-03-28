@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { Eye, EyeOff, ArrowRight, ShieldCheck, Loader2, UserPlus } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, ShieldCheck, Loader2, UserPlus, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import LocationPicker from "@/components/map/LocationPicker";
 
 type RoutePoint = { x: number; y: number; delay: number };
@@ -113,11 +114,13 @@ export default function ShareBiteRegister() {
   const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phoneNumber: "",
     address: "",
     city: "",
@@ -126,10 +129,33 @@ export default function ShareBiteRegister() {
     pincode: "",
     latitude: 0,
     longitude: 0,
+    hasAgreedToTerms: false,
   });
 
-  const update = (field: string, value: string) =>
+  const update = (field: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  // Persistence logic
+  useEffect(() => {
+    const saved = localStorage.getItem("sharebite_admin_register");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setForm(prev => ({ 
+        ...prev, 
+        ...parsed, 
+        password: "", 
+        hasAgreedToTerms: false 
+      }));
+    }
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated) {
+      const { password, confirmPassword, hasAgreedToTerms, ...safe } = form;
+      localStorage.setItem("sharebite_admin_register", JSON.stringify(safe));
+    }
+  }, [form, isHydrated]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +187,7 @@ export default function ShareBiteRegister() {
         return;
       }
 
+      localStorage.removeItem("sharebite_admin_register");
       router.push("/admin/login");
     } catch {
       setError("Something went wrong. Please try again.");
@@ -171,6 +198,13 @@ export default function ShareBiteRegister() {
 
   const inputClass =
     "flex h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all";
+
+  if (!isHydrated) return <div className="min-h-screen w-full flex items-center justify-center bg-orange-50/50">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-10 w-10 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+      <span className="text-xs uppercase tracking-[0.2em] font-black text-orange-600 animate-pulse">Initializing Portal...</span>
+    </div>
+  </div>;
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
@@ -308,6 +342,35 @@ export default function ShareBiteRegister() {
                     {isPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+                {form.password.length > 0 && form.password.length < 6 && (
+                  <p className="text-[10px] text-red-500 font-bold mt-1.5 uppercase tracking-wider">Access key must be 6+ characters</p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+                  Confirm Password <span className="text-orange-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={isPasswordVisible ? "text" : "password"}
+                    value={form.confirmPassword}
+                    onChange={(e) => update("confirmPassword", e.target.value)}
+                    placeholder="Repeat access key"
+                    required
+                    disabled={isLoading}
+                    className={`flex h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all ${form.confirmPassword.length > 0 && form.password !== form.confirmPassword ? "border-red-400 bg-red-50" : ""}`}
+                  />
+                </div>
+                {form.confirmPassword.length > 0 && form.password !== form.confirmPassword && (
+                  <p className="text-[10px] text-red-500 font-black mt-1.5 uppercase tracking-widest italic animate-bounce">Key mismatch detected</p>
+                )}
+                {form.confirmPassword.length > 0 && form.password === form.confirmPassword && (
+                  <p className="text-[10px] text-emerald-600 font-black mt-1.5 uppercase tracking-widest flex items-center gap-1">
+                    <Check size={12} strokeWidth={3} /> Keys Synchronized
+                  </p>
+                )}
               </div>
 
               {/* Phone & City */}
@@ -355,6 +418,32 @@ export default function ShareBiteRegister() {
                 )}
               </div>
 
+              {/* Terms and Conditions Checkbox */}
+              <div className="pt-2">
+                <label className="flex items-start gap-3 cursor-pointer group">
+                  <div className="relative flex items-center mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={form.hasAgreedToTerms}
+                      onChange={(e) => update("hasAgreedToTerms", e.target.checked)}
+                      className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-gray-50 checked:border-orange-500 checked:bg-orange-500 transition-all focus:ring-2 focus:ring-orange-200 focus:outline-none"
+                    />
+                    <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
+                  </div>
+                  <span className="text-xs text-gray-500 leading-relaxed font-medium">
+                    I have read and agree to the{" "}
+                    <Link 
+                      href="/terms/admin" 
+                      target="_blank"
+                      className="text-orange-600 hover:text-orange-700 font-bold underline underline-offset-2 transition-colors"
+                    >
+                      Terms and Conditions
+                    </Link>{" "}
+                    for Administrators.
+                  </span>
+                </label>
+              </div>
+
               {/* Submit Button */}
               <motion.div
                 whileHover={{ scale: 1.01 }}
@@ -365,7 +454,7 @@ export default function ShareBiteRegister() {
               >
                 <button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !form.hasAgreedToTerms || form.password !== form.confirmPassword || form.password.length < 6}
                   className={`w-full relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-xl text-sm font-bold text-white py-3 px-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${isHovered ? "shadow-lg shadow-orange-200" : "shadow-md"}`}
                 >
                   <span className="flex items-center justify-center gap-2">
