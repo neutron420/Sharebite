@@ -72,8 +72,9 @@ async function postDonationHandler(request: Request) {
       // TRIGGER WEBSOCKET RELAY: Live feed for NGOs and Admins
       try {
         const allTargetIds = [...adminNotifications, ...ngoNotifications].map(n => n.userId);
+        const notifyUrl = (process.env.INTERNAL_WS_URL || 'http://localhost:8080').replace(':8081', ':8080') + '/notify';
         await Promise.all(allTargetIds.map(userId => 
-          fetch('http://localhost:8081/notify', {
+          fetch(notifyUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

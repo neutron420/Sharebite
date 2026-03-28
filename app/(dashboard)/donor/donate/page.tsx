@@ -20,7 +20,8 @@ import {
   Heart,
   Soup,
   ArrowLeft,
-  Camera
+  Camera,
+  Search
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,7 @@ export default function DonatePage() {
   const [selectedPriority, setSelectedPriority] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mapTrigger, setMapTrigger] = useState<string>("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -84,6 +86,28 @@ export default function DonatePage() {
     longitude: 0,
     imageUrl: ""
   });
+
+  // ── Persistent Location Recovery ──
+  React.useEffect(() => {
+    const savedLocation = localStorage.getItem("sharebite_last_location");
+    if (savedLocation) {
+      try {
+        const parsed = JSON.parse(savedLocation);
+        setFormData(prev => ({
+          ...prev,
+          pickupLocation: parsed.address || "",
+          city: parsed.city || "",
+          state: parsed.state || "",
+          district: parsed.district || "",
+          pincode: parsed.pincode || "",
+          latitude: parsed.latitude || 0,
+          longitude: parsed.longitude || 0,
+        }));
+      } catch (e) {
+        console.error("Failed to recover saved location", e);
+      }
+    }
+  }, []);
 
   const updateFormData = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -227,6 +251,18 @@ export default function DonatePage() {
       setSuccess("Mission Accomplished! Your donation has been deployed to the grid.");
       setError(null);
       toast.success("Donation posted! Thank you for sharing.");
+
+      // Save location for next time
+      const locationData = {
+        address: formData.pickupLocation,
+        city: formData.city,
+        state: formData.state,
+        district: formData.district,
+        pincode: formData.pincode,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+      };
+      localStorage.setItem("sharebite_last_location", JSON.stringify(locationData));
       
       // Delay redirect to allow the user to see the premium alert
       setTimeout(() => {
@@ -651,12 +687,22 @@ export default function DonatePage() {
 
                               <div className="space-y-3">
                                  <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Logistics Address</Label>
-                                 <Input 
-                                    className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black px-6 text-sm transition-all"
-                                    value={formData.pickupLocation}
-                                    placeholder="Door no, Street, Landmark..."
-                                    onChange={(e) => updateFormData("pickupLocation", e.target.value)}
-                                 />
+                                 <div className="flex gap-2">
+                                    <Input 
+                                       className="flex-grow h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black px-6 text-sm transition-all"
+                                       value={formData.pickupLocation}
+                                       placeholder="Door no, Street, Landmark..."
+                                       onChange={(e) => updateFormData("pickupLocation", e.target.value)}
+                                    />
+                                    <Button 
+                                       variant="outline" 
+                                       type="button"
+                                       className="h-14 rounded-2xl border-2 border-orange-100 text-orange-600 hover:bg-orange-50 font-black text-[10px] uppercase px-4 flex items-center gap-2"
+                                       onClick={() => setMapTrigger(formData.pickupLocation)}
+                                    >
+                                       <Search className="w-3.5 h-3.5" /> Find & Pin
+                                    </Button>
+                                 </div>
                                  <p className="text-[10px] font-bold text-slate-400 italic">This will be shown to the approved NGO only.</p>
                               </div>
 
@@ -665,6 +711,7 @@ export default function DonatePage() {
                                  <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-3 block">Tactical Pin Pointing</Label>
                                  <div className="h-72 rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl relative bg-slate-100 ring-1 ring-slate-100">
                                     <LocationPicker 
+                                       externalSearchTrigger={mapTrigger}
                                        onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
                                           setFormData(prev => ({
                                              ...prev,
@@ -745,6 +792,7 @@ export default function DonatePage() {
          <div className="hidden lg:block flex-grow relative bg-slate-100">
             <div className="absolute inset-0 z-0">
                <LocationPicker 
+                  externalSearchTrigger={mapTrigger}
                   onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
                      setFormData(prev => ({
                         ...prev,

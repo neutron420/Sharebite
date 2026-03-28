@@ -37,7 +37,15 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         wsBaseUrl = `wss://ws.${baseHost}`;
       }
       const wsUrl = `${wsBaseUrl}?token=${token}`;
+      console.log(`🔌 Attempting Tactical Connection: ${wsUrl}`);
       const ws = new WebSocket(wsUrl);
+
+      // 💓 Heartbeat to keep connection alive on mobile/flaky networks
+      const heartbeatInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "HEARTBEAT" }));
+        }
+      }, 30000);
 
       ws.onopen = () => {
         setIsConnected(true);
@@ -48,6 +56,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       ws.onmessage = (event) => {
         try {
           const { type, payload } = JSON.parse(event.data);
+          if (type === "HEARTBEAT_ACK") return; // Ignore heartbeat responses
           const typeListeners = listeners.current.get(type);
           if (typeListeners) {
             typeListeners.forEach((callback) => callback(payload));
@@ -58,6 +67,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       };
 
       ws.onclose = () => {
+        clearInterval(heartbeatInterval);
         setIsConnected(false);
         setSocket(null);
         console.log("WebSocket Disconnected. Reconnecting in 1.5s...");
@@ -65,6 +75,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       };
 
       ws.onerror = (err) => {
+        clearInterval(heartbeatInterval);
         console.error("WebSocket Error:", err);
         ws.close();
       };

@@ -17,6 +17,8 @@ interface LocationPickerProps {
     pincode: string;
   }) => void;
   initialCoords?: { lat: number; lng: number };
+  initialSearchQuery?: string;
+  externalSearchTrigger?: string; // Change to triggerEffect
 }
 
 const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
@@ -26,12 +28,12 @@ const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
  * Integrates Mapbox to allow users to pick a location.
  * Features: Search auto-complete and click-to-geodecode.
  */
-export default function LocationPicker({ onLocationSelect, initialCoords }: LocationPickerProps) {
+export default function LocationPicker({ onLocationSelect, initialCoords, initialSearchQuery, externalSearchTrigger }: LocationPickerProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
   
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -125,6 +127,25 @@ export default function LocationPicker({ onLocationSelect, initialCoords }: Loca
     });
     setSearchQuery(address);
   };
+
+  useEffect(() => {
+    if (externalSearchTrigger && externalSearchTrigger.length > 5 && mapboxToken) {
+      const runSearch = async () => {
+        try {
+          const resp = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(externalSearchTrigger)}.json?access_token=${mapboxToken}&limit=1`
+          );
+          const data = await resp.json();
+          if (data.features && data.features.length > 0) {
+            selectSuggestion(data.features[0]);
+          }
+        } catch (err) {
+          console.error('Trigger search error:', err);
+        }
+      }
+      runSearch();
+    }
+  }, [externalSearchTrigger]);
 
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;

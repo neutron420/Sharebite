@@ -22,7 +22,46 @@ sub.on("error", (err) => {
   console.log("Redis Sub Error:", err.message || "Redis server is not reachable");
 });
 
-const wss = new WebSocketServer({ port: 8080 });
+const PORT = 8080;
+const server = createServer();
+const wss = new WebSocketServer({ noServer: true });
+server.on("request", async (req, res) => {
+  const { pathname } = parse(req.url || "", true);
+
+  if (pathname === "/") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "healthy", service: "ShareBite WebSocket Guard" }));
+    return;
+  }
+
+  if (req.method === "POST" && pathname === "/notify") {
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", async () => {
+      try {
+        await pub.publish("notifications", body);
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ success: true, broadcasted: true }));
+      } catch (err) {
+        res.writeHead(400);
+        res.end();
+      }
+    });
+    return;
+  }
+
+  res.writeHead(404);
+  res.end();
+});
+
+// Handle WebSocket Upgrades
+server.on("upgrade", (request, socket, head) => {
+  const { pathname } = parse(request.url || "", true);
+  
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit("connection", ws, request);
+  });
+});
 
 if (!process.env.JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable is not set");
@@ -138,6 +177,8 @@ wss.on("connection", async (ws, req) => {
               userId: userId
             }
           }));
+        } else if (type === "HEARTBEAT") {
+          ws.send(JSON.stringify({ type: "HEARTBEAT_ACK" }));
         }
       } catch (err) {
         console.error("Message processing error:", err);
@@ -154,31 +195,8 @@ wss.on("connection", async (ws, req) => {
   }
 });
 
-// Internal HTTP server for Next.js to trigger notifications through Redis
-const httpServer = createServer(async (req, res) => {
-  if (req.method === 'POST' && req.url === '/notify') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', async () => {
-      try {
-        const data = JSON.parse(body);
-        // Publish trigger to all instances via Redis
-        await pub.publish("notifications", body);
-        
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ success: true, broadcasted: true }));
-      } catch (err) {
-        res.writeHead(400);
-        res.end();
-      }
-    });
-  } else {
-    res.writeHead(404);
-    res.end();
-  }
+server.listen(PORT, () => {
+  console.log(`🚀 ShareBite Unified Hub running on port ${PORT}`);
+  console.log(`- WebSocket: wss://ws.youdomain.com (via ALB)`);
+  console.log(`- Health/Notify: http://localhost:${PORT}`);
 });
-
-httpServer.listen(8081, () => {
-  console.log("Internal Trigger Server (Scalable) running on http://localhost:8081");
-});
-

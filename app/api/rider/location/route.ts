@@ -35,7 +35,8 @@ async function postLocationHandler(request: Request) {
     });
 
     if (activeRequest) {
-      await fetch("http://localhost:8081/notify", {
+      const notifyUrl = (process.env.INTERNAL_WS_URL || 'http://localhost:8080').replace(':8081', ':8080') + '/notify';
+      await fetch(notifyUrl, {
         method: "POST",
         body: JSON.stringify({
           type: "RIDER_LOCATION_UPDATE",

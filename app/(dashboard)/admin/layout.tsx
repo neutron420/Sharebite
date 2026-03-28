@@ -28,6 +28,7 @@ import {
   AlertTriangle,
   Bug,
   type LucideIcon,
+  Zap,
 } from "lucide-react";
 import { useSocket } from "@/components/providers/socket-provider";
 import { 
@@ -44,6 +45,7 @@ import {
   Stack,
   Chip
 } from "@mui/material";
+import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 
 interface AdminUser {
   id: string;
@@ -362,7 +364,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
+              <div className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all duration-500 ${isConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                <span className="text-[10px] font-black uppercase tracking-tighter">
+                  {isConnected ? 'Sync Online' : 'Sync Error'}
+                </span>
+                <Zap className={`w-3 h-3 ${isConnected ? 'animate-pulse' : ''}`} />
+              </div>
+
+              <DashboardRefreshButton className="shrink-0" />
+
               <IconButton 
                 onClick={(e) => setNotifAnchor(e.currentTarget)}
                 className="hover:bg-gray-100 text-gray-500 hover:text-orange-600 transition-colors"
