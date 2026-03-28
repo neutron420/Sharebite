@@ -1,6 +1,6 @@
 variable "aws_region" {
   description = "AWS region"
-  default     = "us-east-1"
+  default     = "ap-south-1"
 }
 
 variable "domain_name" {
@@ -22,7 +22,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Application Secrets and Environment Variables
 variable "database_url" { description = "Database connection string" }
 variable "jwt_secret" { description = "JWT Secret" }
 variable "r2_account_id" { description = "Cloudflare R2 Account ID" }
@@ -37,3 +36,6 @@ variable "openai_api_key" { description = "OpenAI API Key" }
 variable "resend_api_key" { description = "Resend API Key" }
 variable "next_public_cloudflare_turnstile_site_key" { description = "Turnstile site key" }
 variable "cloudflare_turnstile_secret_key" { description = "Turnstile secret key" }
+variable "groq_api_key" { description = "Groq API Key" }
+variable "rapidapi_key" { description = "RapidAPI Key" }
+variable "rapidapi_host" { description = "RapidAPI Host" }

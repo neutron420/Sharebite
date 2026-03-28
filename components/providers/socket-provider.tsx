@@ -30,7 +30,10 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       const { token } = await res.json();
       if (!token) return;
 
-      const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+      let wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+      if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
+        wsBaseUrl = `wss://ws.${window.location.hostname}`;
+      }
       const wsUrl = `${wsBaseUrl}?token=${token}`;
       const ws = new WebSocket(wsUrl);
 

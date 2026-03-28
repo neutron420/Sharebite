@@ -46,6 +46,10 @@ COPY --from=builder /app/app/generated/prisma ./app/generated/prisma
 # Ensure we have node_modules for the WS server
 COPY --from=deps /app/node_modules ./node_modules
 
+# Copy the start script BEFORE switching to non-root user
+COPY --chown=nextjs:nodejs start.sh ./start.sh
+RUN chmod +x ./start.sh
+
 USER nextjs
 
 EXPOSE 3000
@@ -54,10 +58,6 @@ EXPOSE 8081
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV INTERNAL_WS_URL="http://localhost:8081"
 
-# Copy the start script
-COPY start.sh ./start.sh
-RUN chmod +x ./start.sh
-
-# Default to running the start script
 CMD ["./start.sh"]

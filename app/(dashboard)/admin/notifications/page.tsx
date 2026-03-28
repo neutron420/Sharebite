@@ -92,7 +92,10 @@ export default function NotificationsPage() {
         }
         const { token } = await tokenRes.json();
 
-        const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+        let wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
+        if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
+          wsBaseUrl = `wss://ws.${window.location.hostname}`;
+        }
         const ws = new WebSocket(`${wsBaseUrl}?token=${token}`);
 
         ws.onopen = () => {
