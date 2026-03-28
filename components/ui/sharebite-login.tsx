@@ -253,7 +253,7 @@ export default function ShareBiteLogin({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-4xl overflow-hidden rounded-2xl flex bg-white shadow-xl"
+        className="w-full max-w-4xl overflow-hidden rounded-2xl flex flex-col md:flex-row bg-white shadow-xl"
       >
         {/* Left side - Animated Dot Map */}
         <div className="hidden md:flex md:w-1/2 relative overflow-hidden border-r border-orange-100">
