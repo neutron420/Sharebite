@@ -4,10 +4,9 @@ import { jwtVerify } from "jose";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "");
 
-// 1. CORS Configuration
 const allowedOrigins = [
   process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-  // Add production/staging domains here
+
 ];
 
 /**
