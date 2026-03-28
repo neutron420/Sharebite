@@ -126,7 +126,7 @@ export default function Home() {
 
       <Header />
 
-      <main className="relative z-10 w-full pt-56">
+      <main className="relative z-10 w-full pt-32 md:pt-56">
         {/* Refined Hero Section */}
         <section className="px-6 flex flex-col items-center text-center max-w-5xl mx-auto">
           <motion.div
@@ -145,7 +145,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-5xl md:text-[80px] font-medium tracking-tight leading-[0.95] mb-10 text-slate-950"
+            className="text-4xl sm:text-5xl md:text-[80px] font-medium tracking-tight leading-[0.95] mb-10 text-slate-950"
           >
             <Translate>Zero Waste.</Translate> <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 ">
@@ -219,7 +219,7 @@ export default function Home() {
         </section>
 
         {/* Roles Section - Premium Orange Gradient */}
-        <section id="roles" className="px-10 py-32 bg-gradient-to-br from-orange-400 via-[#F89880] to-orange-600 text-white rounded-[4rem] mx-4 md:mx-12 overflow-hidden relative group shadow-inner border border-white/10">
+        <section id="roles" className="px-6 sm:px-10 py-24 md:py-32 bg-gradient-to-br from-orange-400 via-[#F89880] to-orange-600 text-white rounded-[2rem] md:rounded-[4rem] mx-4 md:mx-12 overflow-hidden relative group shadow-inner border border-white/10">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
           
           <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-20 relative z-10">
@@ -231,7 +231,7 @@ export default function Home() {
 
         {/* Minimalist CTA */}
         <section className="px-6 py-48 text-center">
-          <h2 className="text-5xl md:text-[100px] font-medium tracking-tighter mb-14 text-slate-950 "><Translate>Ready to Lead?</Translate></h2>
+          <h2 className="text-4xl sm:text-5xl md:text-[100px] font-medium tracking-tighter mb-14 text-slate-950 "><Translate>Ready to Lead?</Translate></h2>
           <p className="text-lg text-slate-400 mb-16 max-w-lg mx-auto font-medium"><Translate>Join 12,000+ pioneers redefining food security. Experience the future of sharing.</Translate></p>
           <Link href="/register" className="px-20 py-8 bg-slate-950 text-white font-medium text-2xl rounded-[2rem] hover:bg-orange-600 hover:-translate-y-2 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] active:scale-95 group">
              <Translate>Initialize Profile</Translate> <ArrowRight className="inline ml-2 group-hover:translate-x-3 transition-transform" />
