@@ -14,6 +14,8 @@ import {
   Mic,
   MicOff,
   Loader2,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,12 +31,34 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Icons } from "@/components/ui/icons";
 import { useTranslationStore } from "@/lib/translation-store";
 
+const formatAssistantText = (text: string, role: string) => {
+  if (role !== "assistant") {
+    return text;
+  }
+
+  return text
+    .replace(/\r/g, "")
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/`{1,3}/g, "")
+    .replace(/^\s*[-*]\s+/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
 interface AiAssistantCardProps {
   onClose?: () => void;
 }
 
 export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
   const { currentLanguage } = useTranslationStore();
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [input, setInput] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ 
       api: '/api/chat',
@@ -43,12 +67,82 @@ export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
       }
     }),
   });
-  const [input, setInput] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
+
+  const isLoading = status === "streaming" || status === "submitted" || isTranscribing;
+  const lastSpokenMessageIdRef = useRef<string | null>(null);
+
+  // Effect to trigger speech when a new message finishes
+  useEffect(() => {
+    // If we're loading or voice is off, don't do anything
+    if (!isVoiceEnabled || isLoading || messages.length === 0) return;
+
+    // Get the latest message
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role !== "assistant") return;
+
+    // Extract text safely from parts or content
+    const assistantText = (lastMessage as any).content || lastMessage.parts
+      ?.filter((p: any) => p.type === "text")
+      .map((p: any) => p.text)
+      .join("") || "";
+
+    if (assistantText && lastMessage.id !== lastSpokenMessageIdRef.current) {
+      lastSpokenMessageIdRef.current = lastMessage.id;
+      // Small delay to ensure browser speech synth is ready after streaming finishes
+      const timer = setTimeout(() => speak(assistantText), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, status, isTranscribing, isVoiceEnabled, isLoading]);
+
+  const speak = (text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    
+    // Clean text of markdown/artifacts for better speech
+    const cleanText = formatAssistantText(text, "assistant");
+    if (!cleanText) return;
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    // Map application language to BCP 47 language tags for TTS
+    const langMap: Record<string, string> = {
+      'en': 'en-US', 'hi': 'hi-IN', 'bn': 'bn-IN', 'te': 'te-IN',
+      'mr': 'mr-IN', 'ta': 'ta-IN', 'gu': 'gu-IN', 'kn': 'kn-IN',
+      'ml': 'ml-IN', 'pa': 'pa-IN', 'es': 'es-ES', 'fr': 'fr-FR',
+      'de': 'de-DE', 'zh': 'zh-CN', 'ja': 'ja-JP'
+    };
+    
+    utterance.lang = langMap[currentLanguage] || 'en-US';
+    utterance.volume = 1;
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = (e: any) => {
+      // Don't log canceled/interrupted as errors since they happen normally
+      // 'not-allowed' means user hasn't interacted yet
+      if (e.error !== 'canceled' && e.error !== 'interrupted') {
+        console.error("Speech synthesis error:", e.error || e.message || e);
+      }
+      setIsSpeaking(false);
+    };
+    
+    // Fix: Browsers sometimes need an explicit getVoices() call to manifest the list
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+      const voice = voices.find(v => v.lang.startsWith(utterance.lang) || v.lang.includes(utterance.lang)) || voices[0];
+      if (voice) utterance.voice = voice;
+    }
+
+    window.speechSynthesis.speak(utterance);
+  };
+
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const isLoading = status === "streaming" || status === "submitted" || isTranscribing;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -138,21 +232,6 @@ export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
     }
   };
 
-  const formatAssistantText = (text: string, role: string) => {
-    if (role !== "assistant") {
-      return text;
-    }
-
-    return text
-      .replace(/\r/g, "")
-      .replace(/^#{1,6}\s*/gm, "")
-      .replace(/\*\*(.*?)\*\*/g, "$1")
-      .replace(/__(.*?)__/g, "$1")
-      .replace(/`{1,3}/g, "")
-      .replace(/^\s*[-*]\s+/gm, "")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-  };
 
   return (
     <Card className="flex h-[min(82vh,700px)] sm:h-[min(78vh,700px)] min-h-[520px] w-[calc(100vw-24px)] sm:w-[480px] flex-col gap-4 p-3 sm:p-4 shadow-2xl bg-background border-border/50 rounded-3xl overflow-hidden">
@@ -166,6 +245,37 @@ export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
             <p className="text-xs text-muted-foreground">Support Chat</p>
           </div>
         </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn(
+            "size-8 transition-colors relative",
+            isVoiceEnabled ? "text-orange-600 bg-orange-50" : "text-muted-foreground",
+            isSpeaking && "animate-pulse"
+          )}
+          onClick={() => {
+            setIsVoiceEnabled(!isVoiceEnabled);
+            if (!isVoiceEnabled) {
+              toast.success("Voice responses enabled");
+              speak("Voice mode is now active. I will speak my responses.");
+            } else {
+              window.speechSynthesis.cancel();
+              setIsSpeaking(false);
+              toast.info("Voice responses disabled");
+            }
+          }}
+        >
+          {isVoiceEnabled ? (
+            <div className="relative">
+              <Volume2 className="size-4" />
+              {isSpeaking && (
+                 <span className="absolute -top-1 -right-1 size-1.5 rounded-full bg-orange-500 animate-ping" />
+              )}
+            </div>
+          ) : (
+            <VolumeX className="size-4" />
+          )}
+        </Button>
         <Button variant="ghost" size="icon" className="size-8">
           <svg
             xmlns="http://www.w3.org/2000/svg"
