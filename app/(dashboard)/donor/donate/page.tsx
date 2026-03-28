@@ -245,7 +245,7 @@ export default function DonatePage() {
     <div className="h-full flex flex-col lg:flex-row overflow-hidden">
          
          {/* FORM PART - SCROLLABLE */}
-         <div className="w-full lg:w-[45%] xl:w-[40%] bg-white border-r border-slate-100 overflow-y-auto p-8 md:p-12">
+         <div className="w-full lg:w-[45%] xl:w-[40%] bg-white border-r border-slate-100 overflow-y-auto p-6 sm:p-8 md:p-12">
             <div className="max-w-md mx-auto min-h-full flex flex-col">
                {/* Steps indicator inside form for better context */}
                <div className="flex items-center justify-center gap-4 mb-10 overflow-x-auto pb-4 no-scrollbar">

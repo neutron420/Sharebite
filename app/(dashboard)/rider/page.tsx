@@ -135,16 +135,16 @@ export default function RiderDashboard() {
 
   return (
     <div className="w-full space-y-10">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-2">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <div className="flex items-center gap-2 mb-2 text-emerald-600 font-semibold text-xs tracking-tight">
+          <div className="flex items-center gap-2 mb-2 text-emerald-600 font-semibold text-[10px] sm:text-xs tracking-tight">
              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
              System Online
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
              Mission Hub
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your active deployments and new delivery opportunities.</p>
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage your active deployments and new delivery opportunities.</p>
         </motion.div>
       </header>
 
@@ -158,17 +158,17 @@ export default function RiderDashboard() {
            <motion.div 
              initial={{ opacity: 0, y: 10 }} 
              animate={{ opacity: 1, y: 0 }}
-             className="bg-white border border-gray-200 rounded-3xl p-8 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
+             className="bg-white border border-gray-200 rounded-[2rem] sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
            >
-             <div className="absolute top-0 right-0 w-48 h-48 bg-orange-500/5 blur-3xl" />
+             <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-orange-500/5 blur-3xl" />
              
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center relative z-10">
-                <div className="space-y-6">
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 items-center relative z-10">
+                <div className="space-y-4 sm:space-y-6">
                    <div className="space-y-2">
                       <Badge className="bg-orange-500 text-white border-none py-1">
                          {activeMission.status}
                       </Badge>
-                      <h3 className="text-3xl font-bold text-gray-900">{activeMission.donation.title}</h3>
+                      <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{activeMission.donation.title}</h3>
                       <div className="text-xs font-medium text-orange-600 uppercase tracking-wide">
                          {activeMission.status === 'ASSIGNED' ? 'Objective: Pickup Food' : 'Objective: Deliver to NGO'}
                       </div>
@@ -249,24 +249,24 @@ export default function RiderDashboard() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="p-8 rounded-3xl bg-white border border-gray-100 hover:border-orange-500/30 hover:shadow-xl hover:shadow-orange-500/5 transition-all cursor-pointer group flex flex-col"
+                className="p-6 sm:p-8 rounded-[1.5rem] sm:rounded-3xl bg-white border border-gray-100 hover:border-orange-500/30 hover:shadow-xl hover:shadow-orange-500/5 transition-all cursor-pointer group flex flex-col"
                 onClick={() => router.push(`/rider/mission/${bounty.id}`)}
               >
                  <div className="flex justify-between items-start mb-6">
-                    <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center group-hover:bg-orange-50 transition-colors shrink-0">
-                       <Package className="w-7 h-7 text-gray-300 group-hover:text-orange-500 transition-colors" />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-50 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:bg-orange-50 transition-colors shrink-0">
+                       <Package className="w-6 h-6 sm:w-7 sm:h-7 text-gray-300 group-hover:text-orange-500 transition-colors" />
                     </div>
-                    <Badge variant="secondary" className="bg-orange-50 text-orange-600 border-orange-100 text-[10px] font-bold">LIVE CARGO</Badge>
+                    <Badge variant="secondary" className="bg-orange-50 text-orange-600 border-orange-100 text-[9px] sm:text-[10px] font-bold">LIVE CARGO</Badge>
                  </div>
-                 <h4 className="text-xl font-bold mb-1 truncate text-gray-900">{bounty.donation.title}</h4>
-                 <p className="text-xs text-gray-500 truncate mb-8">{bounty.donation.donor.address}</p>
+                 <h4 className="text-lg sm:text-xl font-bold mb-1 truncate text-gray-900">{bounty.donation.title}</h4>
+                 <p className="text-[10px] sm:text-xs text-gray-500 truncate mb-6 sm:mb-8">{bounty.donation.donor.address}</p>
                  
-                 <div className="flex items-center justify-between pt-5 border-t border-gray-50 mt-auto">
+                 <div className="flex items-center justify-between pt-4 sm:pt-5 border-t border-gray-50 mt-auto">
                     <div className="flex items-center gap-2">
-                       <TrendingUp className="w-4 h-4 text-emerald-500" />
-                       <span className="text-xs font-bold text-gray-900">+150 KARMA</span>
+                       <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
+                       <span className="text-[10px] sm:text-xs font-bold text-gray-900 uppercase tracking-tighter sm:tracking-normal">+150 KARMA</span>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all">
+                    <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all scale-90 sm:scale-100">
                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                     </div>
                  </div>

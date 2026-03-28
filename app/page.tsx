@@ -145,9 +145,9 @@ export default function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-4xl sm:text-5xl md:text-[80px] font-medium tracking-tight leading-[0.95] mb-10 text-slate-950"
+            className="text-4xl xs:text-5xl sm:text-6xl md:text-[80px] font-medium tracking-tight leading-[1.1] md:leading-[0.95] mb-10 text-slate-950"
           >
-            <Translate>Zero Waste.</Translate> <br />
+            <Translate>Zero Waste.</Translate> <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 ">
                <Translate>Unlimited Hope.</Translate>
             </span>
@@ -177,25 +177,25 @@ export default function Home() {
           </motion.div>
 
           {/* Luxury Marquee */}
-          <div className="mt-32 w-full max-w-6xl">
-            <p className="text-[11px] font-medium uppercase tracking-[0.5em] text-slate-300 mb-12"><Translate>Trusted Power Partners</Translate></p>
+          <div className="mt-20 sm:mt-32 w-full max-w-6xl">
+            <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.3em] sm:tracking-[0.5em] text-slate-300 mb-8 sm:mb-12"><Translate>Trusted Power Partners</Translate></p>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-white to-transparent z-10" />
-              <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-white to-transparent z-10" />
-              <Marquee pauseOnHover className="[--duration:25s] py-12">
+              <div className="absolute inset-y-0 left-0 w-20 sm:w-40 bg-gradient-to-r from-white to-transparent z-10" />
+              <div className="absolute inset-y-0 right-0 w-20 sm:w-40 bg-gradient-to-l from-white to-transparent z-10" />
+              <Marquee pauseOnHover className="[--duration:25s] py-8 sm:py-12">
                 {partners.map((p, i) => (
-                  <div key={i} className="flex flex-col items-center justify-center gap-5 mx-12 transition-all duration-300 cursor-default group hover:-translate-y-2">
-                     <div className="relative w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center mix-blend-multiply">
-                       <Image 
-                         src={p.img} 
-                         alt={p.name} 
-                         width={180}
-                         height={180}
-                         className="object-contain w-full h-full" 
-                         priority={i < 3}
-                       />
+                  <div key={i} className="flex flex-col items-center justify-center gap-3 sm:gap-5 mx-8 sm:mx-12 transition-all duration-300 cursor-default group hover:-translate-y-2">
+                     <div className="relative w-16 h-16 xs:w-20 xs:h-20 sm:w-32 sm:h-32 flex items-center justify-center mix-blend-multiply">
+                        <Image 
+                          src={p.img} 
+                          alt={p.name} 
+                          width={140}
+                          height={140}
+                          className="object-contain w-full h-full" 
+                          priority={i < 3}
+                        />
                      </div>
-                     <span className="text-sm sm:text-lg font-medium uppercase tracking-[0.2em] text-slate-800">{p.name}</span>
+                     <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 group-hover:text-orange-500 transition-colors">{p.name}</span>
                   </div>
                 ))}
               </Marquee>
@@ -219,10 +219,10 @@ export default function Home() {
         </section>
 
         {/* Roles Section - Premium Orange Gradient */}
-        <section id="roles" className="px-6 sm:px-10 py-24 md:py-32 bg-gradient-to-br from-orange-400 via-[#F89880] to-orange-600 text-white rounded-[2rem] md:rounded-[4rem] mx-4 md:mx-12 overflow-hidden relative group shadow-inner border border-white/10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+        <section id="roles" className="px-6 sm:px-10 py-20 sm:py-24 md:py-32 bg-gradient-to-br from-orange-400 via-[#F89880] to-orange-600 text-white rounded-[2rem] md:rounded-[4rem] mx-4 md:mx-12 overflow-hidden relative group shadow-inner border border-white/10">
+          <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-white/10 blur-[80px] sm:blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
           
-          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-20 relative z-10">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-16 lg:gap-20 relative z-10">
             <RoleItem luxury title={<Translate>The Giver</Translate>} desc={<Translate>Transform surplus into status. Posting handles everything from logistics to detailed impact reports.</Translate>} />
             <RoleItem luxury title={<Translate>The Anchor</Translate>} desc={<Translate>Empower your NGO with a high-fidelity dashboard to manage cities of surplus food.</Translate>} />
             <RoleItem luxury title={<Translate>The Fleet</Translate>} desc={<Translate>Step into the driver's seat of change. Deliver smiles and earn elite Karma rewards.</Translate>} />

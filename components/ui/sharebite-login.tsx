@@ -393,7 +393,7 @@ export default function ShareBiteLogin({
               {/* Cloudflare Turnstile */}
               <div className="flex justify-center border border-slate-100 rounded-xl p-3 bg-slate-50/50 scale-90 origin-center">
                 <Turnstile 
-                  sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
+                  sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO"} 
                   onVerify={(token) => setTurnstileToken(token)}
                 />
               </div>

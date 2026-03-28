@@ -74,28 +74,28 @@ export const Header = () => {
                     </div>
 
                     <div className={cn(
-                        "bg-white in-data-[state=active]:block lg:in-data-[state=active]:hidden mb-6 hidden w-full absolute top-[100%] left-0 right-0 p-8 shadow-2xl rounded-b-[2rem] border-x border-b border-orange-100 transition-all",
-                        menuState ? "block opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+                        "bg-white lg:hidden absolute top-[100%] left-0 right-0 p-8 shadow-2xl rounded-b-[2rem] border-x border-b border-orange-100 transition-all duration-300 ease-in-out z-50",
+                        menuState ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-4 pointer-events-none"
                     )}>
                         <div className="w-full">
-                            <ul className="flex flex-col items-center gap-6 text-[12px] font-black uppercase tracking-[0.3em] text-slate-400 w-full text-center">
+                            <ul className="flex flex-col items-center gap-6 text-[11px] font-black uppercase tracking-[0.25em] text-slate-400 w-full text-center">
                                 {menuItems.map((item, index) => (
-                                    <li key={index} className="w-full border-b border-slate-50 pb-4">
+                                    <li key={index} className="w-full border-b border-slate-50 pb-4 last:border-0 last:pb-0">
                                         <Link
                                             href={item.href as string}
                                             onClick={() => setMenuState(false)}
-                                            className="hover:text-orange-600 transition-colors block duration-150">
+                                            className="hover:text-orange-600 transition-colors block py-1">
                                             <span>{item.name}</span>
                                         </Link>
                                     </li>
                                 ))}
-                                <li className="w-full pt-4">
+                                <li className="w-full pt-2">
                                     <Button
                                         asChild
                                         size="sm"
-                                        className="w-full px-8 py-5 bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-orange-600 transition-all active:scale-95 items-center gap-2">
+                                        className="w-full px-8 py-6 bg-slate-950 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-orange-600 transition-all active:scale-95 flex items-center justify-center gap-2">
                                         <Link href="/register">
-                                            <Translate>JOIN MOVEMENT</Translate> <ChevronRight className="w-4 h-4 ml-1" />
+                                            <Translate>JOIN MOVEMENT</Translate> <ChevronRight className="w-4 h-4" />
                                         </Link>
                                     </Button>
                                 </li>

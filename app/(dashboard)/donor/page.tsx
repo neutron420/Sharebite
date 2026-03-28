@@ -257,14 +257,14 @@ export default function DonorDashboard() {
 
   return (
     <div className="w-full space-y-12">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-4">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-4">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2 underline decoration-orange-600/10 underline-offset-8">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-2 underline decoration-orange-600/10 underline-offset-8 leading-tight">
              Salute, {userName}! 👋
           </h1>
-          <p className="text-slate-400 font-bold">Your donations have impacted hundreds of lives today.</p>
+          <p className="text-sm sm:text-base text-slate-400 font-bold">Your donations have impacted hundreds of lives today.</p>
         </motion.div>
-        <Link href="/donor/donate" className="group px-8 py-4 bg-slate-950 text-white font-black rounded-2xl flex items-center gap-3 hover:bg-orange-600 transition-all shadow-xl active:scale-95 text-xs uppercase tracking-widest">
+        <Link href="/donor/donate" className="group w-full sm:w-fit px-8 py-4 bg-slate-950 text-white font-black rounded-2xl flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl active:scale-95 text-xs uppercase tracking-widest">
           Share Surplus <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
         </Link>
       </header>
@@ -384,15 +384,15 @@ export default function DonorDashboard() {
         {statCards.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="p-8 rounded-[2.5rem] bg-white border border-slate-100 hover:border-orange-200 transition-all group relative overflow-hidden shadow-xl shadow-slate-200/20">
-              <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-orange-600 transition-all duration-500 ${stat.colorClass} shadow-inner shrink-0`}>
-                  <Icon className="w-8 h-8" />
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-white border border-slate-100 hover:border-orange-200 transition-all group relative overflow-hidden shadow-xl shadow-slate-200/20">
+              <div className="flex items-center gap-4 sm:gap-6">
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 rounded-xl sm:rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-orange-600 transition-all duration-500 ${stat.colorClass} shadow-inner shrink-0`}>
+                  <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
                 </div>
                 <div>
-                  <h3 className="text-4xl font-black text-slate-950 tracking-tighter leading-none mb-1">{stat.value}</h3>
-                  <p className="text-slate-400 font-black text-[10px] uppercase tracking-[0.2em]">{stat.label}</p>
-                  <div className="mt-2 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-500" /><span className="text-[10px] font-black uppercase text-green-600 tracking-widest">{stat.trend}</span></div>
+                  <h3 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tighter leading-none mb-1">{stat.value}</h3>
+                  <p className="text-slate-400 font-black text-[9px] sm:text-[10px] uppercase tracking-[0.2em]">{stat.label}</p>
+                  <div className="mt-2 flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-500" /><span className="text-[9px] sm:text-[10px] font-black uppercase text-green-600 tracking-widest">{stat.trend}</span></div>
                 </div>
               </div>
             </motion.div>
