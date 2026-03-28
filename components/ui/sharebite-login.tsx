@@ -166,8 +166,36 @@ export default function ShareBiteLogin({
   const [isLoading, setIsLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER" | "ADMIN">(defaultRole);
+  const [isHydrated, setIsHydrated] = useState(false);
   const searchParams = useSearchParams();
   const [success, setSuccess] = useState(searchParams.get("registered") === "true" ? "Registration Successful! Log in to deploy your first mission." : "");
+
+  // Persistence logic
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("sharebite_login_email");
+    const savedRole = localStorage.getItem("sharebite_login_role");
+    
+    if (savedEmail) setEmail(savedEmail);
+    
+    // Core logic: If we have a role selector (Home Login), restore from memory.
+    // If not (Admin Portal), FORCE the default role to ensure access.
+    if (showRoleSelector) {
+      if (savedRole && (savedRole === "DONOR" || savedRole === "NGO" || savedRole === "RIDER")) {
+        setLoginRole(savedRole as any);
+      }
+    } else {
+      setLoginRole(defaultRole);
+    }
+    
+    setIsHydrated(true);
+  }, [showRoleSelector, defaultRole]);
+
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem("sharebite_login_email", email);
+      localStorage.setItem("sharebite_login_role", loginRole);
+    }
+  }, [email, loginRole, isHydrated]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,6 +239,13 @@ export default function ShareBiteLogin({
     RIDER: { title: "Rider Dispatch", subtitle: "Accept missions and deliver hope across your city." },
     ADMIN: { title: "ShareBite Admin Hub", subtitle: "Total platform oversight and cognitive engine monitoring." },
   };
+
+  if (!isHydrated) return <div className="min-h-screen w-full flex items-center justify-center bg-orange-50/50">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-10 w-10 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+      <span className="text-xs uppercase tracking-[0.2em] font-black text-orange-600 animate-pulse">Authenticating Base...</span>
+    </div>
+  </div>;
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-100 p-4">
@@ -398,6 +433,14 @@ export default function ShareBiteLogin({
                 <a href={showRoleSelector ? "/register" : "/admin/register"} className="text-orange-600 hover:text-orange-700 text-sm transition-colors block">
                   Don&apos;t have an account? Register
                 </a>
+                <div className="pt-2">
+                  <Link 
+                    href={`/terms/${loginRole.toLowerCase()}`} 
+                    className="text-[10px] text-gray-400 hover:text-orange-500 font-bold uppercase tracking-widest transition-colors"
+                  >
+                    View {loginRole} Terms & Conditions
+                  </Link>
+                </div>
               </div>
             </form>
           </motion.div>

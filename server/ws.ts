@@ -30,8 +30,8 @@ if (!process.env.JWT_SECRET) {
 
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
-// Map to track active connections per user on THIS instance
-const localClients = new Map<string, WebSocket>();
+// Map to track active connections per user on THIS instance, including their role
+const localClients = new Map<string, { ws: WebSocket; role: string }>();
 
 console.log("WebSocket server starting on ws://localhost:8080");
 
@@ -44,19 +44,26 @@ sub.subscribe("notifications", (err) => {
 sub.on("message", (channel, message) => {
   if (channel === "notifications") {
     try {
-      const { type, userId, userIds, payload, riderId, lat, lng } = JSON.parse(message);
+      const { type, userId, userIds, targetRole, payload, riderId, lat, lng } = JSON.parse(message);
       
       if (type === "RIDER_LOCATION_UPDATE" && userIds) {
         userIds.forEach((id: string) => {
-          const ws = localClients.get(id);
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: "RIDER_LOCATION", payload: { riderId, lat, lng } }));
+          const client = localClients.get(id);
+          if (client && client.ws.readyState === WebSocket.OPEN) {
+            client.ws.send(JSON.stringify({ type: "RIDER_LOCATION", payload: { riderId, lat, lng } }));
+          }
+        });
+      } else if (targetRole) {
+        // Broadcast to ALL users with a specific role on this instance
+        localClients.forEach((client) => {
+          if (client.role === targetRole && client.ws.readyState === WebSocket.OPEN) {
+            client.ws.send(JSON.stringify({ type, payload }));
           }
         });
       } else if (userId) {
-        const ws = localClients.get(userId);
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: "NOTIFICATION", payload }));
+        const client = localClients.get(userId);
+        if (client && client.ws.readyState === WebSocket.OPEN) {
+          client.ws.send(JSON.stringify({ type: "NOTIFICATION", payload }));
         }
       }
     } catch (err) {
@@ -77,9 +84,10 @@ wss.on("connection", async (ws, req) => {
   try {
     const { payload } = await jwtVerify(token, secretKey);
     const userId = payload.userId as string;
+    const role = (payload.role as string) || "GUEST";
     
-    localClients.set(userId, ws);
-    console.log(`User ${userId} connected to this instance`);
+    localClients.set(userId, { ws, role });
+    console.log(`User ${userId} [${role}] connected to this instance`);
 
     ws.on("message", async (data) => {
       try {

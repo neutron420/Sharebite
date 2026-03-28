@@ -26,8 +26,10 @@ import {
   Info,
   CheckCircle,
   AlertTriangle,
+  Bug,
   type LucideIcon,
 } from "lucide-react";
+import { useSocket } from "@/components/providers/socket-provider";
 import { 
   Badge, 
   Menu, 
@@ -86,6 +88,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { label: "Pickup Requests", icon: ClipboardList, id: "requests", href: "/admin/requests", badge: "New" },
   { label: "NGO Partners", icon: Building2, id: "ngo-partners", href: "/admin/ngo" },
   { label: "Complaints", icon: AlertTriangle, id: "reports", href: "/admin/reports" },
+  { label: "Bug Reports", icon: Bug, id: "bugs", href: "/admin/bugs", badge: "Live" },
   { label: "Reviews", icon: Star, id: "reviews", href: "/admin/reviews" },
   { label: "Operations Map", icon: Map, id: "map", href: "/admin/map" },
   { label: "Notifications", icon: Bell, id: "notifications", href: "/admin/notifications" },
@@ -96,6 +99,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { addListener, isConnected } = useSocket();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -154,48 +158,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, []);
 
-  // WebSocket for real-time notifications
-  useEffect(() => {
-    if (isAuthPage || !user) return;
-
-    let ws: WebSocket | null = null;
-    let reconnectTimeout: NodeJS.Timeout;
-
-    const connectWS = async () => {
-      try {
-        const tokenRes = await fetch("/api/auth/token", { credentials: "include" });
-        if (!tokenRes.ok) return;
-        const { token } = await tokenRes.json();
-
-        const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
-        ws = new WebSocket(`${wsBaseUrl}?token=${token}`);
-        
-        ws.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          if (data.type === "NOTIFICATION") {
-            setNotifications(prev => [data.payload, ...prev]);
-            setUnreadCount(prev => prev + 1);
-            
-            // Play a subtle sound if possible or show a toast logic here if needed
-          }
-        };
-
-        ws.onclose = () => {
-          reconnectTimeout = setTimeout(connectWS, 10000);
-        };
-      } catch (err) {
-        reconnectTimeout = setTimeout(connectWS, 10000);
-      }
-    };
-
-    connectWS();
-
-    return () => {
-       if (ws) ws.close();
-       clearTimeout(reconnectTimeout);
-    };
-  }, [isAuthPage, user]);
-
   useEffect(() => {
     if (!isAuthPage) {
       fetchUser();
@@ -204,6 +166,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setLoading(false);
     }
   }, [fetchUser, fetchNotifications, isAuthPage]);
+
+  useEffect(() => {
+    if (isAuthPage || !user) return;
+
+    const unsubscribe = addListener("NOTIFICATION", (newNotif) => {
+      setNotifications(prev => [newNotif, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    });
+
+    return () => unsubscribe();
+  }, [addListener, isAuthPage, user]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST", credentials: "include" });

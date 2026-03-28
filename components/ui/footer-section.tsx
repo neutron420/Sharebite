@@ -18,14 +18,21 @@ import { Translate } from "@/components/ui/translate"
 
 function Footerdemo() {
   const [isDarkMode, setIsDarkMode] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
+    setMounted(true)
+  }, [])
+
+  React.useEffect(() => {
+    if (mounted) {
+      if (isDarkMode) {
+        document.documentElement.classList.add("dark")
+      } else {
+        document.documentElement.classList.remove("dark")
+      }
     }
-  }, [isDarkMode])
+  }, [isDarkMode, mounted])
 
   return (
     <footer className="relative border-t bg-background text-foreground transition-colors duration-300 overflow-hidden">
@@ -143,15 +150,24 @@ function Footerdemo() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <div className="flex items-center space-x-3 bg-white/30 backdrop-blur-md border border-orange-100/30 p-2.5 rounded-2xl w-fit">
-              <Sun className={`h-4 w-4 ${!isDarkMode ? 'text-orange-500' : 'text-slate-400'}`} />
-              <Switch
-                id="dark-mode"
-                checked={isDarkMode}
-                onCheckedChange={setIsDarkMode}
-                className="data-[state=checked]:bg-orange-600"
-              />
-              <Moon className={`h-4 w-4 ${isDarkMode ? 'text-blue-500' : 'text-slate-400'}`} />
+            <div className="flex items-center space-x-3 bg-white/30 backdrop-blur-md border border-orange-100/30 p-2.5 rounded-2xl w-[120px] justify-center min-h-[44px]">
+              {mounted ? (
+                <>
+                  <Sun className={`h-4 w-4 ${!isDarkMode ? 'text-orange-500' : 'text-slate-400'}`} />
+                  <Switch
+                    id="dark-mode"
+                    checked={isDarkMode}
+                    onCheckedChange={setIsDarkMode}
+                    className="data-[state=checked]:bg-orange-600"
+                  />
+                  <Moon className={`h-4 w-4 ${isDarkMode ? 'text-blue-500' : 'text-slate-400'}`} />
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
+                  <span className="text-[10px] font-black text-orange-200 uppercase tracking-widest">BOOTING...</span>
+                </div>
+              )}
               <Label htmlFor="dark-mode" className="sr-only">
                 Toggle dark mode
               </Label>

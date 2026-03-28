@@ -7,11 +7,306 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id                   String          @id @default(uuid())
+  email                String          @unique
+  password             String
+  name                 String
+  role                 UserRole        @default(DONOR)
+  phoneNumber          String?
+  address              String?
+  city                 String?
+  imageUrl             String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  isVerified           Boolean         @default(false)
+  verificationDoc      String?
+  district             String?
+  latitude             Float?
+  longitude            Float?
+  pincode              String?
+  state                String?
+  isLicenseSuspended   Boolean         @default(false)
+  strikeCount          Int             @default(0)
+  suspensionExpiresAt  DateTime?
+  isAvailable          Boolean         @default(true)
+  rating               Float           @default(5.0)
+  totalDeliveries      Int             @default(0)
+  donorType            String?
+  karmaPoints          Int             @default(0)
+  level                Int             @default(1)
+  auditLogs            AuditLog[]
+  bugReports           BugReport[]
+  bugResponses         BugResponse[]
+  conversationsAsA     Conversation[]  @relation("ParticipantA")
+  conversationsAsB     Conversation[]  @relation("ParticipantB")
+  donorReportsReceived DonorReport[]   @relation("ReportedDonor")
+  donorReportsMade     DonorReport[]   @relation("DonorReporter")
+  donations            FoodDonation[]  @relation("DonorDonations")
+  sentMessages         Message[]
+  notifications        Notification[]
+  requests             PickupRequest[] @relation("NGORequests")
+  tasks                PickupRequest[] @relation("RiderTasks")
+  reports              Report[]        @relation("ReportedUser")
+  reportsMade          Report[]        @relation("Reporter")
+  reviewsReceived      Review[]        @relation("Reviewee")
+  reviewsGiven         Review[]        @relation("Reviewer")
+  badges               UserBadge[]
+  violations           Violation[]     @relation("UserViolations")
+
+  @@index([email])
+  @@index([role])
+  @@index([isVerified])
+}
+
+model BugReport {
+  id          String        @id @default(uuid())
+  type        BugType
+  description String
+  location    String?
+  status      BugStatus     @default(PENDING)
+  reporterId  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  reporter    User          @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  responses   BugResponse[]
+
+  @@index([status])
+  @@index([type])
+  @@index([reporterId])
+}
+
+model BugResponse {
+  id          String    @id @default(uuid())
+  message     String
+  adminId     String
+  bugReportId String
+  createdAt   DateTime  @default(now())
+  admin       User      @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  bugReport   BugReport @relation(fields: [bugReportId], references: [id], onDelete: Cascade)
+
+  @@index([bugReportId])
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  description String
+  imageUrl    String?
+  criteria    Json?
+  createdAt   DateTime    @default(now())
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  badgeId   String
+  createdAt DateTime @default(now())
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId])
+}
+
+model FoodDonation {
+  id              String          @id @default(uuid())
+  title           String
+  description     String
+  expiryTime      DateTime
+  pickupLocation  String
+  latitude        Float?
+  longitude       Float?
+  imageUrl        String?
+  status          DonationStatus  @default(AVAILABLE)
+  donorId         String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  pickupEndTime   DateTime
+  pickupStartTime DateTime
+  quantity        Int
+  category        FoodCategory
+  weight          Float?          @default(0)
+  city            String
+  district        String?
+  pincode         String?
+  state           String?
+  conversations   Conversation[]
+  donor           User            @relation("DonorDonations", fields: [donorId], references: [id], onDelete: Cascade)
+  requests        PickupRequest[]
+  reviews         Review[]
+
+  @@index([status])
+  @@index([expiryTime])
+  @@index([latitude, longitude])
+  @@index([category])
+}
+
+model PickupRequest {
+  id               String        @id @default(uuid())
+  message          String?
+  status           RequestStatus @default(PENDING)
+  ngoId            String
+  donationId       String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deliveryImageUrl String?
+  handoverPin      String?
+  step             Int           @default(1)
+  completedAt      DateTime?
+  pickedUpAt       DateTime?
+  riderId          String?
+  donation         FoodDonation  @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  ngo              User          @relation("NGORequests", fields: [ngoId], references: [id], onDelete: Cascade)
+  rider            User?         @relation("RiderTasks", fields: [riderId], references: [id])
+
+  @@unique([ngoId, donationId])
+  @@index([status])
+}
+
+model Review {
+  id         String       @id @default(uuid())
+  rating     Int
+  comment    String?
+  reviewerId String
+  revieweeId String
+  donationId String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  reviewee   User         @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+  reviewer   User         @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, donationId])
+  @@index([revieweeId])
+  @@index([donationId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  details   String?
+  ipAddress String?
+  adminId   String
+  createdAt DateTime @default(now())
+  admin     User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([adminId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  userId    String
+  link      String?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model Conversation {
+  id             String       @id @default(uuid())
+  donationId     String
+  participantAId String
+  participantBId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  donation       FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
+  participantA   User         @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
+  participantB   User         @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: Cascade)
+  messages       Message[]
+
+  @@unique([donationId, participantAId, participantBId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  text           String?
+  senderId       String
+  conversationId String
+  imageUrl       String?
+  locationLat    Float?
+  locationLng    Float?
+  createdAt      DateTime     @default(now())
+  isRead         Boolean      @default(false)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model Violation {
+  id        String   @id @default(uuid())
+  level     Int
+  reason    String
+  adminId   String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation("UserViolations", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  reason     String
+  details    String?
+  status     String   @default("PENDING")
+  reporterId String
+  ngoId      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  ngo        User     @relation("ReportedUser", fields: [ngoId], references: [id], onDelete: Cascade)
+  reporter   User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([ngoId])
+  @@index([status])
+}
+
+model DonorReport {
+  id         String   @id @default(uuid())
+  reason     String
+  details    String?
+  status     String   @default("PENDING")
+  reporterId String
+  donorId    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  donor      User     @relation("ReportedDonor", fields: [donorId], references: [id], onDelete: Cascade)
+  reporter   User     @relation("DonorReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([donorId])
+  @@index([status])
+}
+
 enum NotificationType {
   REQUEST_STATUS
   NEW_DONATION
   URGENT_EXPIRY
   SYSTEM
+  BUG_RESPONSE
+}
+
+enum BugType {
+  TECHNICAL
+  UI_UX
+  PERFORMANCE
+  SECURITY
+  OTHER
+}
+
+enum BugStatus {
+  PENDING
+  REVIEWING
+  RESOLVED
+  DISMISSED
 }
 
 enum UserRole {
@@ -48,293 +343,4 @@ enum FoodCategory {
   STAPLES
   PACKAGED_FOOD
   OTHERS
-}
-
-model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
-  password    String
-  name        String
-  role        UserRole @default(DONOR)
-  phoneNumber String?
-  address     String?
-  city        String?
-  state       String?
-  district    String?
-  pincode     String?
-  latitude    Float?
-  longitude   Float?
-  imageUrl    String?
-  donorType   String?
-
-
-  isVerified      Boolean @default(false)
-  verificationDoc String?
-
-  donations FoodDonation[]  @relation("DonorDonations")
-  requests  PickupRequest[] @relation("NGORequests")
-
-  reviewsGiven    Review[] @relation("Reviewer")
-  reviewsReceived Review[] @relation("Reviewee")
-
-  auditLogs     AuditLog[]
-  notifications Notification[]
-  violations    Violation[]  @relation("UserViolations")
-  reports       Report[]     @relation("ReportedUser")
-  reportsMade   Report[]     @relation("Reporter")
-
-  // NGO-filed complaints about Donors
-  donorReportsReceived DonorReport[] @relation("ReportedDonor")
-  donorReportsMade     DonorReport[] @relation("DonorReporter")
-
-  // Strike System for NGOs
-  strikeCount         Int       @default(0)
-  suspensionExpiresAt DateTime?
-  isLicenseSuspended  Boolean   @default(false)
-
-  // Chat relations
-  sentMessages     Message[]
-  conversationsAsA Conversation[] @relation("ParticipantA")
-  conversationsAsB Conversation[] @relation("ParticipantB")
-
-  // Rider relations & stats
-  isAvailable     Boolean         @default(true)
-  rating          Float           @default(5.0)
-  totalDeliveries Int             @default(0)
-  tasks           PickupRequest[] @relation("RiderTasks")
-
-  // Gamification & Badges
-  karmaPoints Int         @default(0)
-  level       Int         @default(1)
-  badges      UserBadge[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([email])
-  @@index([role])
-  @@index([isVerified])
-}
-
-model Badge {
-  id          String      @id @default(uuid())
-  name        String      @unique
-  description String
-  imageUrl    String?
-  criteria    Json? // e.g. { type: 'QUANTITY', value: 10 }
-  users       UserBadge[]
-  createdAt   DateTime    @default(now())
-}
-
-model UserBadge {
-  id      String @id @default(uuid())
-  userId  String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  badgeId String
-  badge   Badge  @relation(fields: [badgeId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@unique([userId, badgeId])
-  @@index([userId])
-}
-
-model FoodDonation {
-  id              String         @id @default(uuid())
-  title           String
-  description     String
-  quantity        Int
-  weight          Float?         @default(0)
-  category        FoodCategory
-  expiryTime      DateTime
-  pickupStartTime DateTime
-  pickupEndTime   DateTime
-  pickupLocation  String
-  city            String
-  state           String?
-  district        String?
-  pincode         String?
-  latitude        Float?
-  longitude       Float?
-  imageUrl        String?
-
-
-  status          DonationStatus @default(AVAILABLE)
-
-  donorId       String
-  donor         User            @relation("DonorDonations", fields: [donorId], references: [id], onDelete: Cascade)
-  requests      PickupRequest[]
-  reviews       Review[]
-  conversations Conversation[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([status])
-  @@index([expiryTime])
-  @@index([latitude, longitude])
-  @@index([category])
-}
-
-model PickupRequest {
-  id      String        @id @default(uuid())
-  message String?
-  status  RequestStatus @default(PENDING)
-  
-  // Real-time tracking & security
-  step             Int     @default(1) // 1: Requested, 2: Approved, 3: Out for Pickup, 4: Delivered
-  handoverPin      String? // Secure 4-digit pin generated on approval
-  deliveryImageUrl String? // Proof of delivery photo uploaded by NGO
-
-  // Rider assignment
-  riderId String?
-  rider   User?   @relation("RiderTasks", fields: [riderId], references: [id])
-
-  pickedUpAt  DateTime?
-  completedAt DateTime?
-
-  ngoId      String
-  ngo        User         @relation("NGORequests", fields: [ngoId], references: [id], onDelete: Cascade)
-  donationId String
-  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([ngoId, donationId])
-  @@index([status])
-}
-
-model Review {
-  id      String  @id @default(uuid())
-  rating  Int
-  comment String? @db.Text
-
-  reviewerId String
-  reviewer   User         @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
-  revieweeId String
-  reviewee   User         @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
-  donationId String
-  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([reviewerId, donationId])
-  @@index([revieweeId])
-  @@index([donationId])
-}
-
-model AuditLog {
-  id        String  @id @default(uuid())
-  action    String
-  details   String? @db.Text
-  ipAddress String?
-
-  adminId String
-  admin   User   @relation(fields: [adminId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([action])
-  @@index([adminId])
-}
-
-model Notification {
-  id        String           @id @default(uuid())
-  type      NotificationType
-  title     String
-  message   String
-  isRead    Boolean          @default(false)
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  link      String?
-  createdAt DateTime         @default(now())
-
-  @@index([userId])
-  @@index([isRead])
-}
-
-model Conversation {
-  id         String       @id @default(uuid())
-  donationId String
-  donation   FoodDonation @relation(fields: [donationId], references: [id], onDelete: Cascade)
-
-  participantAId String
-  participantA   User   @relation("ParticipantA", fields: [participantAId], references: [id], onDelete: Cascade)
-  participantBId String
-  participantB   User   @relation("ParticipantB", fields: [participantBId], references: [id], onDelete: Cascade)
-
-  messages Message[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([donationId, participantAId, participantBId])
-}
-
-model Message {
-  id             String       @id @default(uuid())
-  text           String?      @db.Text
-  senderId       String
-  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-
-  imageUrl    String?
-  locationLat Float?
-  locationLng Float?
-  isRead      Boolean  @default(false)
-
-  createdAt DateTime @default(now())
-
-  @@index([conversationId])
-}
-
-model Violation {
-  id        String   @id @default(uuid())
-  level     Int 
-  reason    String   @db.Text
-  adminId   String
-  userId    String
-  user      User     @relation("UserViolations", fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-}
-
-model Report {
-  id          String   @id @default(uuid())
-  reason      String   @db.Text
-  details     String?  @db.Text
-  status      String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
-  
-  reporterId  String
-  reporter    User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  ngoId       String
-  ngo         User     @relation("ReportedUser", fields: [ngoId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([ngoId])
-  @@index([status])
-}
-
-model DonorReport {
-  id          String   @id @default(uuid())
-  reason      String   @db.Text
-  details     String?  @db.Text
-  status      String   @default("PENDING") // PENDING, RESOLVED, DISMISSED
-
-  reporterId  String
-  reporter    User     @relation("DonorReporter", fields: [reporterId], references: [id], onDelete: Cascade)
-  donorId     String
-  donor       User     @relation("ReportedDonor", fields: [donorId], references: [id], onDelete: Cascade)
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([donorId])
-  @@index([status])
 }
