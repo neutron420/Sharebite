@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
+import { createNotification } from "@/lib/notifications";
 
 async function postRequestHandler(request: Request) {
   try {
@@ -64,7 +65,7 @@ async function postRequestHandler(request: Request) {
       );
     }
 
-    // Create pickup request
+    // Create pickup request with NGO details for the notification
     const pickupRequest = await prisma.pickupRequest.create({
       data: {
         donationId,
@@ -72,17 +73,18 @@ async function postRequestHandler(request: Request) {
         message,
         status: "PENDING",
       },
+      include: {
+        ngo: { select: { name: true } }
+      }
     });
 
-    // Notify the donor
-    await prisma.notification.create({
-      data: {
-        userId: donation.donorId,
-        type: "REQUEST_STATUS",
-        title: "New Pickup Request",
-        message: `Your donation "${donation.title}" has a new request from an NGO.`,
-        link: `/donor/donations/${donation.id}`,
-      }
+    // Notify the donor with real-time socket support
+    await createNotification({
+      userId: donation.donorId,
+      type: "REQUEST_STATUS",
+      title: "New Pickup Request",
+      message: `NGO "${pickupRequest.ngo.name}" has requested your donation: "${donation.title}".`,
+      link: `/donor/donations/${donation.id}`,
     });
 
     return NextResponse.json(pickupRequest, { status: 201 });

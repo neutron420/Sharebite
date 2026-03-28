@@ -37,5 +37,22 @@ async function markAllAsReadHandler(request: Request) {
     }
 }
 
+// Clear all notifications
+async function clearAllNotificationsHandler(request: Request) {
+    try {
+      const session = await getSession({ request });
+      if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  
+      await prisma.notification.deleteMany({
+        where: { userId: session.userId as string }
+      });
+  
+      return NextResponse.json({ message: "All notifications cleared" });
+    } catch (error) {
+      return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
 export const GET = withSecurity(getNotificationsHandler);
 export const PATCH = withSecurity(markAllAsReadHandler);
+export const DELETE = withSecurity(clearAllNotificationsHandler);

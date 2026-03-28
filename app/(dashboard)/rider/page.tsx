@@ -137,14 +137,14 @@ export default function RiderDashboard() {
     <div className="w-full space-y-10">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 mb-2">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <div className="flex items-center gap-2 mb-2 text-emerald-600 font-semibold text-[10px] sm:text-xs tracking-tight">
-             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <div className="flex items-center gap-2 mb-2 text-emerald-600 font-bold text-[10px] tracking-widest uppercase">
+             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
              System Online
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 leading-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-5xl font-black tracking-tight text-slate-950 leading-tight italic uppercase">
              Mission Hub
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Manage your active deployments and new delivery opportunities.</p>
+          <p className="text-[10px] sm:text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">Manage deployments & source new bounties.</p>
         </motion.div>
       </header>
 

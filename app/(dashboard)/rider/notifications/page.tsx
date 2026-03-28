@@ -11,7 +11,8 @@ import {
   Zap,
   Calendar,
   Clock,
-  ArrowRight
+  ArrowRight,
+  CheckCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
@@ -51,23 +52,37 @@ export default function RiderCommsLogPage() {
 
   const markAllRead = async () => {
     try {
-      await fetch("/api/notifications/read-all", { method: "POST" });
+      await fetch("/api/notifications", { method: "PATCH" });
       setNotifications(notifications.map(n => ({ ...n, isRead: true })));
-      toast.success("Read all notifications.");
+      toast.success("Identity Logs Synchronized");
     } catch (error) {
       toast.error("Failed to update status.");
     }
   };
 
-  const deleteNotif = async (id: string) => {
+  const clearAllNotifications = async () => {
     try {
-      await fetch(`/api/notifications/${id}`, { method: "DELETE" });
-      setNotifications(notifications.filter(n => n.id !== id));
-      toast.success("Notification removed.");
-    } catch (error) {
-      toast.error("Failed to delete.");
+      await fetch("/api/notifications", { method: "DELETE" });
+      setNotifications([]);
+      toast.success("Channel Wiped Successfully");
+    } catch (e) {
+      toast.error("Failed to wipe logs.");
     }
   };
+
+  const deleteNotif = async (id: string) => {
+    try {
+      // General API for single notification delete should also be supported? 
+      // I'll keep the current logic but standard should be [id] route.
+      await fetch(`/api/notifications/${id}`, { method: "DELETE" });
+      setNotifications(notifications.filter(n => n.id !== id));
+      toast.success("Fragment purged.");
+    } catch (error) {
+      toast.error("Failed to purge fragment.");
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 gap-4">
@@ -86,12 +101,24 @@ export default function RiderCommsLogPage() {
           <p className="text-gray-500 text-sm mt-2">Historical log of mission updates and system alerts.</p>
         </motion.div>
         
-        <button 
-          onClick={markAllRead}
-          className="px-6 py-3 bg-gray-900 text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-orange-600 transition-all shadow-md active:scale-95"
-        >
-          Mark all as read
-        </button>
+        <div className="flex items-center gap-3">
+          {unreadCount > 0 && (
+            <button 
+              onClick={markAllRead}
+              className="px-6 py-3 bg-white border border-gray-100 text-gray-900 font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-orange-50 hover:text-orange-600 transition-all shadow-sm active:scale-95"
+            >
+              <CheckCheck className="w-4 h-4 mr-2 inline" /> Mark read
+            </button>
+          )}
+          {notifications.length > 0 && (
+            <button 
+              onClick={clearAllNotifications}
+              className="px-6 py-3 bg-gray-950 text-white font-bold rounded-xl text-[10px] uppercase tracking-wider hover:bg-red-600 transition-all shadow-md active:scale-95"
+            >
+              <Trash2 className="w-4 h-4 mr-2 inline" /> Wipe Channel
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="space-y-4">

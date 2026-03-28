@@ -450,24 +450,24 @@ export default function RegisterPage() {
 
         {/* Right side - Form */}
         <div className={cn(
-          "flex flex-col bg-white p-8 md:p-10",
-          isMapStep ? "w-full flex-row" : "w-full md:w-1/2"
+          "flex flex-col bg-white p-6 sm:p-8 md:p-10",
+          isMapStep ? "w-full" : "w-full md:w-1/2"
         )}>
           {success && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-6">
-              <Alert variant="success">
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertTitle>Authenticated</AlertTitle>
-                <AlertDescription>{success}</AlertDescription>
+              <Alert variant="success" className="rounded-2xl border-emerald-100 bg-emerald-50">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <AlertTitle className="text-emerald-800 font-bold tracking-tight">Authenticated</AlertTitle>
+                <AlertDescription className="text-emerald-600 text-xs">{success}</AlertDescription>
               </Alert>
             </motion.div>
           )}
           {error && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-6">
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="rounded-2xl">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Access Denied</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
+                <AlertTitle className="font-bold tracking-tight">Deployment Error</AlertTitle>
+                <AlertDescription className="text-xs">{error}</AlertDescription>
               </Alert>
             </motion.div>
           )}
@@ -476,66 +476,68 @@ export default function RegisterPage() {
             {currentStep === 0 && (
               <motion.div
                 key="step-0"
-                initial={{ opacity: 0, x: 30 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                className="p-8 md:p-10 flex flex-col justify-center h-full"
+                exit={{ opacity: 0, x: -20 }}
+                className="flex flex-col justify-center h-full sm:px-4"
               >
-                <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">Create Your Account</h1>
-                <p className="text-gray-500 mb-6 text-sm">Join the mission to reduce food waste</p>
+                <h1 className="text-2xl sm:text-3xl font-black mb-1 text-slate-950 uppercase italic tracking-tighter">Join Movement</h1>
+                <p className="text-slate-400 mb-8 text-xs font-bold uppercase tracking-widest">Select your operational role</p>
 
-                {/* Role Selector Tabs (matches Login Page) */}
-                <div className="flex bg-orange-50 p-1.5 rounded-xl mb-8">
+                {/* Role Selector Tabs */}
+                <div className="flex bg-slate-50 p-1 rounded-2xl mb-8 border border-slate-100/50">
                   {(["DONOR", "NGO", "RIDER"] as const).map((role) => (
                     <button
                       key={role}
                       type="button"
                       onClick={() => updateFormData("role", role)}
                       className={cn(
-                        "flex-1 py-2.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-all duration-200",
+                        "flex-1 py-3 px-2 rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
                         formData.role === role
-                          ? "bg-white text-orange-600 shadow-sm"
-                          : "text-gray-400 hover:text-gray-600"
+                          ? "bg-white text-orange-600 shadow-xl shadow-slate-200/50 translate-y-[-1px]"
+                          : "text-slate-400 hover:text-slate-600"
                       )}
                     >
-                      {role === "NGO" ? "NGO Hub" : role === "RIDER" ? "Rider" : "Donor"}
+                      {role === "NGO" ? "NGO Hub" : role === "RIDER" ? "Fleet" : "Provider"}
                     </button>
                   ))}
                 </div>
 
                 <div className="space-y-4">
-                  <div className={cn(
-                    "p-6 rounded-2xl border-2 transition-all duration-300",
-                    "border-orange-500 bg-orange-50/30 shadow-md shadow-orange-100/50"
+                  <motion.div 
+                    layoutId="role-card"
+                    className={cn(
+                    "p-8 rounded-[2rem] border-2 transition-all duration-500",
+                    "border-orange-600 bg-orange-600 text-white shadow-2xl shadow-orange-100"
                   )}>
-                    <div className="flex items-center gap-4 mb-3">
-                      <div className="w-12 h-12 rounded-xl bg-orange-600 text-white flex items-center justify-center shadow-lg shadow-orange-200">
-                        {formData.role === "DONOR" ? <Heart className="w-6 h-6" /> : formData.role === "NGO" ? <Building2 className="w-6 h-6" /> : <Truck className="w-6 h-6" />}
+                    <div className="flex items-center gap-5 mb-5">
+                      <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                        {formData.role === "DONOR" ? <Heart className="w-7 h-7" /> : formData.role === "NGO" ? <Building2 className="w-7 h-7" /> : <Truck className="w-7 h-7" />}
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-gray-800">{stepDescriptions[formData.role || "DONOR"].title}</h3>
-                        <p className="text-xs text-gray-500 italic">Ready to make an impact?</p>
+                        <h3 className="font-black text-xl uppercase italic tracking-tighter leading-none">{stepDescriptions[formData.role || "DONOR"].title}</h3>
+                        <p className="text-[10px] font-bold uppercase tracking-widest mt-1 opacity-60">Status: Recruit</p>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm font-medium leading-relaxed opacity-90">
                       {stepDescriptions[formData.role || "DONOR"].subtitle}
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
 
-                <div className="flex justify-center mt-8">
+                <div className="flex justify-center mt-10">
                   <Button
                     onClick={nextStep}
                     disabled={!isStepValid()}
-                    className="h-12 px-8 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold shadow-lg shadow-orange-100 active:scale-95"
+                    className="h-16 w-full sm:w-auto px-12 rounded-2xl bg-slate-950 hover:bg-orange-600 text-white text-[11px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-slate-200 transition-all active:scale-95"
                   >
-                    Continue <ChevronRight className="ml-2 w-4 h-4" />
+                    Initialize <ChevronRight className="ml-2 w-4 h-4" strokeWidth={3} />
                   </Button>
                 </div>
 
-                <p className="text-center text-sm text-gray-400 mt-6">
-                  Already have an account?{" "}
-                  <Link href="/login" className="text-orange-600 hover:text-orange-700 font-medium">Sign in</Link>
+                <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 mt-10">
+                  Active Asset?{" "}
+                  <Link href="/login" className="text-orange-600 hover:text-orange-700 underline underline-offset-4 decoration-orange-600/20">Sign In Portal</Link>
                 </p>
               </motion.div>
             )}
@@ -544,36 +546,32 @@ export default function RegisterPage() {
             {currentStep === 1 && (
               <motion.div
                 key="step-1"
-                initial={{ opacity: 0, x: 30 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                className="p-8 md:p-10 flex flex-col justify-center h-full"
+                exit={{ opacity: 0, x: -20 }}
+                className="flex flex-col justify-center h-full sm:px-4"
               >
-                <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">
-                  {formData.role === "DONOR" ? "Donor Details" : formData.role === "NGO" ? "NGO Hub Setup" : "Rider Details"}
+                <h1 className="text-2xl sm:text-3xl font-black mb-1 text-slate-950 uppercase italic tracking-tighter">
+                  {formData.role === "DONOR" ? "Identify Base" : formData.role === "NGO" ? "Hub Credentials" : "Pilot Registry"}
                 </h1>
-                <p className="text-gray-500 mb-6 text-sm">Secure your account with mission-critical info</p>
-
-                {error && (
-                  <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>
-                )}
+                <p className="text-slate-400 mb-8 text-[10px] font-bold uppercase tracking-widest">Secure mission-critical credentials</p>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {formData.role === "DONOR" ? "Full Name" : "Organization Name"} <span className="text-orange-500">*</span>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">
+                      {formData.role === "DONOR" ? "Full Designation" : "Organization Identity"} <span className="text-orange-500">*</span>
                     </label>
                     <Input
                       value={formData.name}
                       onChange={(e) => updateFormData("name", e.target.value)}
-                      placeholder={formData.role === "DONOR" ? "e.g. Rahul Singh" : formData.role === "NGO" ? "e.g. Feeding India" : "e.g. Aman Kumar"}
-                      className="h-11 bg-gray-50 border-gray-200 focus:border-orange-500 focus:ring-orange-500"
+                      placeholder={formData.role === "DONOR" ? "Rahul Singh" : formData.role === "NGO" ? "Feeding India" : "Aman Kumar"}
+                      className="h-12 bg-slate-50 border-slate-100 rounded-xl focus:border-orange-500 focus:ring-orange-500 transition-all text-xs"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Email <span className="text-orange-500">*</span>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">
+                      Email Channel <span className="text-orange-500">*</span>
                     </label>
                     <div className="relative">
                       <Input
@@ -582,132 +580,119 @@ export default function RegisterPage() {
                         onChange={(e) => updateFormData("email", e.target.value)}
                         placeholder="hello@sharebite.org"
                         className={cn(
-                          "h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500 transition-all",
+                          "h-12 bg-slate-50 border-slate-100 rounded-xl pr-12 focus:border-orange-500 focus:ring-orange-500 transition-all text-xs",
                           emailAvailable === false && "border-red-500 bg-red-50 focus:border-red-500",
                           emailAvailable === true && "border-emerald-500 bg-emerald-50 focus:border-emerald-500"
                         )}
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
                         {checkingEmail && <Loader2 className="w-4 h-4 animate-spin text-orange-600" />}
-                        {emailAvailable === true && <CheckCircle2 className="w-4 h-4 text-emerald-600 shadow-sm" strokeWidth={3} />}
+                        {emailAvailable === true && <CheckCircle2 className="w-4 h-4 text-emerald-600" strokeWidth={3} />}
                         {emailAvailable === false && <XCircle className="w-4 h-4 text-red-600" strokeWidth={3} />}
                       </div>
                     </div>
-                    {emailAvailable === false && <p className="text-[10px] text-red-500 font-bold mt-1 px-1 italic">Email already in combat!</p>}
                   </div>
 
                   {formData.role === "DONOR" && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="space-y-1.5"
+                      className="space-y-2"
                     >
-                      <label className="block text-sm font-medium text-gray-700">
-                        Category <span className="text-orange-500">*</span>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">
+                        Deployment Type <span className="text-orange-500">*</span>
                       </label>
                       <Select
                         onValueChange={(v) => updateFormData("donorType", v)}
                         value={formData.donorType}
                       >
-                        <SelectTrigger className="h-11 bg-gray-50 border-gray-200 focus:border-orange-500 focus:ring-orange-500">
-                          <SelectValue placeholder="Who are you?" />
+                        <SelectTrigger className="h-12 bg-slate-50 border-slate-100 rounded-xl focus:border-orange-500 focus:ring-orange-500 text-xs">
+                          <SelectValue placeholder="Select Sector" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-orange-100">
-                          <SelectItem value="WEDDING" className="focus:bg-orange-50 focus:text-orange-600">Wedding / Event</SelectItem>
-                          <SelectItem value="NORMAL_VERSION" className="focus:bg-orange-50 focus:text-orange-600">Individual / Normal</SelectItem>
-                          <SelectItem value="OTHER" className="focus:bg-orange-50 focus:text-orange-600">Any Other</SelectItem>
+                        <SelectContent className="bg-white border-slate-100">
+                          <SelectItem value="WEDDING" className="text-xs font-bold uppercase tracking-wider">Wedding / Event</SelectItem>
+                          <SelectItem value="NORMAL_VERSION" className="text-xs font-bold uppercase tracking-wider">Individual / Normal</SelectItem>
+                          <SelectItem value="OTHER" className="text-xs font-bold uppercase tracking-wider">Logistics / Other</SelectItem>
                         </SelectContent>
                       </Select>
-                      <p className="text-[10px] text-gray-400 italic">Helps us curate the best experience for you</p>
                     </motion.div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                    <div className="relative">
-                      <Input
-                        value={formData.phoneNumber}
-                        onChange={(e) => updateFormData("phoneNumber", e.target.value)}
-                        placeholder="+91 98765 00000"
-                        className={cn(
-                          "h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500 transition-all",
-                          phoneAvailable === false && "border-red-500 bg-red-50 focus:border-red-500",
-                          phoneAvailable === true && "border-emerald-500 bg-emerald-50 focus:border-emerald-500"
-                        )}
-                      />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-                        {checkingPhone && <Loader2 className="w-4 h-4 animate-spin text-orange-600" />}
-                        {phoneAvailable === true && <CheckCircle2 className="w-4 h-4 text-emerald-600" strokeWidth={3} />}
-                        {phoneAvailable === false && <XCircle className="w-4 h-4 text-red-600" strokeWidth={3} />}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">Operational Phone</label>
+                      <div className="relative">
+                        <Input
+                          value={formData.phoneNumber}
+                          onChange={(e) => updateFormData("phoneNumber", e.target.value)}
+                          placeholder="+91 98765 00000"
+                          className={cn(
+                            "h-12 bg-slate-50 border-slate-100 rounded-xl pr-12 focus:border-orange-500 focus:ring-orange-500 transition-all text-xs",
+                            phoneAvailable === false && "border-red-500 bg-red-50 focus:border-red-500",
+                            phoneAvailable === true && "border-emerald-500 bg-emerald-50 focus:border-emerald-500"
+                          )}
+                        />
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
+                          {checkingPhone && <Loader2 className="w-4 h-4 animate-spin text-orange-600" />}
+                          {phoneAvailable === true && <CheckCircle2 className="w-4 h-4 text-emerald-600" strokeWidth={3} />}
+                          {phoneAvailable === false && <XCircle className="w-4 h-4 text-red-600" strokeWidth={3} />}
+                        </div>
                       </div>
                     </div>
-                    </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Password <span className="text-orange-500">*</span>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">
+                        Secure Key <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <Input
                           type={isPasswordVisible ? "text" : "password"}
                           value={formData.password}
                           onChange={(e) => updateFormData("password", e.target.value)}
-                          placeholder="Min 6 characters"
+                          placeholder="••••••••"
                           className={cn(
-                            "h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500",
-                            formData.password.length > 0 && formData.password.length < 6 && "border-red-300 focus:border-red-500 focus:ring-red-500"
+                            "h-12 bg-slate-50 border-slate-100 rounded-xl pr-12 focus:border-orange-500 focus:ring-orange-500 transition-all text-xs",
+                            formData.password.length > 0 && formData.password.length < 6 && "border-red-300 focus:ring-red-500"
                           )}
                         />
                         <button
                           type="button"
                           onClick={() => setIsPasswordVisible(!isPasswordVisible)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-600 transition-colors"
                         >
                           {isPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
-                      {formData.password.length > 0 && formData.password.length < 6 && (
-                        <p className="text-[10px] text-red-500 font-medium mt-1">Armor must be at least 6 characters!</p>
-                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm Password <span className="text-orange-500">*</span>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 ml-1">
+                        Confirm Shield <span className="text-orange-500">*</span>
                       </label>
                       <div className="relative">
                         <Input
                           type={isPasswordVisible ? "text" : "password"}
                           value={formData.confirmPassword}
                           onChange={(e) => updateFormData("confirmPassword", e.target.value)}
-                          placeholder="Re-enter password"
+                          placeholder="••••••••"
                           className={cn(
-                            "h-11 bg-gray-50 border-gray-200 pr-10 focus:border-orange-500 focus:ring-orange-500 transition-all",
-                            formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && "border-red-400 focus:border-red-500 focus:ring-red-500 bg-red-50/30"
+                            "h-12 bg-slate-50 border-slate-100 rounded-xl focus:border-orange-500 focus:ring-orange-500 transition-all text-xs",
+                            formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && "border-red-400 bg-red-50"
                           )}
                         />
                       </div>
-                      {formData.confirmPassword.length > 0 && formData.password !== formData.confirmPassword && (
-                        <p className="text-[10px] text-red-500 font-bold mt-1 animate-pulse">Passwords do not match!</p>
-                      )}
-                      {formData.confirmPassword.length > 0 && formData.password === formData.confirmPassword && (
-                        <p className="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
-                          <Check className="w-3 h-3" /> Passwords synchronized!
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center mt-8">
-                  <Button variant="ghost" onClick={prevStep} className="text-gray-400 font-bold">
-                    <ChevronLeft className="mr-1 w-4 h-4" /> Back
+                <div className="flex justify-between items-center mt-10">
+                  <Button variant="ghost" onClick={prevStep} className="text-slate-400 font-black uppercase tracking-widest text-[9px] hover:bg-slate-50 rounded-xl px-6">
+                    <ChevronLeft className="mr-2 w-4 h-4" strokeWidth={3} /> Abort
                   </Button>
                   <Button
                     onClick={nextStep}
                     disabled={!isStepValid()}
-                    className="h-12 px-8 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold shadow-lg shadow-orange-100 active:scale-95"
+                    className="h-14 px-10 rounded-xl bg-slate-950 hover:bg-orange-600 text-white text-[9px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-slate-200"
                   >
-                    Continue <ChevronRight className="ml-2 w-4 h-4" />
+                    Continue <ChevronRight className="ml-2 w-4 h-4" strokeWidth={3} />
                   </Button>
                 </div>
               </motion.div>
@@ -717,22 +702,19 @@ export default function RegisterPage() {
             {currentStep === 2 && (
               <motion.div
                 key="step-2"
-                initial={{ opacity: 0, x: 30 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                className="flex flex-col md:flex-row w-full min-h-[620px]"
+                exit={{ opacity: 0, x: -20 }}
+                className="flex flex-col lg:flex-row w-full min-h-[500px]"
               >
                 {/* Map Section */}
-                <div className="w-full md:w-[60%] h-[350px] md:h-auto border-r border-gray-100 relative">
-                  <div className="absolute top-6 left-6 z-20">
-                    <div className="bg-white/95 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-xl border border-white/50 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100">
-                        <MapPin className="w-5 h-5 text-white" fill="white" />
+                <div className="w-full lg:w-[55%] h-[300px] lg:h-auto border-r border-slate-100 relative grayscale-[0.2] hover:grayscale-0 transition-all duration-700">
+                  <div className="absolute top-4 left-4 z-20">
+                    <div className="bg-white/90 backdrop-blur-xl px-4 py-2.5 rounded-2xl shadow-2xl border border-white/50 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-100 rotate-6">
+                        <MapPin className="w-4 h-4 text-white" fill="white" />
                       </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-orange-600">Pin Your Location</p>
-                        <p className="text-xs font-bold text-gray-800">Click on the map to set your base</p>
-                      </div>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-800">Operational Base Set</p>
                     </div>
                   </div>
                   <LocationPicker
@@ -747,55 +729,50 @@ export default function RegisterPage() {
                         latitude: data.latitude,
                         longitude: data.longitude,
                       }));
-                      toast.success(`Location set: ${data.city}`);
+                      toast.success(`Vector Locked: ${data.city}`);
                     }}
                   />
                 </div>
 
                 {/* Form Section */}
-                <div className="flex-grow flex flex-col p-8">
-                  <h2 className="text-xl font-bold text-gray-800 mb-1">
-                    {formData.role === "DONOR" ? "Profile Details" : formData.role === "NGO" ? "NGO Hub Setup" : "Rider Base Setup"}
+                <div className="flex-grow flex flex-col p-6 sm:p-8">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-950 uppercase italic tracking-tighter mb-1">
+                    Deploy Base
                   </h2>
-                  <p className="text-xs text-gray-400 font-medium mb-6">Final step — verify your location & upload docs</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-8">Confirm operational sector details</p>
 
-                  {error && (
-                    <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>
-                  )}
-
-                  <div className="space-y-4 flex-grow overflow-y-auto">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">City</label>
-                        <Input readOnly value={formData.city} placeholder="Pin on map" className="bg-gray-50 border-gray-200 text-sm h-10" />
+                  <div className="space-y-4 flex-grow">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-1">
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 ml-1">City Hub</label>
+                        <Input readOnly value={formData.city} placeholder="Pin Map" className="bg-slate-50 border-slate-100 text-xs h-11 rounded-xl font-bold" />
                       </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">Pincode</label>
-                        <Input readOnly value={formData.pincode} placeholder="..." className="bg-gray-50 border-gray-200 text-orange-600 font-bold text-sm h-10" />
+                      <div className="col-span-1">
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 ml-1">Postal Code</label>
+                        <Input readOnly value={formData.pincode} placeholder="----" className="bg-slate-50 border-slate-100 text-orange-600 font-black text-xs h-11 rounded-xl" />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-1">Address</label>
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 ml-1">Physical Vector Address</label>
                       <Input
                         value={formData.address}
                         onChange={(e) => updateFormData("address", e.target.value)}
-                        placeholder="Verify detected address"
-                        className="bg-gray-50 border-gray-200 text-sm h-10"
+                        placeholder="Verify your street address"
+                        className="bg-slate-50 border-slate-100 text-xs h-11 rounded-xl"
                       />
                     </div>
 
-                    {/* File Upload */}
+                    {/* File Upload / Documentation */}
                     <div>
-                      <label className="block text-xs font-medium text-gray-500 mb-2">
-                        {formData.role === "DONOR" ? "Profile Photo" : formData.role === "RIDER" ? "Driver License / ID" : "Registration Proof"}
-                        {(formData.role === "NGO" || formData.role === "RIDER") && <span className="text-orange-500 ml-1">*</span>}
+                      <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 ml-1">
+                        {formData.role === "DONOR" ? "Mission Profile Icon" : "Registry Documentation"}
                       </label>
                       <div
                         onClick={() => !uploadingImage && (formData.role === "DONOR" ? fileInputRef.current?.click() : verifyInputRef.current?.click())}
                         className={cn(
-                          "w-full h-28 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer overflow-hidden relative transition-all",
-                          formData.imageUrl || formData.verificationDoc ? "border-orange-200 bg-orange-50/50" : "border-gray-200 bg-gray-50 hover:border-orange-300"
+                          "w-full h-24 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer overflow-hidden relative transition-all duration-300",
+                          formData.imageUrl || formData.verificationDoc ? "border-emerald-500/20 bg-emerald-50/10" : "border-slate-100 bg-slate-50/50 hover:bg-slate-100 hover:border-orange-500/30"
                         )}
                       >
                         <input
@@ -805,66 +782,61 @@ export default function RegisterPage() {
                           disabled={uploadingImage}
                         />
                         {uploadingImage ? (
-                          <div className="flex flex-col items-center gap-1 text-orange-600">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Uploading...</span>
+                          <div className="flex flex-col items-center gap-2 text-orange-600">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span className="text-[8px] font-black uppercase tracking-widest animate-pulse">Uploading Stream...</span>
                           </div>
                         ) : (formData.imageUrl || formData.verificationDoc) ? (
                           <>
-                            <img src={formData.role === "DONOR" ? formData.imageUrl : formData.verificationDoc} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="Uploaded" />
+                            <img src={formData.role === "DONOR" ? formData.imageUrl : formData.verificationDoc} className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale" alt="Uploaded" />
                             <div className="relative z-10 flex flex-col items-center gap-1">
-                              <CheckCircle2 className="w-5 h-5 text-green-600" />
-                              <span className="text-[10px] font-bold uppercase bg-white px-3 py-1 rounded-full shadow-sm">Uploaded</span>
+                              <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-xl">
+                                <CheckCircle2 className="w-4 h-4" strokeWidth={3} />
+                              </div>
+                              <span className="text-[8px] font-black uppercase bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-emerald-600">Securely Linked</span>
                             </div>
                           </>
                         ) : (
-                          <div className="flex flex-col items-center gap-1 text-gray-300">
-                            <UploadCloud className="w-6 h-6" />
-                            <span className="text-[10px] font-bold uppercase tracking-widest">Click to upload</span>
+                          <div className="flex flex-col items-center gap-1 text-slate-300">
+                            <UploadCloud className="w-6 h-6" strokeWidth={1.5} />
+                            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Upload Documentation</span>
                           </div>
                         )}
                       </div>
                     </div>
+                    
                     {/* Terms and Conditions Checkbox */}
                     <div className="pt-2">
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <div className="relative flex items-center mt-0.5">
+                      <label className="flex items-start gap-4 cursor-pointer group">
+                        <div className="relative flex items-center mt-1">
                           <input
                             type="checkbox"
                             checked={formData.hasAgreedToTerms}
                             onChange={(e) => updateFormData("hasAgreedToTerms", e.target.checked)}
-                            className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 bg-gray-50 checked:border-orange-500 checked:bg-orange-500 transition-all focus:ring-2 focus:ring-orange-200 focus:outline-none"
+                            className="peer h-6 w-6 cursor-pointer appearance-none rounded-xl border-2 border-slate-100 bg-slate-50 checked:border-orange-600 checked:bg-orange-600 transition-all focus:outline-none shadow-sm"
                           />
-                          <Check className="absolute h-3.5 w-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
+                          <Check className="absolute h-4 w-4 text-white opacity-0 peer-checked:opacity-100 transition-all pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" strokeWidth={4} />
                         </div>
-                        <span className="text-xs text-gray-500 leading-relaxed font-medium">
-                          I have read and agree to the{" "}
-                          <Link 
-                            href={`/terms/${(formData.role || "DONOR").toLowerCase()}`} 
-                            target="_blank"
-                            className="text-orange-600 hover:text-orange-700 font-bold underline underline-offset-2 transition-colors"
-                          >
-                            Terms and Conditions
-                          </Link>{" "}
-                          for {formData.role === "NGO" ? "NGO Hubs" : formData.role === "RIDER" ? "Riders" : "Donors"}.
+                        <span className="text-[10px] text-slate-400 leading-relaxed font-bold uppercase tracking-wider">
+                          I accept the <Link href={`/terms/${(formData.role || "DONOR").toLowerCase()}`} target="_blank" className="text-orange-600 underline underline-offset-4 decoration-orange-600/10">Terms of Operation</Link>
                         </span>
                       </label>
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-100">
-                    <Button variant="ghost" onClick={prevStep} disabled={isSubmitting} className="text-gray-400 font-bold">
-                      <ChevronLeft className="mr-1 w-4 h-4" /> Back
+                  <div className="flex justify-between items-center mt-8 pt-6 border-t border-slate-50">
+                    <Button variant="ghost" onClick={prevStep} disabled={isSubmitting} className="text-slate-400 font-black uppercase tracking-widest text-[9px] px-6">
+                      <ChevronLeft className="mr-2 w-4 h-4" strokeWidth={3} /> Adjust
                     </Button>
                     <Button
                       onClick={handleSubmit}
                       disabled={!isStepValid() || isSubmitting || uploadingImage}
-                      className="h-12 px-8 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold shadow-lg shadow-orange-100 active:scale-95"
+                      className="h-14 px-10 rounded-xl bg-slate-950 hover:bg-orange-600 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-slate-200"
                     >
                       {isSubmitting ? (
-                        <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Creating...</>
+                        <><Loader2 className="w-4 h-4 animate-spin mr-3" /> Initializing...</>
                       ) : (
-                        <>Complete Registration <ArrowRight className="ml-2 w-4 h-4" /></>
+                        <>Launch Mission <ArrowRight className="ml-3 w-4 h-4" strokeWidth={3} /></>
                       )}
                     </Button>
                   </div>

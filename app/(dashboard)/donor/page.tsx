@@ -259,12 +259,12 @@ export default function DonorDashboard() {
     <div className="w-full space-y-12">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-4">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-2 underline decoration-orange-600/10 underline-offset-8 leading-tight">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mb-2 underline decoration-orange-600/10 underline-offset-8 leading-tight">
              Salute, {userName}! 👋
           </h1>
-          <p className="text-sm sm:text-base text-slate-400 font-bold">Your donations have impacted hundreds of lives today.</p>
+          <p className="text-xs sm:text-base text-slate-400 font-bold">Your donations have impacted hundreds of lives today.</p>
         </motion.div>
-        <Link href="/donor/donate" className="group w-full sm:w-fit px-8 py-4 bg-slate-950 text-white font-black rounded-2xl flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl active:scale-95 text-xs uppercase tracking-widest">
+        <Link href="/donor/donate" className="group w-full sm:w-fit px-8 py-5 sm:py-4 bg-slate-950 text-white font-black rounded-2xl flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl active:scale-95 text-[10px] sm:text-xs uppercase tracking-widest">
           Share Surplus <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
         </Link>
       </header>
@@ -426,11 +426,11 @@ export default function DonorDashboard() {
                 )}
               </>
             ) : (
-              <div className="p-20 rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center text-center">
+              <div className="p-10 sm:p-20 rounded-[2.5rem] sm:rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center text-center">
                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300"><Plus className="w-8 h-8" /></div>
                  <h4 className="font-black text-lg">No active shipments</h4>
-                 <p className="text-slate-400 text-sm font-bold mt-1">You haven&apos;t shared any surplus recently. Start your first mission today.</p>
-                 <Link href="/donor/donate" className="mt-6 px-10 py-4 bg-orange-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-950 transition-all shadow-xl shadow-orange-100">Post Donation</Link>
+                 <p className="text-slate-400 text-sm font-bold mt-1 max-w-[280px]">You haven&apos;t shared any surplus recently. Start your first mission today.</p>
+                 <Link href="/donor/donate" className="mt-8 px-10 py-5 bg-orange-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-950 transition-all shadow-xl shadow-orange-100 italic">Post Donation</Link>
               </div>
             )}
           </div>

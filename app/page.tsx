@@ -145,7 +145,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="text-4xl xs:text-5xl sm:text-6xl md:text-[80px] font-medium tracking-tight leading-[1.1] md:leading-[0.95] mb-10 text-slate-950"
+            className="text-4xl xs:text-5xl sm:text-7xl md:text-[80px] font-medium tracking-tight leading-[1.1] md:leading-[0.95] mb-8 sm:mb-10 text-slate-950"
           >
             <Translate>Zero Waste.</Translate> <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 ">
@@ -157,7 +157,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-base md:text-lg text-slate-500 max-w-2xl mb-14 font-medium leading-relaxed"
+            className="text-base sm:text-lg text-slate-500 max-w-2xl mb-10 sm:mb-14 font-medium leading-relaxed px-4 sm:px-0"
           >
             <Translate>The world's most sophisticated food-sharing engine. We connect high-volume donors with NGOs and professional riders to eliminate hunger with sub-second precision.</Translate>
           </motion.p>
@@ -166,26 +166,26 @@ export default function Home() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-5"
+            className="flex flex-col sm:flex-row gap-4 sm:gap-5 w-full sm:w-auto px-6 sm:px-0"
           >
-            <Link href="/register" className="px-12 py-5 bg-orange-600 text-white font-medium text-lg rounded-[1.5rem] hover:bg-orange-700 hover:shadow-2xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center gap-3">
+            <Link href="/register" className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-orange-600 text-white font-medium text-base sm:text-lg rounded-[1.2rem] sm:rounded-[1.5rem] hover:bg-orange-700 hover:shadow-2xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center justify-center gap-3">
               <Translate>Start Donating</Translate> <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link href="#features" className="px-12 py-5 bg-white border border-slate-200 text-slate-950 font-medium text-lg rounded-[1.5rem] hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-3">
-              <Translate>Watch Impact</Translate> <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600"><Play className="w-3 h-3 fill-current" /></div>
+            <Link href="#features" className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-white border border-slate-200 text-slate-950 font-medium text-base sm:text-lg rounded-[1.2rem] sm:rounded-[1.5rem] hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3">
+              <Translate>Watch Impact</Translate> <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600"><Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" /></div>
             </Link>
           </motion.div>
 
           {/* Luxury Marquee */}
           <div className="mt-20 sm:mt-32 w-full max-w-6xl">
-            <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.3em] sm:tracking-[0.5em] text-slate-300 mb-8 sm:mb-12"><Translate>Trusted Power Partners</Translate></p>
+            <p className="text-[9px] sm:text-[11px] font-medium uppercase tracking-[0.3em] sm:tracking-[0.5em] text-slate-300 mb-6 sm:mb-12"><Translate>Trusted Power Partners</Translate></p>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 w-20 sm:w-40 bg-gradient-to-r from-white to-transparent z-10" />
-              <div className="absolute inset-y-0 right-0 w-20 sm:w-40 bg-gradient-to-l from-white to-transparent z-10" />
-              <Marquee pauseOnHover className="[--duration:25s] py-8 sm:py-12">
+              <div className="absolute inset-y-0 left-0 w-16 sm:w-40 bg-gradient-to-r from-white to-transparent z-10" />
+              <div className="absolute inset-y-0 right-0 w-16 sm:w-40 bg-gradient-to-l from-white to-transparent z-10" />
+              <Marquee pauseOnHover className="[--duration:25s] py-6 sm:py-12">
                 {partners.map((p, i) => (
-                  <div key={i} className="flex flex-col items-center justify-center gap-3 sm:gap-5 mx-8 sm:mx-12 transition-all duration-300 cursor-default group hover:-translate-y-2">
-                     <div className="relative w-16 h-16 xs:w-20 xs:h-20 sm:w-32 sm:h-32 flex items-center justify-center mix-blend-multiply">
+                  <div key={i} className="flex flex-col items-center justify-center gap-3 sm:gap-5 mx-6 sm:mx-12 transition-all duration-300 cursor-default group hover:-translate-y-2">
+                     <div className="relative w-14 h-14 xs:w-16 xs:h-16 sm:w-32 sm:h-32 flex items-center justify-center mix-blend-multiply opacity-60 group-hover:opacity-100 transition-opacity">
                         <Image 
                           src={p.img} 
                           alt={p.name} 
@@ -195,7 +195,7 @@ export default function Home() {
                           priority={i < 3}
                         />
                      </div>
-                     <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 group-hover:text-orange-500 transition-colors">{p.name}</span>
+                     <span className="text-[9px] sm:text-xs font-semibold uppercase tracking-widest text-slate-400 group-hover:text-orange-500 transition-colors">{p.name}</span>
                   </div>
                 ))}
               </Marquee>
@@ -209,20 +209,20 @@ export default function Home() {
         </div>
 
         {/* Polished Bento Grid */}
-        <section id="features" className="px-6 py-40 max-w-7xl mx-auto">
-          <div className="text-center mb-28">
-            <h2 className="text-4xl md:text-7xl font-medium tracking-tight mb-8"><Translate>Platform of</Translate> <span className="text-orange-600 "><Translate>Prestige.</Translate></span></h2>
-            <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto"><Translate>Engineered for absolute reliability, transparency, and global scale.</Translate></p>
+        <section id="features" className="px-6 py-24 sm:py-40 max-w-7xl mx-auto">
+          <div className="text-center mb-16 sm:mb-28 px-4">
+            <h2 className="text-3xl sm:text-5xl md:text-7xl font-medium tracking-tight mb-6 sm:mb-8"><Translate>Platform of</Translate> <span className="text-orange-600 "><Translate>Prestige.</Translate></span></h2>
+            <p className="text-slate-500 font-medium text-base sm:text-lg max-w-xl mx-auto"><Translate>Engineered for absolute reliability, transparency, and global scale.</Translate></p>
           </div>
           
           <BentoGrid items={features} />
         </section>
 
         {/* Roles Section - Premium Orange Gradient */}
-        <section id="roles" className="px-6 sm:px-10 py-20 sm:py-24 md:py-32 bg-gradient-to-br from-orange-400 via-[#F89880] to-orange-600 text-white rounded-[2rem] md:rounded-[4rem] mx-4 md:mx-12 overflow-hidden relative group shadow-inner border border-white/10">
+        <section id="roles" className="px-6 sm:px-10 py-16 sm:py-24 md:py-32 bg-gradient-to-br from-orange-400 via-[#F89880] to-orange-600 text-white rounded-[2rem] md:rounded-[4rem] mx-4 md:mx-12 overflow-hidden relative group shadow-inner border border-white/10">
           <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-white/10 blur-[80px] sm:blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
           
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 sm:gap-16 lg:gap-20 relative z-10">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-16 lg:gap-20 relative z-10">
             <RoleItem luxury title={<Translate>The Giver</Translate>} desc={<Translate>Transform surplus into status. Posting handles everything from logistics to detailed impact reports.</Translate>} />
             <RoleItem luxury title={<Translate>The Anchor</Translate>} desc={<Translate>Empower your NGO with a high-fidelity dashboard to manage cities of surplus food.</Translate>} />
             <RoleItem luxury title={<Translate>The Fleet</Translate>} desc={<Translate>Step into the driver's seat of change. Deliver smiles and earn elite Karma rewards.</Translate>} />
@@ -230,11 +230,11 @@ export default function Home() {
         </section>
 
         {/* Minimalist CTA */}
-        <section className="px-6 py-48 text-center">
-          <h2 className="text-4xl sm:text-5xl md:text-[100px] font-medium tracking-tighter mb-14 text-slate-950 "><Translate>Ready to Lead?</Translate></h2>
-          <p className="text-lg text-slate-400 mb-16 max-w-lg mx-auto font-medium"><Translate>Join 12,000+ pioneers redefining food security. Experience the future of sharing.</Translate></p>
-          <Link href="/register" className="px-20 py-8 bg-slate-950 text-white font-medium text-2xl rounded-[2rem] hover:bg-orange-600 hover:-translate-y-2 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] active:scale-95 group">
-             <Translate>Initialize Profile</Translate> <ArrowRight className="inline ml-2 group-hover:translate-x-3 transition-transform" />
+        <section className="px-6 py-24 sm:py-48 text-center max-w-5xl mx-auto">
+          <h2 className="text-4xl sm:text-6xl md:text-[100px] font-medium tracking-tighter mb-8 sm:mb-14 text-slate-950 leading-tight"><Translate>Ready to Lead?</Translate></h2>
+          <p className="text-base sm:text-lg text-slate-400 mb-10 sm:mb-16 max-w-lg mx-auto font-medium px-4"><Translate>Join 12,000+ pioneers redefining food security. Experience the future of sharing.</Translate></p>
+          <Link href="/register" className="inline-flex w-full sm:w-auto px-10 sm:px-20 py-5 sm:py-8 bg-slate-950 text-white font-medium text-lg sm:text-2xl rounded-[1.5rem] sm:rounded-[2rem] hover:bg-orange-600 hover:-translate-y-2 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.1)] active:scale-95 group items-center justify-center">
+             <Translate>Initialize Profile</Translate> <ArrowRight className="inline ml-3 group-hover:translate-x-3 transition-transform w-5 h-5 sm:w-8 sm:h-8" />
           </Link>
         </section>
 

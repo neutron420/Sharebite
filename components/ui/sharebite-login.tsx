@@ -291,27 +291,27 @@ export default function ShareBiteLogin({
         </div>
 
         {/* Right side - Sign In Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center bg-white">
+        <div className="w-full md:w-1/2 p-6 sm:p-8 md:p-10 flex flex-col justify-center bg-white">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-2xl md:text-3xl font-bold mb-1 text-gray-800">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-1 text-gray-800">
               {roleConfig[loginRole].title}
             </h1>
-            <p className="text-gray-500 mb-6 text-sm">{roleConfig[loginRole].subtitle}</p>
+            <p className="text-gray-500 mb-6 text-xs sm:text-sm">{roleConfig[loginRole].subtitle}</p>
 
             {/* Role Selector Tabs */}
             {showRoleSelector && (
-              <div className="flex bg-orange-50 p-1.5 rounded-xl mb-6">
+              <div className="flex bg-orange-50 p-1 rounded-xl mb-6">
                 {(["DONOR", "NGO", "RIDER"] as const).map((role) => (
                   <button
                     key={role}
                     type="button"
                     onClick={() => setLoginRole(role)}
                     className={cn(
-                      "flex-1 py-2.5 px-3 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-all duration-200",
+                      "flex-1 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all duration-200",
                       loginRole === role
                         ? "bg-white text-orange-600 shadow-sm"
                         : "text-gray-400 hover:text-gray-600"
@@ -325,27 +325,27 @@ export default function ShareBiteLogin({
 
             {success && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-6">
-                <Alert variant="success">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertTitle>Authenticated</AlertTitle>
-                  <AlertDescription>{success}</AlertDescription>
+                <Alert variant="success" className="rounded-2xl border-emerald-100 bg-emerald-50">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  <AlertTitle className="text-emerald-800 font-bold">Authenticated</AlertTitle>
+                  <AlertDescription className="text-emerald-600">{success}</AlertDescription>
                 </Alert>
               </motion.div>
             )}
 
             {error && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} className="mb-6">
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="rounded-2xl">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Access Denied</AlertTitle>
+                  <AlertTitle className="font-bold">Access Denied</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">
                   Email <span className="text-orange-500">*</span>
                 </label>
                 <input
@@ -353,20 +353,20 @@ export default function ShareBiteLogin({
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
+                  placeholder="name@company.com"
                   required
                   disabled={isLoading}
-                  className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 placeholder:text-gray-400 focus-visible:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all disabled:opacity-50"
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                    Password <span className="text-[#F89880]">*</span>
+                <div className="flex items-center justify-between mb-1.5 ml-1">
+                  <label htmlFor="password" className="block text-xs font-bold text-gray-500 uppercase tracking-widest">
+                    Password <span className="text-orange-500">*</span>
                   </label>
-                  <Link href={forgotPasswordUrl} title="Forgot Password" className="text-xs text-[#F89880] hover:text-[#F89880]/80 transition-colors font-medium">
-                    Forgot password?
+                  <Link href={forgotPasswordUrl} className="text-[10px] text-orange-600 hover:text-orange-700 font-black uppercase tracking-widest">
+                    Forgot key?
                   </Link>
                 </div>
                 <div className="relative">
@@ -375,14 +375,14 @@ export default function ShareBiteLogin({
                     type={isPasswordVisible ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder="••••••••"
                     required
                     disabled={isLoading}
-                    className="flex h-10 w-full rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 pr-10 placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-11 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-800 pr-12 placeholder:text-gray-400 focus-visible:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all disabled:opacity-50"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-orange-600 transition-colors"
                     onClick={() => setIsPasswordVisible(!isPasswordVisible)}
                   >
                     {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -391,7 +391,7 @@ export default function ShareBiteLogin({
               </div>
 
               {/* Cloudflare Turnstile */}
-              <div className="flex justify-center border border-slate-100 rounded-xl p-3 bg-slate-50/50 scale-90 origin-center">
+              <div className="flex justify-center border border-slate-100 rounded-xl p-3 bg-slate-50/50 scale-90 sm:scale-100 origin-center">
                 <Turnstile 
                   sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO"} 
                   onVerify={(token) => setTurnstileToken(token)}
@@ -409,36 +409,27 @@ export default function ShareBiteLogin({
                   type="submit"
                   disabled={isLoading}
                   className={cn(
-                    "w-full relative overflow-hidden inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium text-white py-2.5 px-4 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-                    isHovered ? "shadow-lg shadow-orange-200" : ""
+                    "w-full relative overflow-hidden inline-flex items-center justify-center gap-3 rounded-xl text-xs font-black uppercase tracking-widest text-white py-4 px-4 bg-slate-950 hover:bg-orange-600 transition-all duration-300 focus-visible:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50",
+                    isHovered ? "shadow-2xl shadow-orange-200" : ""
                   )}
                 >
                   <span className="flex items-center justify-center">
-                    {isLoading ? "Signing in..." : "Sign in"}
+                    {isLoading ? "Authenticating..." : "Initialize Session"}
                     {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
                   </span>
-                  {isHovered && (
-                    <motion.span
-                      initial={{ left: "-100%" }}
-                      animate={{ left: "100%" }}
-                      transition={{ duration: 1, ease: "easeInOut" }}
-                      className="absolute top-0 bottom-0 left-0 w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                      style={{ filter: "blur(8px)" }}
-                    />
-                  )}
                 </button>
               </motion.div>
 
-              <div className="text-center mt-6 space-y-2">
-                <a href={showRoleSelector ? "/register" : "/admin/register"} className="text-orange-600 hover:text-orange-700 text-sm transition-colors block">
-                  Don&apos;t have an account? Register
-                </a>
+              <div className="text-center mt-6 space-y-3">
+                <Link href={showRoleSelector ? "/register" : "/admin/register"} className="text-orange-600 hover:text-orange-700 text-xs font-bold transition-colors block uppercase tracking-widest">
+                  Don&apos;t have an account? Create one
+                </Link>
                 <div className="pt-2">
                   <Link 
                     href={`/terms/${loginRole.toLowerCase()}`} 
-                    className="text-[10px] text-gray-400 hover:text-orange-500 font-bold uppercase tracking-widest transition-colors"
+                    className="text-[9px] text-gray-300 hover:text-orange-500 font-black uppercase tracking-[0.2em] transition-colors"
                   >
-                    View {loginRole} Terms & Conditions
+                    Terms & Protocol
                   </Link>
                 </div>
               </div>
