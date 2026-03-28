@@ -104,6 +104,13 @@ sub.on("message", (channel, message) => {
         if (client && client.ws.readyState === WebSocket.OPEN) {
           client.ws.send(JSON.stringify({ type: "NOTIFICATION", payload }));
         }
+      } else if (userIds && Array.isArray(userIds)) {
+        userIds.forEach((id: string) => {
+          const client = localClients.get(id);
+          if (client && client.ws.readyState === WebSocket.OPEN) {
+            client.ws.send(JSON.stringify({ type: "NOTIFICATION", payload }));
+          }
+        });
       }
     } catch (err) {
       console.error("Redis Message Error:", err);

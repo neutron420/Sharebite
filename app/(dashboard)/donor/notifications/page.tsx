@@ -60,9 +60,19 @@ export default function DonorNotificationsPage() {
     try {
       await fetch("/api/notifications", { method: "PATCH" });
       setNotifications(notifications.map(n => ({ ...n, isRead: true })));
-      toast.success("All notifications marked as read");
+      toast.success("Identity Logs Synchronized");
     } catch (e) {
-      toast.error("Failed to update.");
+      toast.error("Failed to update status.");
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      await fetch("/api/notifications", { method: "DELETE" });
+      setNotifications([]);
+      toast.success("Intelligence Logs Purged");
+    } catch (e) {
+      toast.error("Failed to clear logs.");
     }
   };
 
@@ -110,14 +120,24 @@ export default function DonorNotificationsPage() {
                 {unreadCount > 0 ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}` : 'You\'re all caught up!'}
               </p>
             </motion.div>
-            {unreadCount > 0 && (
-               <button 
-                  onClick={markAllAsRead}
-                  className="group px-6 py-3 bg-slate-950 text-white font-black rounded-2xl flex items-center gap-3 hover:bg-orange-600 transition-all shadow-xl active:scale-95 text-xs uppercase tracking-widest"
-               >
-                  <CheckCheck className="w-5 h-5" /> Mark All Read
-               </button>
-            )}
+            <div className="flex items-center gap-3">
+               {unreadCount > 0 && (
+                  <button 
+                     onClick={markAllAsRead}
+                     className="group px-6 py-3 bg-white border border-slate-100 text-slate-950 font-black rounded-2xl flex items-center gap-3 hover:bg-orange-50 hover:text-orange-600 transition-all shadow-sm active:scale-95 text-[10px] uppercase tracking-widest"
+                  >
+                     <CheckCheck className="w-4 h-4" /> Mark Read
+                  </button>
+               )}
+               {notifications.length > 0 && (
+                  <button 
+                     onClick={clearAllNotifications}
+                     className="group px-6 py-3 bg-slate-950 text-white font-black rounded-2xl flex items-center gap-3 hover:bg-red-600 transition-all shadow-xl active:scale-95 text-[10px] uppercase tracking-widest"
+                  >
+                     <Trash2 className="w-4 h-4" /> Clear All
+                  </button>
+               )}
+            </div>
           </header>
 
           <div className="space-y-3">

@@ -78,17 +78,13 @@ export async function PATCH(
         select: { id: true }
       });
 
-      const riderNotifications = riders.map(rider => ({
-        userId: rider.id,
-        type: "SYSTEM" as const,
-        title: "New Bounty Available! 📦",
-        message: `A new pickup for "${pickupRequest.donation.title}" in ${pickupRequest.donation.city} needs a rider.`,
-        link: `/rider`
-      }));
-
-      if (riderNotifications.length > 0) {
-        await prisma.notification.createMany({
-          data: riderNotifications
+      if (riders.length > 0) {
+        await createNotification({
+          userIds: riders.map(r => r.id),
+          type: "SYSTEM",
+          title: "New Bounty Available! 📦",
+          message: `A new pickup for "${pickupRequest.donation.title}" in ${pickupRequest.donation.city} needs a rider.`,
+          link: `/rider`
         });
       }
     }
