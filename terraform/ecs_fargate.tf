@@ -72,6 +72,7 @@ resource "aws_ecs_task_definition" "app" {
         { name = "NEXT_PUBLIC_WS_URL", value = "wss://ws.${var.domain_name}" },
         { name = "OPENAI_API_KEY", value = var.openai_api_key },
         { name = "RESEND_API_KEY", value = var.resend_api_key },
+        { name = "RESEND_FROM_EMAIL", value = var.resend_from_email },
         { name = "NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY", value = var.next_public_cloudflare_turnstile_site_key },
         { name = "CLOUDFLARE_TURNSTILE_SECRET_KEY", value = var.cloudflare_turnstile_secret_key },
         { name = "GROQ_API_KEY", value = var.groq_api_key },

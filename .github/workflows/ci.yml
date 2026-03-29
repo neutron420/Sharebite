@@ -41,6 +41,7 @@ jobs:
           NEXT_PUBLIC_WS_URL: ${{ secrets.NEXT_PUBLIC_WS_URL }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
           NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY: ${{ secrets.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY }}
           CLOUDFLARE_TURNSTILE_SECRET_KEY: ${{ secrets.CLOUDFLARE_TURNSTILE_SECRET_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
@@ -54,6 +55,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -88,6 +90,7 @@ jobs:
             --build-arg NEXT_PUBLIC_WS_URL="${{ secrets.NEXT_PUBLIC_WS_URL }}" \
             --build-arg OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             --build-arg RESEND_API_KEY="${{ secrets.RESEND_API_KEY }}" \
+            --build-arg RESEND_FROM_EMAIL="${{ secrets.RESEND_FROM_EMAIL }}" \
             --build-arg NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY="${{ secrets.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY }}" \
             --build-arg CLOUDFLARE_TURNSTILE_SECRET_KEY="${{ secrets.CLOUDFLARE_TURNSTILE_SECRET_KEY }}" \
             --build-arg GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \

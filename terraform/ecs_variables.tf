@@ -39,3 +39,4 @@ variable "cloudflare_turnstile_secret_key" { description = "Turnstile secret key
 variable "groq_api_key" { description = "Groq API Key" }
 variable "rapidapi_key" { description = "RapidAPI Key" }
 variable "rapidapi_host" { description = "RapidAPI Host" }
+variable "resend_from_email" { description = "Resend From Email" }
