@@ -122,3 +122,44 @@ resource "aws_lb_listener_rule" "ws_rule" {
     }
   }
 }
+
+# -----------------------------------------------------------------
+# Resend Email Verification Records
+# -----------------------------------------------------------------
+
+# 1. DKIM Record
+resource "aws_route53_record" "resend_dkim" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "resend._domainkey.${var.domain_name}"
+  type    = "TXT"
+  ttl     = 300
+  records = ["p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCp0H2OY6/FICzYHFCzNHPjE5qTBrOE3bGpXGol7mf5SQzc7etrDBwoKR8yd0Wc3BvhlYkZ7lfa2hor7Ok99uGUO6zrfOi7p7o2GAp0WW2bI+USIhu9onQW9FV22SZLsTNNdtENKUWw/VmaF/Tfn54wV7leVKAklD5eZ545fTMOzwIDAQAB"]
+}
+
+# 2. SPF Record (MX)
+resource "aws_route53_record" "resend_spf_mx" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "send.${var.domain_name}"
+  type    = "MX"
+  ttl     = 300
+  records = ["10 feedback-smtp.us-east-1.amazonses.com"]
+}
+
+# 3. SPF Record (TXT)
+resource "aws_route53_record" "resend_spf_txt" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "send.${var.domain_name}"
+  type    = "TXT"
+  ttl     = 300
+  records = ["v=spf1 include:amazonses.com ~all"]
+}
+
+# 4. DMARC Record (Optional but recommended)
+resource "aws_route53_record" "resend_dmarc" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "_dmarc.${var.domain_name}"
+  type    = "TXT"
+  ttl     = 300
+  records = ["v=DMARC1; p=none;"]
+}
+
