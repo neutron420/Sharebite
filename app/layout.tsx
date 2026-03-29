@@ -26,12 +26,20 @@ import { FloatingAiChat } from "@/components/ai-chat/floating-chat";
 import { SocketProvider } from "@/components/providers/socket-provider";
 import CookieConsent from "@/components/ui/cookie-consent";
 import BugReportModal from "@/components/support/BugReportModal";
+import { cookies } from "next/headers";
+import { SESSION_COOKIE_NAMES } from "@/lib/auth";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  const cookieStore = await cookies();
+  const token = SESSION_COOKIE_NAMES
+    .map((name) => cookieStore.get(name)?.value)
+    .find((value): value is string => !!value);
+
   return (
     <html lang="en">
       <head>
@@ -40,7 +48,7 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} font-sans antialiased bg-white text-slate-900`}
       >
-        <SocketProvider>
+        <SocketProvider initialToken={token}>
           {children}
           <Toaster position="top-center" richColors />
           <FloatingAiChat />

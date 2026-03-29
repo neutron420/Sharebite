@@ -93,7 +93,7 @@ export default function LocationPicker({ onLocationSelect, initialCoords, initia
     setLoading(true);
     try {
       const resp = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&types=address,place,postcode,region,locality`
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&types=address,place,postcode,region,locality&country=IN`
       );
       const data = await resp.json();
       
@@ -133,7 +133,7 @@ export default function LocationPicker({ onLocationSelect, initialCoords, initia
       const runSearch = async () => {
         try {
           const resp = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(externalSearchTrigger)}.json?access_token=${mapboxToken}&limit=1`
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(externalSearchTrigger)}.json?access_token=${mapboxToken}&limit=1&country=IN`
           );
           const data = await resp.json();
           if (data.features && data.features.length > 0) {
@@ -154,7 +154,7 @@ export default function LocationPicker({ onLocationSelect, initialCoords, initia
     if (query.length > 3) {
       try {
         const resp = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&limit=5`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&limit=8&country=IN&proximity=78.9629,20.5937`
         );
         const data = await resp.json();
         setSuggestions(data.features || []);

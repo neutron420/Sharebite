@@ -9,6 +9,7 @@ import {
   UploadCloud, 
   Loader2, 
   Check,
+  CheckCircle2,
   Clock,
   Zap,
   Timer,
@@ -21,7 +22,8 @@ import {
   Soup,
   ArrowLeft,
   Camera,
-  Search
+  Search,
+  LayoutGrid
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -41,18 +43,35 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2Icon, AlertCircleIcon } from "lucide-react";
+import GuidedAddressSelector from "@/components/map/GuidedAddressSelector";
+import { 
+  GiBroccoli, 
+  GiChickenLeg, 
+  GiMilkCarton, 
+  GiBreadSlice, 
+  GiFruitBowl, 
+  GiHotMeal, 
+  GiWheat, 
+  GiBoxUnpacking,
+  GiSodaCan,
+  GiOpenedFoodCan,
+  GiSnowflake1,
+  GiStarsStack
+} from "react-icons/gi";
 
 const categories = [
-  { value: "VEG", label: "Vegetarian", icon: "🥦" },
-  { value: "NON_VEG", label: "Non-Vegetarian", icon: "🍗" },
-  { value: "DAIRY", label: "Dairy Products", icon: "🥛" },
-  { value: "BAKERY", label: "Bakery & Sweets", icon: "🥐" },
-  { value: "FRUITS_AND_VEGGIES", label: "Fruits & Veggies", icon: "🍎" },
-  { value: "COOKED_FOOD", label: "Cooked Meals", icon: "🍲" },
-  { value: "STAPLES", label: "Staples/Grains", icon: "🌾" },
-  { value: "PACKAGED_FOOD", label: "Packaged Food", icon: "📦" },
-  { value: "OTHERS", label: "Other Items", icon: "✨" },
+  { value: "VEG", label: "Vegetarian", icon: <GiBroccoli /> },
+  { value: "NON_VEG", label: "Non-Veg", icon: <GiChickenLeg /> },
+  { value: "DAIRY", label: "Dairy", icon: <GiMilkCarton /> },
+  { value: "BAKERY", label: "Bakery", icon: <GiBreadSlice /> },
+  { value: "FRUITS_AND_VEGGIES", label: "Produce", icon: <GiFruitBowl /> },
+  { value: "COOKED_FOOD", label: "Cooked", icon: <GiHotMeal /> },
+  { value: "STAPLES", label: "Grains", icon: <GiWheat /> },
+  { value: "PACKAGED_FOOD", label: "Packaged", icon: <GiBoxUnpacking /> },
+  { value: "BEVERAGES", label: "Beverages", icon: <GiSodaCan /> },
+  { value: "CANNED_GOODS", label: "Canned", icon: <GiOpenedFoodCan /> },
+  { value: "FROZEN_FOOD", label: "Frozen", icon: <GiSnowflake1 /> },
+  { value: "OTHERS", label: "Others", icon: <GiStarsStack /> },
 ];
 
 export default function DonatePage() {
@@ -67,6 +86,7 @@ export default function DonatePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mapTrigger, setMapTrigger] = useState<string>("");
+  const [showGuidedSelector, setShowGuidedSelector] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -317,7 +337,7 @@ export default function DonatePage() {
                      {success && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}>
                           <Alert variant="success" className="mb-8">
-                            <CheckCircle2Icon className="h-5 w-5" />
+                            <CheckCircle2 className="h-5 w-5" />
                             <AlertTitle>Surplus Shared</AlertTitle>
                             <AlertDescription>{success}</AlertDescription>
                           </Alert>
@@ -326,7 +346,7 @@ export default function DonatePage() {
                      {error && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}>
                           <Alert variant="destructive" className="mb-8">
-                            <AlertCircleIcon className="h-5 w-5" />
+                            <AlertCircle className="h-5 w-5" />
                             <AlertTitle>Tactical Error</AlertTitle>
                             <AlertDescription>{error}</AlertDescription>
                           </Alert>
@@ -343,17 +363,17 @@ export default function DonatePage() {
                            <div className="space-y-6 pt-4">
                               <div className="space-y-3">
                                  <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Category <span className="text-orange-500">*</span></Label>
-                                 <div className="grid grid-cols-3 gap-3">
+                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     {categories.map((cat) => (
                                        <button
                                           key={cat.value}
                                           onClick={() => updateFormData("category", cat.value)}
                                           className={cn(
-                                             "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all group",
+                                             "flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all group touch-manipulation",
                                              formData.category === cat.value ? "border-orange-600 bg-orange-50/30 text-orange-600 shadow-xl shadow-orange-100" : "border-slate-50 bg-slate-50/50 hover:border-orange-200"
                                           )}
                                        >
-                                          <span className="text-2xl grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all">{cat.icon}</span>
+                                          <div className="text-3xl group-hover:scale-110 transition-all text-orange-600/80 group-hover:text-orange-600">{cat.icon}</div>
                                           <span className="text-[9.5px] font-black uppercase tracking-tighter leading-tight">{cat.label}</span>
                                        </button>
                                     ))}
@@ -687,23 +707,72 @@ export default function DonatePage() {
 
                               <div className="space-y-3">
                                  <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Logistics Address</Label>
-                                 <div className="flex gap-2">
+                                 <div className="flex gap-2 relative">
                                     <Input 
                                        className="flex-grow h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-orange-600 font-black px-6 text-sm transition-all"
                                        value={formData.pickupLocation}
                                        placeholder="Door no, Street, Landmark..."
                                        onChange={(e) => updateFormData("pickupLocation", e.target.value)}
                                     />
-                                    <Button 
-                                       variant="outline" 
-                                       type="button"
-                                       className="h-14 rounded-2xl border-2 border-orange-100 text-orange-600 hover:bg-orange-50 font-black text-[10px] uppercase px-4 flex items-center gap-2"
-                                       onClick={() => setMapTrigger(formData.pickupLocation)}
-                                    >
-                                       <Search className="w-3.5 h-3.5" /> Find & Pin
-                                    </Button>
+                                    <div className="flex gap-2">
+                                       <Button 
+                                          variant="outline" 
+                                          type="button"
+                                          className="h-14 rounded-2xl border-2 border-orange-100 text-orange-600 hover:bg-orange-50 font-black text-[10px] uppercase px-4 flex items-center gap-2"
+                                          onClick={() => setMapTrigger(formData.pickupLocation)}
+                                       >
+                                          <Search className="w-3.5 h-3.5" /> Pin
+                                       </Button>
+                                       <Button 
+                                          variant="outline" 
+                                          type="button"
+                                          className={cn(
+                                             "h-14 rounded-2xl border-2 font-black text-[10px] uppercase px-4 flex items-center gap-2 transition-all",
+                                             showGuidedSelector ? "bg-orange-600 border-orange-600 text-white shadow-lg shadow-orange-100" : "border-slate-100 text-slate-400 hover:border-orange-100 hover:text-orange-600"
+                                          )}
+                                          onClick={() => setShowGuidedSelector(!showGuidedSelector)}
+                                       >
+                                          <LayoutGrid className="w-3.5 h-3.5" /> Guide
+                                       </Button>
+                                    </div>
+
+                                    <AnimatePresence>
+                                       {showGuidedSelector && (
+                                          <>
+                                             <motion.div 
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                onClick={() => setShowGuidedSelector(false)}
+                                                className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden"
+                                             />
+                                             <motion.div 
+                                                initial={{ opacity: 0, scale: 0.9, y: 10, x: "-50%" }}
+                                                animate={{ opacity: 1, scale: 1, y: 0, x: "-50%" }}
+                                                exit={{ opacity: 0, scale: 0.9, y: 10, x: "-50%" }}
+                                                className="fixed lg:absolute top-1/2 lg:top-20 left-1/2 -translate-x-1/2 -translate-y-1/2 lg:translate-y-0 w-[90%] max-w-[400px] z-[60] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.3)] h-fit"
+                                             >
+                                                <GuidedAddressSelector 
+                                                   onClose={() => setShowGuidedSelector(false)}
+                                                   onSelect={(data) => {
+                                                      const newAddress = `${data.area ? data.area + ', ' : ''}${data.city}, ${data.state}`;
+                                                      setFormData(prev => ({ 
+                                                         ...prev, 
+                                                         pickupLocation: newAddress,
+                                                         city: data.city,
+                                                         state: data.state
+                                                      }));
+                                                      setMapTrigger(newAddress);
+                                                      setShowGuidedSelector(false);
+                                                      toast.success(`Position updated to ${data.city}`);
+                                                   }}
+                                                />
+                                             </motion.div>
+                                          </>
+                                       )}
+                                    </AnimatePresence>
                                  </div>
-                                 <p className="text-[10px] font-bold text-slate-400 italic">This will be shown to the approved NGO only.</p>
+                                 <p className="text-[10px] font-bold text-slate-400 italic">Try searching or use the &quot;Guide&quot; for structured selection.</p>
                               </div>
 
                               {/* Mobile Map Integrated - Precise Ops Targeting */}
