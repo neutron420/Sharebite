@@ -52,10 +52,12 @@ async function forgotPasswordHandler(req: Request) {
     // 5. Secure Email Dispatch via Resend
     let emailStatus = "Dispatched via Resend";
     try {
+      const fromEmail = process.env.RESEND_FROM_EMAIL || "ShareBite Support <support@neutrondev.in>";
+      
       const { data, error } = await resend.emails.send({
-        from: "ShareBite Support <onboarding@resend.dev>",
+        from: fromEmail,
         to: email,
-        subject: "🔒 Security Alert: Your Access Code",
+        subject: "Security Alert: Your Access Code",
         html: `
           <div style="font-family: sans-serif; background: #fffaf8; padding: 40px;">
             <div style="max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; border: 1px solid #feeae2;">
@@ -72,18 +74,21 @@ async function forgotPasswordHandler(req: Request) {
 
       if (error) {
         console.error("❌ [RESEND_API_ERROR]", error);
-        emailStatus = `Email Failed: ${error.message}`;
         
         // Critical Tip for the User:
-        if (error.message.includes("onboarding@resend.dev")) {
-          console.log("\n💡 IMPORTANT TIP: You are using Resend Sandbox. You MUST send to the email address you signed up with (likely your own) OR verify your domain in Resend dashboard.\n");
+        if (error.message.includes("onboarding@resend.dev") || error.name === "validation_error") {
+          return NextResponse.json({ 
+            error: "Production Email configuration required: Please add RESEND_FROM_EMAIL to your .env with your verified domain (e.g., support@yourdomain.com), or use the email you signed up to Resend with." 
+          }, { status: 500 });
         }
+        
+        return NextResponse.json({ error: `Email routing failed: ${error.message}` }, { status: 500 });
       } else {
         console.log(`✅ [AUTH] OTP Successfully Sent to ${email} (Role: ${role})`);
       }
     } catch (catchErr: any) {
       console.error("❌ [RESEND_NETWORK_ERROR]", catchErr);
-      emailStatus = "Service unavailable";
+      return NextResponse.json({ error: "Email delivery service unavailable." }, { status: 500 });
     }
 
     // 📢 DEVELOPER COMPONENT: Log to terminal for local testing
@@ -97,7 +102,8 @@ async function forgotPasswordHandler(req: Request) {
 
     return NextResponse.json({ 
       message: "OTP Dispatched.",
-      devHint: "If the email doesn't arrive, check your server terminal for the code."
+      devHint: "If the email doesn't arrive, check your server terminal for the code.",
+      devOtp: process.env.NODE_ENV !== "production" ? otp : undefined
     });
   } catch (err: any) {
     console.error("[FORGOT_PASSWORD_HANDLER_ERROR]", err);

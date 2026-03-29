@@ -85,7 +85,9 @@ export default function ForgotPasswordPage() {
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       
       setStep("OTP");
-      setSuccess("OTP sent to your email. Check your inbox.");
+      setSuccess(
+        `OTP sent to your email. ${data.devOtp ? `(DEV OVERRIDE: ${data.devOtp})` : "Check your inbox."}`
+      );
     } catch (err: any) {
       setError(err.message);
     } finally {

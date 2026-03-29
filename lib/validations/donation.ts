@@ -13,6 +13,9 @@ export const donationSchema = z.object({
     "COOKED_FOOD",
     "STAPLES",
     "PACKAGED_FOOD",
+    "BEVERAGES",
+    "CANNED_GOODS",
+    "FROZEN_FOOD",
     "OTHERS"
   ]),
   expiryTime: z.string().refine((val) => !isNaN(Date.parse(val)), {
