@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import prisma from "@/lib/prisma";
 import { donationSchema } from "@/lib/validations/donation";
 import { getSession } from "@/lib/auth";
@@ -122,9 +123,9 @@ async function postDonationHandler(request: Request) {
 
     return NextResponse.json(donation, { status: 201 });
   } catch (error: any) {
-    if (error.name === "ZodError") {
+    if (error.name === "ZodError" || error instanceof ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues || error.errors },
         { status: 400 }
       );
     }
