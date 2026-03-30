@@ -5,6 +5,7 @@ import { withSecurity } from "@/lib/api-handler";
 import { createNotification } from "@/lib/notifications";
 import redis from "@/lib/redis";
 import { sendThankYouEmail } from "@/lib/email";
+import { validateFoodImage, compareFoodImages } from "@/lib/vision";
 
 async function deliveryHandler(
   request: Request,
@@ -26,7 +27,7 @@ async function deliveryHandler(
       return NextResponse.json({ error: "Proof of delivery image is required" }, { status: 400 });
     }
 
-    // 1. Fetch the request with donor and NGO details
+    // 1. Fetch the request with donor and NGO details (NECESSARY FOR VERIFICATION)
     const pickupRequest = await prisma.pickupRequest.findUnique({
       where: { id },
       include: { 
@@ -50,6 +51,25 @@ async function deliveryHandler(
 
     if (!pickupRequest || (pickupRequest.riderId !== userId && session.role !== "ADMIN")) {
       return NextResponse.json({ error: "Unauthorized task access" }, { status: 403 });
+    }
+
+    // 2. AI-based Quality Control: Verify that the rider is actually delivering food
+    const isFood = await validateFoodImage(deliveryProofUrl);
+    if (!isFood) {
+      return NextResponse.json({ 
+        error: "Image verification failed. The photo does not seem to be a clear picture of food. Please take a proper picture of the delivery." 
+      }, { status: 400 });
+    }
+
+    // 3. Verify consistency between original posting and delivery proof
+    const originalImageUrl = pickupRequest.donation.imageUrl;
+    if (originalImageUrl) {
+      const isSameItems = await compareFoodImages(originalImageUrl, deliveryProofUrl);
+      if (!isSameItems) {
+        return NextResponse.json({ 
+          error: "Photo mismatch. The delivery photo does not seem to match the original donation items. Please ensure you are delivering the correct food." 
+        }, { status: 400 });
+      }
     }
 
     // SECURITY: Ensure food was actually picked up first

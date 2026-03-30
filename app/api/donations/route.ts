@@ -7,6 +7,7 @@ import { NotificationType } from "@/app/generated/prisma";
 import redis from "@/lib/redis";
 import { withSecurity } from "@/lib/api-handler";
 import { checkAndAwardBadges, awardDonationKarma } from "@/lib/achievements";
+import { validateFoodImage } from "@/lib/vision";
 
 async function postDonationHandler(request: Request) {
   try {
@@ -21,6 +22,16 @@ async function postDonationHandler(request: Request) {
 
     const body = await request.json();
     const validatedData = donationSchema.parse(body);
+
+    // AI-based Quality Control: Verify that the donor is actually posting food and it matches the category
+    if (validatedData.imageUrl) {
+      const isFood = await validateFoodImage(validatedData.imageUrl, validatedData.category);
+      if (!isFood) {
+        return NextResponse.json({ 
+          error: "Image verification failed. The photo does not seem to be a clear picture of food. Please upload a proper picture of the donation." 
+        }, { status: 400 });
+      }
+    }
 
     const donation = await prisma.foodDonation.create({
       data: {

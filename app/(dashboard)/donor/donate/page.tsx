@@ -6,7 +6,6 @@ import {
   ChevronLeft, 
   ChevronRight, 
   MapPin, 
-  UploadCloud, 
   Loader2, 
   Check,
   CheckCircle2,
@@ -23,7 +22,8 @@ import {
   ArrowLeft,
   Camera,
   Search,
-  LayoutGrid
+  LayoutGrid,
+  UploadCloud
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,7 @@ import {
   GiSnowflake1,
   GiStarsStack
 } from "react-icons/gi";
+import { HiCloudUpload } from "react-icons/hi";
 
 const categories = [
   { value: "VEG", label: "Vegetarian", icon: <GiBroccoli /> },
@@ -79,6 +80,7 @@ export default function DonatePage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -199,6 +201,46 @@ export default function DonatePage() {
     setPreviewUrl(URL.createObjectURL(file));
     setUploadingImage(true);
     try {
+      
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]); 
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+   
+      setIsValidating(true);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+
+      const verifyRes = await fetch("/api/vision/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          base64Data, 
+          mimeType: file.type, 
+          category: formData.category 
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      setIsValidating(false);
+
+      const verifyData = await verifyRes.json();
+
+      if (!verifyData.isFood) {
+        setPreviewUrl(null);
+        toast.error("Verification failed: This doesn't look like food. Please upload a real food photo.");
+        return;
+      }
+
+      toast.success("Image verified as food! ✅ Uploading...");
+
+ 
       const res = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -211,21 +253,39 @@ export default function DonatePage() {
       if (!res.ok) throw new Error("Upload initialization failed");
       const { presignedUrl, url } = await res.json();
 
-      const uploadRes = await fetch(presignedUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-
-      if (!uploadRes.ok) throw new Error("Cloud storage upload failed");
+      let uploadSuccess = false;
+      try {
+        const uploadRes = await fetch(presignedUrl, {
+          method: "PUT",
+          headers: { "Content-Type": file.type },
+          body: file,
+        });
+        uploadSuccess = uploadRes.ok;
+      } catch {
+        // Fallback check
+        try {
+          const checkRes = await fetch(url, { method: "HEAD" });
+          uploadSuccess = checkRes.ok;
+        } catch {
+          throw new Error("Upload failed. Try disabling browser extensions.");
+        }
+      }
 
       updateFormData("imageUrl", url);
-      toast.success("Photo attached successfully!");
-    } catch (error) {
+      toast.success("Synchronized with Secure Cloud! ☁️");
+
+    } catch (error: any) {
       console.error(error);
-      toast.error("Failed to upload image");
+      setPreviewUrl(null);
+      updateFormData("imageUrl", "");
+      if (error.name === "AbortError") {
+        toast.error("AI verification timed out. Please try again.");
+      } else {
+        toast.error(error.message || "Failed to process image");
+      }
     } finally {
       setUploadingImage(false);
+      setIsValidating(false);
     }
   };
 
@@ -639,8 +699,8 @@ export default function DonatePage() {
                                        onClick={() => !uploadingImage && fileInputRef.current?.click()}
                                        className="flex flex-col items-center justify-center gap-2 p-6 rounded-3xl border-2 border-slate-100 bg-slate-50/50 text-slate-400 hover:border-orange-200 hover:text-orange-600 transition-all"
                                     >
-                                       <UploadCloud className="w-6 h-6" />
-                                       <span className="text-[10px] font-black uppercase tracking-widest">Gallery</span>
+                                       <HiCloudUpload className="w-8 h-8" />
+                                       <span className="text-[10px] font-black uppercase tracking-widest">Upload Image</span>
                                     </button>
                                  </div>
 
