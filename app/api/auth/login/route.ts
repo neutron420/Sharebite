@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import { withSecurity } from "@/lib/api-handler";
 
 async function loginHandler(request: Request) {
+  console.log(">>> LOGIN ATTEMPT REACHED HANDLER");
   try {
     const body = await request.json();
     const { turnstileToken, ...loginData } = body;

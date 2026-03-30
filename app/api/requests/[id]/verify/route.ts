@@ -56,7 +56,7 @@ export async function POST(
       type: "REQUEST_STATUS",
       title: "Donation Completed!",
       message: `The NGO has verified the handover for "${pickupRequest.donation.title}". Thank you for your contribution!`,
-      link: `/dashboard/requests/${id}`
+      link: `/donor/donations/${pickupRequest.donationId}`
     });
 
     // Remove from Redis GEO index since it's now collected

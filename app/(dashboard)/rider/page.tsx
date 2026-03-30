@@ -21,6 +21,8 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Wallet, Trophy, Coins, CreditCard } from "lucide-react";
+import { TimesheetConfirmation } from "@/components/timesheet-confirmation";
 
 interface Task {
   id: string;
@@ -53,10 +55,26 @@ export default function RiderDashboard() {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [pin, setPin] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [stats, setStats] = useState({ balance: 0, totalEarnings: 0, rewardPoints: 0, completedMissions: 0 });
+  const [isDeliveryVerify, setIsDeliveryVerify] = useState(false);
+  
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [completedMissionData, setCompletedMissionData] = useState<any>(null);
 
   useEffect(() => {
     fetchTasks();
+    fetchStats();
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/rider/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setStats(data);
+      }
+    } catch (err) {}
+  };
 
   const fetchTasks = async () => {
     try {
@@ -98,24 +116,69 @@ export default function RiderDashboard() {
 
   const handleHandover = async () => {
     if (!verifyingId || pin.length < 4) {
-      toast.error("Enter the 4-digit Handover PIN");
+      toast.error(isDeliveryVerify ? "Enter the 6-digit OTP" : "Enter the 4-digit Handover PIN");
       return;
     }
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/requests/${verifyingId}/handover`, {
-        method: "PATCH",
+      const endpoint = isDeliveryVerify 
+        ? `/api/requests/${verifyingId}/rider-verify`
+        : `/api/requests/${verifyingId}/handover`;
+      
+      const method = isDeliveryVerify ? "POST" : "PATCH";
+      const payload = isDeliveryVerify ? { otp: pin } : { pin };
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Handover failed.");
+      if (!res.ok) throw new Error(data.error || "Operation failed.");
 
-      toast.success("Handover Success! Move to NGO location.");
+      if (isDeliveryVerify) {
+        const activeReq = tasks.find(t => t.id === verifyingId);
+        if (activeReq) {
+          setCompletedMissionData({
+            clientName: activeReq.ngo.name,
+            taskName: activeReq.donation.title,
+            timeEntries: [
+              { date: "Pickup Verified", duration: "Step 1 ✓" },
+              { date: "Delivery Verified", duration: "Step 2 ✓" }
+            ],
+            financials: [
+              { label: "Base Payout", value: 40 },
+              { label: "Production Bonus", value: 10 }
+            ],
+            totalHours: "10 Karma Pts",
+            takeHomeAmount: 50
+          });
+          setShowSuccessModal(true);
+        }
+      }
+
+      toast.success(isDeliveryVerify ? "Mission Accomplished! Payment Released." : "Handover Success! Move to NGO location.");
       setVerifyingId(null);
       setPin("");
       fetchTasks();
+      fetchStats();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSendOtp = async (requestId: string) => {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/requests/${requestId}/send-otp`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+      toast.success("OTP sent to NGO coordinate email!");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -145,6 +208,27 @@ export default function RiderDashboard() {
              Mission Hub
           </h1>
           <p className="text-[10px] sm:text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">Manage deployments & source new bounties.</p>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex gap-4">
+           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 min-w-[180px]">
+              <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600">
+                 <Wallet className="w-6 h-6" />
+              </div>
+              <div>
+                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Earnings</p>
+                 <p className="text-xl font-black text-gray-950 tracking-tighter">₹{stats.balance.toFixed(2)}</p>
+              </div>
+           </div>
+           <div className="bg-slate-950 p-6 rounded-3xl shadow-xl flex items-center gap-4 min-w-[180px] text-white">
+              <div className="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center text-white">
+                 <Trophy className="w-6 h-6" />
+              </div>
+              <div>
+                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rewards</p>
+                 <p className="text-xl font-black text-white tracking-tighter">{stats.rewardPoints} Pts</p>
+              </div>
+           </div>
         </motion.div>
       </header>
 
@@ -189,18 +273,40 @@ export default function RiderDashboard() {
                 </div>
 
                 <div className="flex flex-col items-center gap-4">
-                   <button 
-                      onClick={() => {
-                         if (activeMission.status === 'ASSIGNED') {
-                            setVerifyingId(activeMission.id);
-                         } else {
-                            router.push(`/rider/mission/${activeMission.id}`);
-                         }
-                      }}
-                      className="w-full py-6 bg-orange-600 text-white font-bold rounded-2xl text-lg hover:bg-orange-700 hover:scale-[1.02] transition-all active:scale-95 shadow-lg shadow-orange-500/20 flex items-center justify-center gap-3"
-                   >
-                      {activeMission.status === 'ASSIGNED' ? 'Verify Handover' : 'Briefing Details'} <Navigation className="w-5 h-5" />
-                   </button>
+                    {activeMission.status === 'ON_THE_WAY' ? (
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                          <button 
+                             onClick={() => handleSendOtp(activeMission.id)}
+                             disabled={actionLoading}
+                             className="py-4 bg-white border-2 border-orange-600 text-orange-600 font-bold rounded-2xl text-xs hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
+                          >
+                             <Zap className="w-4 h-4" /> Send OTP
+                          </button>
+                          <button 
+                             onClick={() => {
+                                setIsDeliveryVerify(true);
+                                setVerifyingId(activeMission.id);
+                             }}
+                             className="py-4 bg-orange-600 text-white font-bold rounded-2xl text-xs hover:bg-orange-700 shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
+                          >
+                             <ShieldCheck className="w-4 h-4" /> Verify Delivery
+                          </button>
+                       </div>
+                    ) : (
+                       <button 
+                          onClick={() => {
+                             if (activeMission.status === 'ASSIGNED') {
+                                setIsDeliveryVerify(false);
+                                setVerifyingId(activeMission.id);
+                             } else {
+                                router.push(`/rider/mission/${activeMission.id}`);
+                             }
+                          }}
+                          className="w-full py-6 bg-orange-600 text-white font-bold rounded-2xl text-lg hover:bg-orange-700 hover:scale-[1.02] transition-all active:scale-95 shadow-lg shadow-orange-500/20 flex items-center justify-center gap-3"
+                       >
+                          {activeMission.status === 'ASSIGNED' ? 'Verify Handover' : 'Briefing Details'} <Navigation className="w-5 h-5" />
+                       </button>
+                    )}
                    
                    <div className="flex gap-3 w-full">
                       <button 
@@ -289,15 +395,19 @@ export default function RiderDashboard() {
                      <ShieldCheck className="w-10 h-10 text-white" />
                   </div>
                   <div className="space-y-2">
-                     <h2 className="text-2xl font-bold text-gray-900">Security Key</h2>
-                     <p className="text-gray-500 text-xs px-4">Enter the 4-digit verification code provided by the donor.</p>
+                     <h2 className="text-2xl font-bold text-gray-900">{isDeliveryVerify ? "Delivery OTP" : "Handover PIN"}</h2>
+                     <p className="text-gray-500 text-xs px-4">
+                        {isDeliveryVerify 
+                           ? "Enter the 6-digit code shared by the NGO coordinator." 
+                           : "Enter the 4-digit verification code provided by the donor."}
+                     </p>
                   </div>
 
                   <div className="space-y-6">
                      <input 
                         type="text" 
-                        maxLength={4}
-                        placeholder="----"
+                        maxLength={isDeliveryVerify ? 6 : 4}
+                        placeholder={isDeliveryVerify ? "------" : "----"}
                         autoFocus
                         className="w-full text-center text-5xl font-bold tracking-[0.5em] py-8 rounded-2xl bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white focus:outline-none transition-all placeholder:text-gray-200"
                         value={pin}
@@ -307,11 +417,11 @@ export default function RiderDashboard() {
                         <button onClick={() => setVerifyingId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
                         <button 
                            onClick={handleHandover}
-                           disabled={actionLoading || pin.length < 4}
+                           disabled={actionLoading || pin.length < (isDeliveryVerify ? 6 : 4)}
                            className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                         >
                            {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                           Verify PIN
+                           {isDeliveryVerify ? "Verify Delivery" : "Verify PIN"}
                         </button>
                      </div>
                   </div>
@@ -319,6 +429,17 @@ export default function RiderDashboard() {
             </motion.div>
          )}
       </AnimatePresence>
+
+      <TimesheetConfirmation 
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        clientName={completedMissionData?.clientName || ""}
+        taskName={completedMissionData?.taskName || ""}
+        timeEntries={completedMissionData?.timeEntries || []}
+        financials={completedMissionData?.financials || []}
+        totalHours={completedMissionData?.totalHours || ""}
+        takeHomeAmount={completedMissionData?.takeHomeAmount || 0}
+      />
     </div>
   );
 }

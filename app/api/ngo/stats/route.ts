@@ -22,7 +22,7 @@ async function getNgoStatsHandler(request: Request) {
     const userId = session.userId as string;
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { name: true }
+      select: { name: true, state: true, city: true }
     });
 
     const [
@@ -43,7 +43,15 @@ async function getNgoStatsHandler(request: Request) {
         _sum: { weight: true }
       }),
       prisma.foodDonation.findMany({
-        where: { status: "AVAILABLE" },
+        where: { 
+          status: "AVAILABLE",
+          // Only show donations from the NGO's state
+          ...(user?.state ? { state: user.state } : {}),
+          // Exclude donations this NGO already requested
+          NOT: {
+            requests: { some: { ngoId: userId } }
+          }
+        },
         take: 5,
         orderBy: { createdAt: "desc" },
         include: { donor: { select: { name: true, city: true } } }

@@ -7,6 +7,35 @@ interface EmailResponse {
   error?: any;
 }
 
+interface EmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  from?: string;
+}
+
+export async function sendEmail(options: EmailOptions): Promise<EmailResponse> {
+  const { to, subject, html, from } = options;
+  try {
+    const fromEmail = from || process.env.RESEND_FROM_EMAIL || "ShareBite Support <support@neutrondev.in>";
+    const { data, error } = await resend.emails.send({
+      from: fromEmail,
+      to,
+      subject,
+      html,
+    });
+
+    if (error) {
+      console.error("[EMAIL_GENERIC_ERROR]", error);
+      return { success: false, error };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("[EMAIL_GENERIC_CRITICAL_ERROR]", err);
+    return { success: false, error: err };
+  }
+}
 
 const ICONS = {
   TRUCK: "https://cdn-icons-png.flaticon.com/512/3063/3063822.png",

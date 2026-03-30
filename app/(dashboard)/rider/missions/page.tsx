@@ -30,6 +30,9 @@ interface Task {
   donationId: string;
   ngoId: string;
   updatedAt: string;
+  payment?: {
+    status: string;
+  };
   donation: {
     id: string;
     title: string;
@@ -55,6 +58,7 @@ export default function RiderMissionsPage() {
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [pin, setPin] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [isDeliveryVerify, setIsDeliveryVerify] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -76,24 +80,47 @@ export default function RiderMissionsPage() {
 
   const handleHandover = async () => {
     if (!verifyingId || pin.length < 4) {
-      toast.error("Enter the 4-digit Handover PIN");
+      toast.error(isDeliveryVerify ? "Enter the 6-digit OTP" : "Enter the 4-digit Handover PIN");
       return;
     }
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/requests/${verifyingId}/handover`, {
-        method: "PATCH",
+      const endpoint = isDeliveryVerify 
+        ? `/api/requests/${verifyingId}/rider-verify`
+        : `/api/requests/${verifyingId}/handover`;
+      
+      const method = isDeliveryVerify ? "POST" : "PATCH";
+      const payload = isDeliveryVerify ? { otp: pin } : { pin };
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Handover failed.");
+      if (!res.ok) throw new Error(data.error || "Operation failed.");
 
-      toast.success("Handover Success! Move to NGO location.");
+      toast.success(isDeliveryVerify ? "Delivery Success! Payment Released." : "Handover Success! Move to NGO location.");
       setVerifyingId(null);
       setPin("");
       fetchTasks();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleSendOtp = async (requestId: string) => {
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/requests/${requestId}/send-otp`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send OTP");
+      toast.success("OTP sent to NGO coordinate email!");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -166,19 +193,41 @@ export default function RiderMissionsPage() {
                        </div>
                     </div>
 
-                    <div className="mt-auto flex gap-3">
-                       <button 
-                          onClick={() => {
-                             if (task.status === 'ASSIGNED') {
-                                setVerifyingId(task.id);
-                             } else {
-                                router.push(`/rider/mission/${task.id}`);
-                             }
-                          }}
-                          className={`flex-1 py-4 font-bold rounded-2xl text-sm transition-all active:scale-95 flex items-center justify-center gap-3 ${task.status === 'ASSIGNED' ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20' : 'bg-gray-900 text-white shadow-lg shadow-gray-900/10'}`}
-                       >
-                          {task.status === 'ASSIGNED' ? 'Verify Handover' : 'Briefing Details'} <ArrowRight className="w-4 h-4" />
-                       </button>
+                    <div className="mt-auto flex flex-col gap-3">
+                       {task.status === 'ON_THE_WAY' ? (
+                          <div className="grid grid-cols-2 gap-3">
+                             <button 
+                                onClick={() => handleSendOtp(task.id)}
+                                disabled={actionLoading}
+                                className="py-4 bg-white border-2 border-orange-600 text-orange-600 font-bold rounded-2xl text-xs hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
+                             >
+                                <Zap className="w-4 h-4" /> Send OTP
+                             </button>
+                             <button 
+                                onClick={() => {
+                                   setIsDeliveryVerify(true);
+                                   setVerifyingId(task.id);
+                                }}
+                                className="py-4 bg-orange-600 text-white font-bold rounded-2xl text-xs hover:bg-orange-700 shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
+                             >
+                                <ShieldCheck className="w-4 h-4" /> Verify Delivery
+                             </button>
+                          </div>
+                       ) : (
+                          <button 
+                             onClick={() => {
+                                if (task.status === 'ASSIGNED') {
+                                   setIsDeliveryVerify(false);
+                                   setVerifyingId(task.id);
+                                } else {
+                                   router.push(`/rider/mission/${task.id}`);
+                                }
+                             }}
+                             className={`flex-1 py-4 font-bold rounded-2xl text-sm transition-all active:scale-95 flex items-center justify-center gap-3 ${task.status === 'ASSIGNED' ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20' : 'bg-gray-900 text-white shadow-lg shadow-gray-900/10'}`}
+                          >
+                             {task.status === 'ASSIGNED' ? 'Verify Handover' : 'Briefing Details'} <ArrowRight className="w-4 h-4" />
+                          </button>
+                       )}
                     </div>
                  </div>
                </motion.div>
@@ -255,33 +304,37 @@ export default function RiderMissionsPage() {
                   <div className="w-20 h-20 bg-orange-600 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-orange-500/20">
                      <ShieldCheck className="w-10 h-10 text-white" />
                   </div>
-                  <div className="space-y-2">
-                     <h2 className="text-2xl font-bold text-gray-900">Security Key</h2>
-                     <p className="text-gray-500 text-xs px-4">Enter the 4-digit verification code provided by the donor.</p>
-                  </div>
+                    <div className="space-y-2">
+                       <h2 className="text-2xl font-bold text-gray-900">{isDeliveryVerify ? "Delivery OTP" : "Handover PIN"}</h2>
+                       <p className="text-gray-500 text-xs px-4">
+                          {isDeliveryVerify 
+                             ? "Enter the 6-digit code shared by the NGO coordinator." 
+                             : "Enter the 4-digit verification code provided by the donor."}
+                       </p>
+                    </div>
 
-                  <div className="space-y-6">
-                     <input 
-                        type="text" 
-                        maxLength={4}
-                        placeholder="----"
-                        autoFocus
-                        className="w-full text-center text-5xl font-bold tracking-[0.5em] py-8 rounded-2xl bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white focus:outline-none transition-all placeholder:text-gray-200"
-                        value={pin}
-                        onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                     />
-                     <div className="flex gap-3">
-                        <button onClick={() => setVerifyingId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
-                        <button 
-                           onClick={handleHandover}
-                           disabled={actionLoading || pin.length < 4}
-                           className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
-                        >
-                           {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                           Verify PIN
-                        </button>
-                     </div>
-                  </div>
+                    <div className="space-y-6">
+                       <input 
+                          type="text" 
+                          maxLength={isDeliveryVerify ? 6 : 4}
+                          placeholder={isDeliveryVerify ? "------" : "----"}
+                          autoFocus
+                          className="w-full text-center text-5xl font-bold tracking-[0.5em] py-8 rounded-2xl bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white focus:outline-none transition-all placeholder:text-gray-200"
+                          value={pin}
+                          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                       />
+                       <div className="flex gap-3">
+                          <button onClick={() => setVerifyingId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
+                          <button 
+                             onClick={handleHandover}
+                             disabled={actionLoading || pin.length < (isDeliveryVerify ? 6 : 4)}
+                             className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                          >
+                             {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                             {isDeliveryVerify ? "Verify Delivery" : "Verify PIN"}
+                          </button>
+                       </div>
+                    </div>
                </motion.div>
             </motion.div>
          )}
