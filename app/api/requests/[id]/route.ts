@@ -4,6 +4,76 @@ import { getSession } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
 import redis from "@/lib/redis";
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    const pickupRequest = await prisma.pickupRequest.findUnique({
+      where: { id },
+      include: {
+        donation: {
+          include: {
+            donor: {
+              select: {
+                id: true,
+                name: true,
+                city: true,
+                latitude: true,
+                longitude: true,
+                phoneNumber: true
+              }
+            }
+          }
+        },
+        ngo: {
+          select: {
+            id: true,
+            name: true,
+            city: true,
+            latitude: true,
+            longitude: true
+          }
+        },
+        rider: {
+          select: {
+            id: true,
+            name: true,
+            city: true
+          }
+        },
+        payment: true
+      }
+    });
+
+    if (!pickupRequest) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    // Role-based authorization
+    const isDonor = pickupRequest.donation.donorId === session.userId;
+    const isNGO = pickupRequest.ngoId === session.userId;
+    const isAdmin = session.role === "ADMIN";
+    const isRider = pickupRequest.riderId === session.userId;
+
+    if (!isDonor && !isNGO && !isAdmin && !isRider) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    return NextResponse.json(pickupRequest);
+  } catch (error) {
+    console.error("Fetch request error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -69,7 +139,7 @@ export async function PATCH(
         type: "REQUEST_STATUS",
         title: "Request Approved!",
         message: `Your request for "${pickupRequest.donation.title}" is approved. Check your dashboard for the Handover PIN.`,
-        link: `/dashboard/requests/${id}`
+        link: `/ngo/requests/${id}`
       });
 
       // Broadcast to Riders that a "Bounty" is available
@@ -84,7 +154,7 @@ export async function PATCH(
           type: "SYSTEM",
           title: "New Bounty Available! 📦",
           message: `A new pickup for "${pickupRequest.donation.title}" in ${pickupRequest.donation.city} needs a rider.`,
-          link: `/rider`
+          link: `/rider/mission/${id}`
         });
       }
     }
@@ -99,7 +169,7 @@ export async function PATCH(
         type: "REQUEST_STATUS",
         title: "NGO is on the way!",
         message: `An NGO representative for "${pickupRequest.donation.title}" has started the pickup journey.`,
-        link: `/dashboard/requests/${id}`
+        link: `/donor/requests`
       });
     }
 

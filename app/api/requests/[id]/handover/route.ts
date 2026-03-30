@@ -34,8 +34,8 @@ async function handoverHandler(
     }
 
     // SECURITY: Ensure we are at the correct step (Assigned/Step 2)
-    if (pickupRequest.status !== "ASSIGNED" || pickupRequest.step !== 2) {
-      return NextResponse.json({ error: "Invalid request state for handover." }, { status: 400 });
+    if (pickupRequest.status !== "ASSIGNED" || Math.floor(pickupRequest.step) !== 2) {
+      return NextResponse.json({ error: `Invalid request state for handover. Current status: ${pickupRequest.status}, step: ${pickupRequest.step}. Request must be ASSIGNED at step 2.` }, { status: 400 });
     }
 
     // 2. PIN Validation
@@ -65,7 +65,7 @@ async function handoverHandler(
       type: "REQUEST_STATUS",
       title: "Food Collected! 📦",
       message: `The rider has successfully picked up the food for your request. It's now on the way!`,
-      link: `/dashboard/requests/${id}`
+      link: `/ngo/requests/${id}`
     });
 
     // 6. Notify the Donor

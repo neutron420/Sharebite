@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import LiveRiderMap from "@/components/ui/live-rider-map";
+import RazorpayPayment from "@/components/payments/razorpay-payout";
 
 export default function NgoRequestsPage() {
   const router = useRouter();
@@ -135,7 +136,11 @@ export default function NgoRequestsPage() {
     }
   };
 
-  const activeRequests = requests.filter(r => r.status === "APPROVED" || r.status === "ON_THE_WAY");
+  const activeRequests = requests.filter(r => 
+    r.status === "APPROVED" || 
+    r.status === "ASSIGNED" || 
+    r.status === "ON_THE_WAY"
+  );
   const pendingRequests = requests.filter(r => r.status === "PENDING");
   const completedRequests = requests.filter(r => r.status === "COMPLETED");
 
@@ -206,30 +211,48 @@ export default function NgoRequestsPage() {
                     </div>
                  </div>
 
-                 <div className="shrink-0 flex flex-col items-center gap-3 w-full md:w-auto">
-                    <div className="flex gap-3 w-full">
-                       <button 
-                          onClick={() => handleStartChat(req.donationId, req.donation.donorId)}
-                          className="w-16 h-16 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-orange-600 hover:text-white hover:border-orange-500 hover:shadow-xl hover:shadow-orange-100 transition-all duration-300 active:scale-90 group/msg"
-                       >
-                          <MessageSquare className="w-7 h-7 group-hover/msg:scale-110 transition-transform" />
-                       </button>
-                       <button 
-                          onClick={() => setVerifyingId(req.id)}
-                          className="flex-1 px-8 py-5 bg-slate-950 text-white font-black rounded-[2rem] flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest active:scale-95 group/ver"
-                       >
-                          Verify Handover <ShieldCheck className="w-5 h-5 group-hover/ver:rotate-12 transition-transform" />
-                       </button>
-                    </div>
-                    {req.riderId && (req.status === 'ASSIGNED' || req.status === 'ON_THE_WAY') && (
-                       <button 
-                          onClick={() => setTrackingId(req.id === trackingId ? null : req.id)}
-                          className={`w-full py-4 ${req.id === trackingId ? 'bg-orange-600 text-white shadow-orange-100' : 'bg-white border-2 border-slate-950 text-slate-950'} font-black rounded-2xl flex items-center justify-center gap-3 transition-all italic text-[10px] uppercase tracking-widest active:scale-95 shadow-xl`}
-                       >
-                          {req.id === trackingId ? 'Close Pursuit Grid' : 'Open Pursuit Grid'} <Navigation className="w-4 h-4" />
-                       </button>
+                  <div className="shrink-0 flex flex-col items-center gap-3 w-full md:w-auto">
+                    {req.step === 3.5 ? (
+                       <RazorpayPayment 
+                          requestId={req.id} 
+                          amount={50} 
+                          onSuccess={fetchRequests} 
+                          className="w-full"
+                          label="Release Rider Payout"
+                       />
+                    ) : (
+                      <>
+                        <div className="flex gap-3 w-full">
+                           <button 
+                              onClick={() => handleStartChat(req.donationId, req.donation.donorId)}
+                              className="w-16 h-16 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:bg-orange-600 hover:text-white hover:border-orange-500 hover:shadow-xl hover:shadow-orange-100 transition-all duration-300 active:scale-90 group/msg"
+                           >
+                              <MessageSquare className="w-7 h-7 group-hover/msg:scale-110 transition-transform" />
+                           </button>
+                           <button 
+                              onClick={() => setVerifyingId(req.id)}
+                              className="flex-1 px-8 py-5 bg-slate-950 text-white font-black rounded-[2rem] flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest active:scale-95 group/ver"
+                           >
+                              Verify Handover <ShieldCheck className="w-5 h-5 group-hover/ver:rotate-12 transition-transform" />
+                           </button>
+                           <button 
+                              onClick={() => router.push(`/ngo/requests/${req.id}`)}
+                              className="w-16 h-16 rounded-[2rem] bg-orange-600 text-white flex items-center justify-center hover:bg-slate-950 transition-all shadow-xl shadow-orange-100 active:scale-90 group/man"
+                           >
+                              <ArrowRight className="w-7 h-7 group-hover/man:translate-x-1 transition-transform" />
+                           </button>
+                        </div>
+                        {req.riderId && (req.status === 'ASSIGNED' || req.status === 'ON_THE_WAY') && (
+                           <button 
+                              onClick={() => setTrackingId(req.id === trackingId ? null : req.id)}
+                              className={`w-full py-4 ${req.id === trackingId ? 'bg-orange-600 text-white shadow-orange-100' : 'bg-white border-2 border-slate-950 text-slate-950'} font-black rounded-2xl flex items-center justify-center gap-3 transition-all italic text-[10px] uppercase tracking-widest active:scale-95 shadow-xl`}
+                           >
+                              {req.id === trackingId ? 'Close Pursuit Grid' : 'Open Pursuit Grid'} <Navigation className="w-4 h-4" />
+                           </button>
+                        )}
+                      </>
                     )}
-                 </div>
+                  </div>
                </motion.div>
              ))
            ) : (

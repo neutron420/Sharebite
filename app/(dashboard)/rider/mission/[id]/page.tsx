@@ -14,7 +14,9 @@ import {
   Navigation,
   Upload,
   AlertCircle,
-  Zap
+  Zap,
+  X,
+  RotateCcw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -138,7 +140,14 @@ export default function MissionDetailPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ deliveryProofUrl: proofImage })
       });
-      if (!res.ok) throw new Error("Mission completion failed.");
+      const data = await res.json();
+      if (!res.ok) {
+        // If AI rejects the photo, auto-clear so rider can retry
+        if (res.status === 400) {
+          setProofImage(null);
+        }
+        throw new Error(data.error || "Mission completion failed.");
+      }
       toast.success("Mission Accomplished! Sector Secured.");
       router.push("/rider");
     } catch (e: any) {
@@ -314,7 +323,23 @@ export default function MissionDetailPage() {
                  <div className="space-y-6">
                     <div className="relative h-44 w-full rounded-[2rem] bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden group/upload transition-colors hover:border-orange-200 hover:bg-orange-50/10">
                        {proofImage ? (
-                          <img src={proofImage} className="w-full h-full object-cover" alt="Proof" />
+                          <>
+                             <img src={proofImage} className="w-full h-full object-cover" alt="Proof" />
+                             <button 
+                                onClick={() => setProofImage(null)}
+                                className="absolute top-3 right-3 w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-red-500/30 transition-all active:scale-90 z-10"
+                             >
+                                <X className="w-5 h-5" />
+                             </button>
+                             <div className="absolute bottom-3 left-3 right-3 z-10">
+                                <button 
+                                   onClick={() => setProofImage(null)}
+                                   className="w-full py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-all shadow-sm border border-gray-200"
+                                >
+                                   <RotateCcw className="w-3.5 h-3.5" /> Retake Photo
+                                </button>
+                             </div>
+                          </>
                        ) : (
                           <>
                              <Upload className="w-8 h-8 text-gray-300 mb-2 group-hover/upload:text-orange-500 transition-colors" />

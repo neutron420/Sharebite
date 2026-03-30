@@ -126,6 +126,9 @@ async function getRequestsHandler(request: Request) {
           },
           rider: {
             select: { id: true, name: true }
+          },
+          payment: {
+            select: { status: true, razorpayOrderId: true }
           }
         }
       });
@@ -157,7 +160,7 @@ async function getRequestsHandler(request: Request) {
             { riderId: session.userId as string },
             { 
               riderId: null, 
-              status: "APPROVED", // Ready for a rider to pick up
+              status: { in: ["APPROVED", "ASSIGNED"] }, 
             }
           ]
         },
