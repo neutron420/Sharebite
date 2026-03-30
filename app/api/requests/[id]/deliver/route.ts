@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
 import { createNotification } from "@/lib/notifications";
 import redis from "@/lib/redis";
+import { sendThankYouEmail } from "@/lib/email";
 
 async function deliveryHandler(
   request: Request,
@@ -25,10 +26,26 @@ async function deliveryHandler(
       return NextResponse.json({ error: "Proof of delivery image is required" }, { status: 400 });
     }
 
-    // 1. Fetch the request
+    // 1. Fetch the request with donor and NGO details
     const pickupRequest = await prisma.pickupRequest.findUnique({
       where: { id },
-      include: { donation: true }
+      include: { 
+        donation: {
+          include: {
+            donor: true
+          }
+        },
+        ngo: {
+          select: {
+            name: true,
+            address: true,
+            city: true,
+            district: true,
+            state: true,
+            pincode: true
+          }
+        }
+      }
     });
 
     if (!pickupRequest || (pickupRequest.riderId !== userId && session.role !== "ADMIN")) {
@@ -84,20 +101,51 @@ async function deliveryHandler(
       link: `/dashboard/requests/${id}`
     });
 
-    // 7. Notify the Donor
-    const donorId = pickupRequest.donation.donorId;
-    await createNotification({
-      userId: donorId,
-      type: "REQUEST_STATUS",
-      title: "Mission Accomplished!",
-      message: `Your food donation has successfully reached the NGO. You've made a difference today!`,
-      link: `/donor/donations/${pickupRequest.donation.id}`
-    });
+    // 7. Notify the Donor (In-app)
+    const donor = pickupRequest.donation?.donor;
+    if (donor) {
+      const donorId = donor.id;
+      await createNotification({
+        userId: donorId,
+        type: "REQUEST_STATUS",
+        title: "Mission Accomplished!",
+        message: `Your food donation has successfully reached the NGO. You've made a difference today!`,
+        link: `/donor/donations/${pickupRequest.donation.id}`
+      });
+
+      // 8. Trigger Automated Email Dispatch (Donor)
+      if (donor.email) {
+        // Format NGO address for the email
+        const ngo = pickupRequest.ngo;
+        const fullNGOAddress = ngo ? [
+          ngo.address,
+          ngo.city,
+          ngo.district,
+          ngo.state,
+          ngo.pincode
+        ].filter(Boolean).join(", ") : "Delivered to NGO";
+
+        // Fire-and-forget email dispatch
+        sendThankYouEmail(
+          donor.email, 
+          donor.name || "Hero", 
+          pickupRequest.donation.title,
+          deliveryProofUrl,
+          ngo?.name || "Our NGO Partner",
+          fullNGOAddress
+        ).catch(emailErr => {
+          console.error(`[EMAIL_CRITICAL_FAILURE] Failed to dispatch thank you email to ${donor.email}`, emailErr);
+        });
+      }
+    }
+
 
     return NextResponse.json({ 
       success: true, 
       message: "Delivery marked as complete. Great job hero!" 
     });
+
+
 
   } catch (error) {
     console.error("Delivery completion error:", error);

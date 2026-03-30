@@ -53,7 +53,6 @@ type BugReport = {
   createdAt: string;
 };
 
-// ── Helpers ────────────────────────────────────────────
 const getTypeIcon = (type: string) => {
   switch (type) {
     case "TECHNICAL": return <BsCpu className="h-5 w-5" />;
@@ -77,7 +76,6 @@ const formatDate = (d: string) => {
   return new Date(d).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric", hour: '2-digit', minute: '2-digit' });
 };
 
-// ── Animated Counter (Simplified) ──────────────────
 function StatCard({ value, label, icon: Icon, color }: { 
   value: number; 
   label: string; 
@@ -305,7 +303,6 @@ export default function AdminBugsPage() {
         )}
       </div>
 
-      {/* Report Detail Modal (Styled like Dashboard Modals) */}
       <AnimatePresence>
         {selectedReport && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
