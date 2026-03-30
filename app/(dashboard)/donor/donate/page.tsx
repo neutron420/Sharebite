@@ -758,7 +758,7 @@ export default function DonatePage() {
                                                       const newAddress = `${data.area ? data.area + ', ' : ''}${data.city}, ${data.state}`;
                                                       setFormData(prev => ({ 
                                                          ...prev, 
-                                                         pickupLocation: newAddress,
+                                                         pickupLocation: prev.pickupLocation && prev.pickupLocation.trim().length > 0 ? prev.pickupLocation : newAddress,
                                                          city: data.city,
                                                          state: data.state
                                                       }));
@@ -784,7 +784,7 @@ export default function DonatePage() {
                                        onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
                                           setFormData(prev => ({
                                              ...prev,
-                                             pickupLocation: data.address,
+                                             pickupLocation: prev.pickupLocation && prev.pickupLocation.trim().length > 0 ? prev.pickupLocation : data.address,
                                              city: data.city,
                                              state: data.state,
                                              district: data.district,
@@ -865,7 +865,7 @@ export default function DonatePage() {
                   onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
                      setFormData(prev => ({
                         ...prev,
-                        pickupLocation: data.address,
+                        pickupLocation: prev.pickupLocation && prev.pickupLocation.trim().length > 0 ? prev.pickupLocation : data.address,
                         city: data.city,
                         state: data.state,
                         district: data.district,

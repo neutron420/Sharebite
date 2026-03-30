@@ -11,6 +11,7 @@ export async function GET(request: Request) {
 
     // For admin, get all notifications or filter by admin-related ones
     const notifications = await prisma.notification.findMany({
+      where: { userId: session.userId as string },
       orderBy: { createdAt: "desc" },
       take: 100,
     });
