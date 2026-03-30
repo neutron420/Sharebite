@@ -1,14 +1,20 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
 
-if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-  throw new Error("Razorpay keys are missing in environment variables.");
-}
+let _razorpay: Razorpay | null = null;
 
-export const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+function getRazorpay() {
+  if (!_razorpay) {
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      throw new Error("Razorpay keys are missing in environment variables.");
+    }
+    _razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return _razorpay;
+}
 
 /**
  * Creates a new Razorpay order
@@ -22,6 +28,7 @@ export async function createOrder(amount: number, receipt: string) {
       receipt: receipt.slice(0, 40),
     };
 
+    const razorpay = getRazorpay();
     const order = await razorpay.orders.create(options);
     return order;
   } catch (error) {
