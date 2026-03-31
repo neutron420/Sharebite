@@ -40,3 +40,7 @@ variable "groq_api_key" { description = "Groq API Key" }
 variable "rapidapi_key" { description = "RapidAPI Key" }
 variable "rapidapi_host" { description = "RapidAPI Host" }
 variable "resend_from_email" { description = "Resend From Email" }
+variable "next_public_razorpay_key_id" { description = "Public Razorpay Key ID" }
+variable "razorpay_key_id" { description = "Razorpay Key ID" }
+variable "razorpay_key_secret" { description = "Razorpay Key Secret" }
+variable "razorpay_webhook_secret" { description = "Razorpay Webhook Secret" }

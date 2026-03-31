@@ -77,7 +77,11 @@ resource "aws_ecs_task_definition" "app" {
         { name = "CLOUDFLARE_TURNSTILE_SECRET_KEY", value = var.cloudflare_turnstile_secret_key },
         { name = "GROQ_API_KEY", value = var.groq_api_key },
         { name = "RAPIDAPI_KEY", value = var.rapidapi_key },
-        { name = "RAPIDAPI_HOST", value = var.rapidapi_host }
+        { name = "RAPIDAPI_HOST", value = var.rapidapi_host },
+        { name = "NEXT_PUBLIC_RAZORPAY_KEY_ID", value = var.next_public_razorpay_key_id },
+        { name = "RAZORPAY_KEY_ID", value = var.razorpay_key_id },
+        { name = "RAZORPAY_KEY_SECRET", value = var.razorpay_key_secret },
+        { name = "RAZORPAY_WEBHOOK_SECRET", value = var.razorpay_webhook_secret }
       ]
 
       logConfiguration = {
