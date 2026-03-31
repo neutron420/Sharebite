@@ -29,6 +29,10 @@ interface TimesheetConfirmationProps {
   totalHours: string;
   takeHomeAmount: number;
   className?: string;
+  title?: string;
+  subtitle?: string;
+  actionButton?: React.ReactNode;
+  hideSecondaryButton?: boolean;
 }
 
 // --- CURRENCY FORMATTER ---
@@ -48,6 +52,10 @@ export function TimesheetConfirmation({
   totalHours,
   takeHomeAmount,
   className,
+  title = "Mission Accomplished!",
+  subtitle = "Your delivery has been verified. The rewards have been credited to your mission wallet.",
+  actionButton,
+  hideSecondaryButton = false,
 }: TimesheetConfirmationProps) {
   return (
     <AnimatePresence>
@@ -79,13 +87,17 @@ export function TimesheetConfirmation({
                 >
                   <CheckCircle2 className="h-16 w-16 text-green-500" />
                 </motion.div>
-                <h2 className="text-3xl font-black italic tracking-tighter uppercase">Mission Accomplished!</h2>
+                <h2 className="text-3xl font-black italic tracking-tighter uppercase">{title}</h2>
                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                  Your delivery has been verified. The rewards have been credited to your mission wallet.
+                  {subtitle}
                 </p>
                 <div className="mt-4 flex flex-col w-full max-w-xs gap-2">
-                  <Button onClick={onClose} size="lg" className="bg-orange-600 hover:bg-orange-700 text-white font-black uppercase text-[10px] tracking-widest py-6 rounded-2xl shadow-xl shadow-orange-100">Claim Rewards</Button>
-                  <Button onClick={onClose} variant="ghost" className="font-black uppercase text-[10px] tracking-widest text-slate-400">View Wallet</Button>
+                  {actionButton || (
+                    <Button onClick={onClose} size="lg" className="bg-orange-600 hover:bg-orange-700 text-white font-black uppercase text-[10px] tracking-widest py-6 rounded-2xl shadow-xl shadow-orange-100">Claim Rewards</Button>
+                  )}
+                  {!hideSecondaryButton && (
+                    <Button onClick={onClose} variant="ghost" className="font-black uppercase text-[10px] tracking-widest text-slate-400">View Wallet</Button>
+                  )}
                 </div>
               </div>
 

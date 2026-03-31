@@ -16,7 +16,9 @@ import {
   ArrowRight,
   MessageSquare,
   ShieldCheck,
-  Calendar
+  Calendar,
+  Camera,
+  UploadCloud
 } from "lucide-react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,6 +61,8 @@ export default function RiderMissionsPage() {
   const [pin, setPin] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [isDeliveryVerify, setIsDeliveryVerify] = useState(false);
+  const [modalStep, setModalStep] = useState<"PHOTO" | "OTP">("PHOTO");
+  const [proofFile, setProofFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetchTasks();
@@ -80,7 +84,7 @@ export default function RiderMissionsPage() {
 
   const handleHandover = async () => {
     if (!verifyingId || pin.length < 4) {
-      toast.error(isDeliveryVerify ? "Enter the 6-digit OTP" : "Enter the 4-digit Handover PIN");
+      toast.error(isDeliveryVerify ? "Enter the 4-digit OTP" : "Enter the 4-digit Handover PIN");
       return;
     }
     setActionLoading(true);
@@ -114,13 +118,31 @@ export default function RiderMissionsPage() {
 
   const handleSendOtp = async (requestId: string) => {
     setActionLoading(true);
+    let imageUrl = null;
     try {
+      if (isDeliveryVerify && proofFile) {
+        const formData = new FormData();
+        formData.append("file", proofFile);
+        const uploadRes = await fetch("/api/upload/public", {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadRes.ok) throw new Error("Proof upload failed");
+        const uploadData = await uploadRes.json();
+        imageUrl = uploadData.url;
+      }
+
       const res = await fetch(`/api/requests/${requestId}/send-otp`, {
         method: "POST",
+        headers: imageUrl ? { "Content-Type": "application/json" } : {},
+        body: imageUrl ? JSON.stringify({ deliveryImageUrl: imageUrl }) : undefined,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
-      toast.success("OTP sent to NGO coordinate email!");
+      toast.success("Delivery recorded! OTP sent to NGO securely.");
+      if (isDeliveryVerify) {
+         setModalStep("OTP");
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -195,24 +217,17 @@ export default function RiderMissionsPage() {
 
                     <div className="mt-auto flex flex-col gap-3">
                        {task.status === 'ON_THE_WAY' ? (
-                          <div className="grid grid-cols-2 gap-3">
-                             <button 
-                                onClick={() => handleSendOtp(task.id)}
-                                disabled={actionLoading}
-                                className="py-4 bg-white border-2 border-orange-600 text-orange-600 font-bold rounded-2xl text-xs hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
-                             >
-                                <Zap className="w-4 h-4" /> Send OTP
-                             </button>
-                             <button 
-                                onClick={() => {
-                                   setIsDeliveryVerify(true);
-                                   setVerifyingId(task.id);
-                                }}
-                                className="py-4 bg-orange-600 text-white font-bold rounded-2xl text-xs hover:bg-orange-700 shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
-                             >
-                                <ShieldCheck className="w-4 h-4" /> Verify Delivery
-                             </button>
-                          </div>
+                          <button 
+                             onClick={() => {
+                                setIsDeliveryVerify(true);
+                                setModalStep("PHOTO");
+                                setProofFile(null);
+                                setVerifyingId(task.id);
+                             }}
+                             className="w-full py-4 bg-orange-600 text-white font-bold rounded-2xl text-xs hover:bg-orange-700 shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
+                          >
+                             <Camera className="w-4 h-4" /> Deliver Food
+                          </button>
                        ) : (
                           <button 
                              onClick={() => {
@@ -305,35 +320,73 @@ export default function RiderMissionsPage() {
                      <ShieldCheck className="w-10 h-10 text-white" />
                   </div>
                     <div className="space-y-2">
-                       <h2 className="text-2xl font-bold text-gray-900">{isDeliveryVerify ? "Delivery OTP" : "Handover PIN"}</h2>
+                       <h2 className="text-2xl font-bold text-gray-900">
+                          {isDeliveryVerify 
+                             ? (modalStep === "PHOTO" ? "Capture Proof" : "NGO Delivery Verification")
+                             : "Handover PIN"}
+                       </h2>
                        <p className="text-gray-500 text-xs px-4">
                           {isDeliveryVerify 
-                             ? "Enter the 6-digit code shared by the NGO coordinator." 
+                             ? (modalStep === "PHOTO" ? "Please upload a photo of the food at the NGO location." : "Enter the 4-digit code shared by the NGO coordinator via their email.")
                              : "Enter the 4-digit verification code provided by the donor."}
                        </p>
                     </div>
 
                     <div className="space-y-6">
-                       <input 
-                          type="text" 
-                          maxLength={isDeliveryVerify ? 6 : 4}
-                          placeholder={isDeliveryVerify ? "------" : "----"}
-                          autoFocus
-                          className="w-full text-center text-5xl font-bold tracking-[0.5em] py-8 rounded-2xl bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white focus:outline-none transition-all placeholder:text-gray-200"
-                          value={pin}
-                          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-                       />
-                       <div className="flex gap-3">
-                          <button onClick={() => setVerifyingId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
-                          <button 
-                             onClick={handleHandover}
-                             disabled={actionLoading || pin.length < (isDeliveryVerify ? 6 : 4)}
-                             className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
-                          >
-                             {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                             {isDeliveryVerify ? "Verify Delivery" : "Verify PIN"}
-                          </button>
-                       </div>
+                       {isDeliveryVerify && modalStep === "PHOTO" ? (
+                          <div className="space-y-4">
+                             <label className="w-full flex flex-col items-center justify-center h-40 border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 cursor-pointer hover:bg-gray-100 transition-all">
+                                {proofFile ? (
+                                   <div className="flex flex-col items-center">
+                                      <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" />
+                                      <span className="text-sm font-bold text-gray-900">{proofFile.name}</span>
+                                   </div>
+                                ) : (
+                                   <div className="flex flex-col items-center">
+                                      <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
+                                      <span className="text-xs font-bold text-gray-500">Tap to snap or upload photo</span>
+                                   </div>
+                                )}
+                                <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => {
+                                   if (e.target.files?.[0]) setProofFile(e.target.files[0]);
+                                }} />
+                             </label>
+                             <div className="flex gap-3">
+                                <button onClick={() => setVerifyingId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
+                                <button 
+                                   onClick={() => handleSendOtp(verifyingId!)}
+                                   disabled={actionLoading || !proofFile}
+                                   className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                                >
+                                   {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                                   Submit & Notify NGO
+                                </button>
+                             </div>
+                          </div>
+                       ) : (
+                          <div className="space-y-6">
+                             <input 
+                                type="text" 
+                                maxLength={4}
+                                placeholder="----"
+                                autoFocus
+                                className="w-full text-center text-5xl font-bold tracking-[0.5em] py-8 rounded-2xl bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white focus:outline-none transition-all placeholder:text-gray-200"
+                                value={pin}
+                                onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+                             />
+                             <div className="flex gap-3">
+                                <button onClick={() => setVerifyingId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
+                                <button 
+                                   onClick={handleHandover}
+                                   disabled={actionLoading || pin.length < 4}
+                                   className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
+                                >
+                                   {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                                   {isDeliveryVerify ? "Verify NGO OTP" : "Verify PIN"}
+                                </button>
+                             </div>
+                          </div>
+                       )}
                     </div>
                </motion.div>
             </motion.div>

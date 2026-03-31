@@ -116,7 +116,7 @@ export default function RiderDashboard() {
 
   const handleHandover = async () => {
     if (!verifyingId || pin.length < 4) {
-      toast.error(isDeliveryVerify ? "Enter the 6-digit OTP" : "Enter the 4-digit Handover PIN");
+      toast.error(isDeliveryVerify ? "Enter the 4-digit OTP" : "Enter the 4-digit Handover PIN");
       return;
     }
     setActionLoading(true);
@@ -398,7 +398,7 @@ export default function RiderDashboard() {
                      <h2 className="text-2xl font-bold text-gray-900">{isDeliveryVerify ? "Delivery OTP" : "Handover PIN"}</h2>
                      <p className="text-gray-500 text-xs px-4">
                         {isDeliveryVerify 
-                           ? "Enter the 6-digit code shared by the NGO coordinator." 
+                           ? "Enter the 4-digit code shared by the NGO coordinator." 
                            : "Enter the 4-digit verification code provided by the donor."}
                      </p>
                   </div>
@@ -406,8 +406,8 @@ export default function RiderDashboard() {
                   <div className="space-y-6">
                      <input 
                         type="text" 
-                        maxLength={isDeliveryVerify ? 6 : 4}
-                        placeholder={isDeliveryVerify ? "------" : "----"}
+                        maxLength={4}
+                        placeholder={"----"}
                         autoFocus
                         className="w-full text-center text-5xl font-bold tracking-[0.5em] py-8 rounded-2xl bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white focus:outline-none transition-all placeholder:text-gray-200"
                         value={pin}
@@ -417,7 +417,7 @@ export default function RiderDashboard() {
                         <button onClick={() => setVerifyingId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
                         <button 
                            onClick={handleHandover}
-                           disabled={actionLoading || pin.length < (isDeliveryVerify ? 6 : 4)}
+                           disabled={actionLoading || pin.length < 4}
                            className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                         >
                            {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}

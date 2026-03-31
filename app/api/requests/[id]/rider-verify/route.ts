@@ -3,8 +3,9 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { creditRiderWallet, addRewardPoints } from "@/lib/rider-service";
 import { createNotification } from "@/lib/notifications";
+import { withSecurity } from "@/lib/api-handler";
 
-export async function POST(
+async function riderVerifyHandler(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -16,6 +17,16 @@ export async function POST(
 
     const { otp } = await request.json();
     const { id: requestId } = await params;
+
+    // SECURITY PATCH: Ensure the pickup request actually belongs to this specific rider
+    const existingReq = await prisma.pickupRequest.findUnique({
+      where: { id: requestId },
+      select: { riderId: true }
+    });
+
+    if (!existingReq || existingReq.riderId !== session.userId) {
+      return NextResponse.json({ error: "Access denied or request not found" }, { status: 403 });
+    }
 
     // 1. Check if OTP is valid, not expired, and matches requestId
     const latestOtp = await prisma.oTPVerification.findFirst({
@@ -52,16 +63,7 @@ export async function POST(
       where: { orderId: requestId }
     });
 
-    // 6. Notify NGO to pay the fee
-    await createNotification({
-      userId: pickupRequest.ngoId,
-      type: "REQUEST_STATUS",
-      title: "Delivery Received! Please Pay Fee",
-      message: `The rider has delivered "${pickupRequest.donation.title}". Please pay the ₹50 fee to release their payout.`,
-      link: `/ngo/requests/${requestId}`
-    });
-
-    const payoutAmount = 50;
+    const payoutAmount = 1;
 
     // Notify Rider about successful delivery and pending payout
     await createNotification({
@@ -76,8 +78,8 @@ export async function POST(
     await createNotification({
       userId: pickupRequest.ngoId,
       type: "REQUEST_STATUS",
-      title: "Confirm Delivery & Release Payout",
-      message: `The rider has delivered "${pickupRequest.donation.title}". Please release the payout to complete the mission.`,
+      title: "Food Delivered! Release Rider Payout",
+      message: `The rider has safely delivered "${pickupRequest.donation.title}". Please pay the ₹1 fee to release their payout.`,
       link: `/ngo/requests/${requestId}`
     });
 
@@ -90,3 +92,5 @@ export async function POST(
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const POST = withSecurity(riderVerifyHandler, { limit: 10 });

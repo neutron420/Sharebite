@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import LiveRiderMap from "@/components/ui/live-rider-map";
 import RazorpayPayment from "@/components/payments/razorpay-payout";
+import { TimesheetConfirmation } from "@/components/timesheet-confirmation";
 
 export default function NgoRequestsPage() {
   const router = useRouter();
@@ -31,15 +32,25 @@ export default function NgoRequestsPage() {
   const [pin, setPin] = useState("");
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [trackingId, setTrackingId] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   const [showReview, setShowReview] = useState<string | null>(null);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  const fetchRequests = useCallback(async () => {
+  // New hook: if there is a pending payment, auto-show the modal
+  useEffect(() => {
+    if (requests.some((r) => r.step === 3.5)) {
+      setShowPaymentModal(true);
+    } else {
+      setShowPaymentModal(false);
+    }
+  }, [requests]);
+
+  const fetchRequests = useCallback(async (isPolling = false) => {
     try {
-      setLoading(true);
+      if (!isPolling) setLoading(true);
       const res = await fetch("/api/requests");
       if (!res.ok) throw new Error("Failed to fetch requests");
       const data = await res.json();
@@ -47,12 +58,16 @@ export default function NgoRequestsPage() {
     } catch (error) {
       toast.error("Could not load requests.");
     } finally {
-      setLoading(false);
+      if (!isPolling) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchRequests();
+    fetchRequests(false);
+    const interval = setInterval(() => {
+      fetchRequests(true);
+    }, 5000);
+    return () => clearInterval(interval);
   }, [fetchRequests]);
 
   const handleStartChat = async (donationId: string, participantId: string) => {
@@ -213,13 +228,12 @@ export default function NgoRequestsPage() {
 
                   <div className="shrink-0 flex flex-col items-center gap-3 w-full md:w-auto">
                     {req.step === 3.5 ? (
-                       <RazorpayPayment 
-                          requestId={req.id} 
-                          amount={50} 
-                          onSuccess={fetchRequests} 
-                          className="w-full"
-                          label="Release Rider Payout"
-                       />
+                       <button
+                          onClick={() => router.push(`/ngo/requests/${req.id}`)}
+                          className="w-full py-4 bg-orange-600 text-white shadow-orange-100 font-black rounded-[2rem] flex items-center justify-center gap-3 transition-all italic text-[10px] uppercase tracking-widest active:scale-95 shadow-xl animate-pulse"
+                       >
+                          Review & Pay Rider <ArrowRight className="w-4 h-4" />
+                       </button>
                     ) : (
                       <>
                         <div className="flex gap-3 w-full">
@@ -403,6 +417,40 @@ export default function NgoRequestsPage() {
             </motion.div>
          )}
       </AnimatePresence>
+
+      {/* Auto-Triggered Payment Modal */}
+      {(() => {
+        const pendingPaymentReq = requests.find((r) => r.step === 3.5);
+        if (!showPaymentModal || !pendingPaymentReq) return null;
+        
+        return (
+          <TimesheetConfirmation
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            clientName={pendingPaymentReq.rider?.name || "ShareBite Rider"}
+            taskName={pendingPaymentReq.donation?.title || "Food Salvage Operation"}
+            timeEntries={[{ date: new Date().toLocaleDateString(), duration: "Verified Dropoff" }]}
+            financials={[{ label: "Rider Commission", value: 1, isCommission: false }]}
+            totalHours="1 Mission"
+            takeHomeAmount={1}
+            title="Mission Verified!"
+            subtitle="The rider secured the perimeter and delivered the food. Release their bounty to conclude the grid log."
+            hideSecondaryButton={true}
+            actionButton={
+              <RazorpayPayment
+                requestId={pendingPaymentReq.id}
+                amount={1}
+                label="Release Reward"
+                onSuccess={() => {
+                  setShowPaymentModal(false);
+                  fetchRequests();
+                }}
+                className="w-full bg-slate-950 hover:bg-orange-600 border-none shadow-2xl py-6 rounded-[2rem] text-white my-4 font-black text-[12px]"
+              />
+            }
+          />
+        );
+      })()}
     </div>
   );
 }

@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import LiveRiderMap from "@/components/ui/live-rider-map";
 import RazorpayPayment from "@/components/payments/razorpay-payout";
+import { TimesheetConfirmation } from "@/components/timesheet-confirmation";
 
 export default function RequestDetailPage() {
   const params = useParams();
@@ -178,28 +179,38 @@ export default function RequestDetailPage() {
           )}
 
           {/* Show payment button if it's awaiting initial payment OR awaiting post-delivery payout */}
-          {((!isLive && request.status !== 'COMPLETED') || request.step === 3.5) && (
-             <section className="p-16 rounded-[4rem] bg-slate-950 text-white flex flex-col items-center justify-center text-center space-y-6">
-                <div className="w-20 h-20 bg-orange-600 rounded-[2rem] flex items-center justify-center shadow-xl shadow-orange-600/20">
-                   <ShieldCheck className="w-10 h-10" />
-                </div>
-                <h3 className="text-3xl font-black italic uppercase tracking-tight">Mission On Hold</h3>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest max-w-sm">
-                   {request.step === 3.5 
-                      ? "The delivery manifest is verified. Please release the mandated payout to finalize this operation and credit the rider's wallet."
-                      : "The logistics channel is currently locked. Complete the mandated delivery fee to dispatch a cognitive vertical logistics asset."}
-                </p>
-                <div className="pt-4 w-full max-w-xs">
-                   <RazorpayPayment 
-                      requestId={id} 
-                      amount={50} 
-                      onSuccess={fetchRequest}
-                      className="w-full"
-                      label={request.step === 3.5 ? "Release Rider Payout" : "Pay Delivery Fee"}
-                   />
-                </div>
-             </section>
-          )}
+          <TimesheetConfirmation 
+            isOpen={((!isLive && request.status !== 'COMPLETED') || request.step === 3.5)}
+            onClose={() => {}} // Forced interaction
+            clientName={request.rider?.name || "Unassigned Logistics Asset"}
+            taskName={request.donation.title}
+            timeEntries={[
+              { date: "Logistics Activated", duration: "Secure ✓" },
+              { date: "Cargo Extraction", duration: request.status !== 'PENDING' ? "Verified ✓" : "Pending" },
+              { date: "Drop-Off Authentication", duration: request.step === 3.5 ? "Verified ✓" : "Pending" }
+            ]}
+            financials={[
+              { label: "Base Logistics Fee", value: 40 },
+              { label: "Platform Maintenance", value: 10 }
+            ]}
+            totalHours={`${request.donation.weight || 10} LBS CARGO`}
+            takeHomeAmount={50}
+            title={request.step === 3.5 ? "Release Rider Payout" : "Pay Delivery Fee"}
+            subtitle={request.step === 3.5 
+              ? "The delivery manifest is verified. Please release the mandated payout to finalize this operation and credit the rider's wallet."
+              : "The logistics channel is currently locked. Complete the mandated delivery fee to dispatch a logistics asset."
+            }
+            hideSecondaryButton={true}
+            actionButton={
+               <RazorpayPayment 
+                  requestId={id} 
+                  amount={50} 
+                  onSuccess={fetchRequest}
+                  className="w-full"
+                  label={request.step === 3.5 ? "Authorize Protocol" : "Pay ₹50"}
+               />
+            }
+          />
         </div>
 
         {/* Action Panel */}
