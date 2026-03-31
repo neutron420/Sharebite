@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
 
 export async function POST(
@@ -54,7 +53,7 @@ export async function POST(
       }
     });
 
-    await sendEmail({
+    const emailResult = await sendEmail({
       to: pickupRequest.ngo.email,
       subject: "NGO Delivery PIN - Sharebite",
       html: `
@@ -69,6 +68,16 @@ export async function POST(
         </div>
       `
     });
+
+    if (!emailResult.success) {
+      await prisma.oTPVerification.deleteMany({
+        where: { orderId: requestId }
+      });
+      return NextResponse.json(
+        { error: "Failed to send NGO delivery PIN email. Please retry." },
+        { status: 502 }
+      );
+    }
 
     return NextResponse.json({
       message: "NGO delivery PIN sent successfully",

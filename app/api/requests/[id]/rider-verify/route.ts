@@ -15,7 +15,28 @@ export async function POST(
     }
 
     const { otp } = await request.json();
+    if (typeof otp !== "string" || !/^\d{4}$/.test(otp)) {
+      return NextResponse.json({ error: "A valid 4-digit NGO delivery PIN is required" }, { status: 400 });
+    }
+
     const { id: requestId } = await params;
+
+    const existingRequest = await prisma.pickupRequest.findUnique({
+      where: { id: requestId },
+      include: { donation: true, ngo: true }
+    });
+
+    if (!existingRequest || existingRequest.riderId !== session.userId) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    if (existingRequest.step === 3.5 || existingRequest.status === "COMPLETED") {
+      return NextResponse.json({ error: "NGO takeover is already verified for this mission." }, { status: 400 });
+    }
+
+    if (existingRequest.status !== "ON_THE_WAY" || (existingRequest.step || 0) < 3) {
+      return NextResponse.json({ error: "Donor pickup must be verified before the NGO delivery PIN can be used." }, { status: 400 });
+    }
 
     const latestOtp = await prisma.oTPVerification.findFirst({
       where: {
@@ -29,35 +50,29 @@ export async function POST(
       return NextResponse.json({ error: "Invalid or expired NGO delivery PIN" }, { status: 400 });
     }
 
-    const existingRequest = await prisma.pickupRequest.findUnique({ where: { id: requestId } });
-    if (!existingRequest || existingRequest.status !== "ON_THE_WAY" || (existingRequest.step || 0) < 3) {
-      return NextResponse.json({ error: "Donor pickup must be verified before the NGO delivery PIN can be used." }, { status: 400 });
-    }
-
-    const pickupRequest = await prisma.pickupRequest.update({
-      where: { id: requestId },
-      data: {
-        status: "ASSIGNED",
-        step: 3.5, 
-        completedAt: new Date(),
-      },
-      include: { donation: true, ngo: true }
-    });
-
-    await prisma.foodDonation.update({
-      where: { id: pickupRequest.donationId },
-      data: { status: "COLLECTED" }
-    });
-
-    await prisma.oTPVerification.deleteMany({
-      where: { orderId: requestId }
-    });
+    await prisma.$transaction([
+      prisma.pickupRequest.update({
+        where: { id: requestId },
+        data: {
+          status: "ASSIGNED",
+          step: 3.5,
+          completedAt: null,
+        },
+      }),
+      prisma.foodDonation.update({
+        where: { id: existingRequest.donationId },
+        data: { status: "COLLECTED" }
+      }),
+      prisma.oTPVerification.deleteMany({
+        where: { orderId: requestId }
+      }),
+    ]);
 
     await createNotification({
-      userId: pickupRequest.ngoId,
+      userId: existingRequest.ngoId,
       type: "REQUEST_STATUS",
       title: "NGO Takeover Verified",
-      message: `You have confirmed receipt of "${pickupRequest.donation.title}". Please release the rider payout to finish the mission.`,
+      message: `You have confirmed receipt of "${existingRequest.donation.title}". Please release the rider payout to finish the mission.`,
       link: `/ngo/requests/${requestId}`
     });
 
@@ -67,18 +82,18 @@ export async function POST(
       userId: session.userId,
       type: "SYSTEM",
       title: "NGO Takeover Verified",
-      message: `The NGO has confirmed receipt of "${pickupRequest.donation.title}". Payout of ₹${payoutAmount} is now waiting for NGO release.`,
+      message: `The NGO has confirmed receipt of "${existingRequest.donation.title}". Payout of ₹${payoutAmount} is now waiting for NGO release.`,
       link: "/rider"
     });
 
-    if (pickupRequest.ngo?.email) {
+    if (existingRequest.ngo?.email) {
       await sendEmail({
-        to: pickupRequest.ngo.email,
-        subject: `NGO Takeover Confirmed: ${pickupRequest.donation.title}`,
+        to: existingRequest.ngo.email,
+        subject: `NGO Takeover Confirmed: ${existingRequest.donation.title}`,
         html: `
           <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
             <h2 style="color: #10b981;">NGO Takeover Verified</h2>
-            <p>You have confirmed receipt of: <strong>${pickupRequest.donation.title}</strong>.</p>
+            <p>You have confirmed receipt of: <strong>${existingRequest.donation.title}</strong>.</p>
             <div style="background: #f0fdf4; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0; border: 1px solid #bbf7d0;">
               <p style="text-transform: uppercase; font-size: 10px; font-weight: 900; color: #166534; margin-bottom: 5px; tracking-widest: 2px;">Status: TAKEOVER CONFIRMED</p>
               <h1 style="font-size: 24px; font-weight: 900; color: #064e3b; margin: 0; letter-spacing: -1px;">Release Rider Payout</h1>

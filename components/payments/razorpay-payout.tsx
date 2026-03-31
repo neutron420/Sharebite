@@ -76,21 +76,37 @@ export default function RazorpayPayment({
             }
           } catch (err) {
             toast.error("Critical error verifying payment.");
+          } finally {
+            setLoading(false);
           }
         },
         prefill: {
           name: "Sharebite NGO",
+        },
+        modal: {
+          ondismiss: () => {
+            setLoading(false);
+          },
         },
         theme: {
           color: "#ea580c",
         },
       };
 
+      if (!(window as any).Razorpay) {
+        toast.error("Payment gateway is still loading. Please retry in a moment.");
+        setLoading(false);
+        return;
+      }
+
       const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", () => {
+        toast.error("Payment failed. Please try again.");
+        setLoading(false);
+      });
       rzp.open();
     } catch (error: any) {
       toast.error(error.message || "Payment setup failed.");
-    } finally {
       setLoading(false);
     }
   };

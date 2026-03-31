@@ -58,16 +58,51 @@ export function TimesheetConfirmation({
   showAction = true,
   actionNode,
 }: TimesheetConfirmationProps) {
+  const [dismissedKey, setDismissedKey] = React.useState<string | null>(null);
+  const [isActing, setIsActing] = React.useState(false);
+
+  const modalKey = React.useMemo(
+    () => `${clientName}::${taskName}::${takeHomeAmount}`,
+    [clientName, taskName, takeHomeAmount]
+  );
+
+  React.useEffect(() => {
+    if (dismissedKey && dismissedKey !== modalKey) {
+      setDismissedKey(null);
+    }
+  }, [dismissedKey, modalKey]);
+
+  const handleClose = React.useCallback(() => {
+    setDismissedKey(modalKey);
+    onClose();
+  }, [modalKey, onClose]);
+
+  const handleAction = React.useCallback(async () => {
+    if (isActing) return;
+    setIsActing(true);
+    handleClose();
+
+    if (onAction) {
+      try {
+        await onAction();
+      } finally {
+        setIsActing(false);
+      }
+      return;
+    }
+
+    setIsActing(false);
+  }, [handleClose, isActing, onAction]);
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      {isOpen && dismissedKey !== modalKey && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-          onClick={onClose}
+          onClick={handleClose}
         >
           <motion.div
             initial={{ scale: 0.95, y: 20, opacity: 0 }}
@@ -99,21 +134,22 @@ export function TimesheetConfirmation({
                     actionNode
                   ) : showAction ? (
                     <Button 
-                      onClick={onAction || onClose} 
+                      onClick={handleAction}
+                      disabled={isActing}
                       size="lg" 
                       className="bg-slate-950 hover:bg-orange-600 text-white font-black uppercase text-[10px] tracking-widest py-6 rounded-2xl shadow-xl shadow-slate-200"
                     >
                       {actionLabel}
                     </Button>
                   ) : null}
-                  <Button onClick={onClose} variant="ghost" className="font-black uppercase text-[10px] tracking-widest text-slate-400">Archive Log</Button>
+                  <Button onClick={handleClose} variant="ghost" className="font-black uppercase text-[10px] tracking-widest text-slate-400">Archive Log</Button>
                 </div>
 
               </div>
 
               {/* Right Panel: Summary */}
               <div className="relative p-8">
-                <Button variant="ghost" size="icon" className="absolute top-4 right-4" onClick={onClose}>
+                <Button variant="ghost" size="icon" className="absolute top-4 right-4" onClick={handleClose}>
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>
                 </Button>
