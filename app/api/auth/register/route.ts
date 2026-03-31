@@ -110,8 +110,7 @@ async function registerHandler(request: Request) {
     }
 
     console.error("Registration error:", error);
-    // Remove 'debug' info to prevent leakage in production
-    return NextResponse.json(
+    return   NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
     );

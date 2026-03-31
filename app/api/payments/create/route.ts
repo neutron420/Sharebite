@@ -4,13 +4,18 @@ import { getSession } from "@/lib/auth";
 import { createOrder } from "@/lib/razorpay";
 
 export async function POST(request: Request) {
+  let requestId: string | undefined;
+  let amount: number | string | undefined;
+
   try {
     const session = await getSession();
     if (!session || session.role !== "NGO") {
       return NextResponse.json({ error: "Only NGOs can pay for delivery" }, { status: 401 });
     }
 
-    const { requestId, amount } = await request.json();
+    const body = await request.json();
+    requestId = body.requestId;
+    amount = body.amount;
 
     if (!requestId || !amount) {
       return NextResponse.json({ error: "Request ID and amount are required" }, { status: 400 });
@@ -25,12 +30,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-
-    const order = await createOrder(amount, `pickup_${requestId}`);
+    const numericAmount = Number(amount);
+    const order = await createOrder(numericAmount, `pickup_${requestId}`);
 
     const payment = await prisma.payment.create({
       data: {
-        amount,
+        amount: Number(amount),
         razorpayOrderId: order.id,
         userId: session.userId,
         status: "PENDING",
@@ -48,8 +53,16 @@ export async function POST(request: Request) {
       currency: order.currency,
       paymentId: payment.id,
     });
-  } catch (error) {
-    console.error("Payment creation error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Payment creation error details:", {
+      message: error.message,
+      stack: error.stack,
+      requestId,
+      amount
+    });
+    return NextResponse.json({ 
+      error: "Failed to initialize payment", 
+      details: error.message 
+    }, { status: 500 });
   }
 }

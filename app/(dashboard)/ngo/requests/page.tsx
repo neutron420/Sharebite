@@ -22,6 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import LiveRiderMap from "@/components/ui/live-rider-map";
 import RazorpayPayment from "@/components/payments/razorpay-payout";
+import { TimesheetConfirmation } from "@/components/timesheet-confirmation";
+import { useSocket } from "@/components/providers/socket-provider";
+
 
 export default function NgoRequestsPage() {
   const router = useRouter();
@@ -36,8 +39,11 @@ export default function NgoRequestsPage() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
+  const { addListener } = useSocket();
+  const [autoOpenPayoutId, setAutoOpenPayoutId] = useState<string | null>(null);
 
   const fetchRequests = useCallback(async () => {
+
     try {
       setLoading(true);
       const res = await fetch("/api/requests");
@@ -53,7 +59,26 @@ export default function NgoRequestsPage() {
 
   useEffect(() => {
     fetchRequests();
-  }, [fetchRequests]);
+
+    // Mission refresh on status updates
+    const removeListener = addListener("mission_update", (data) => {
+      console.log("Mission updated via socket:", data);
+      fetchRequests();
+    });
+
+    return () => removeListener();
+  }, [fetchRequests, addListener]);
+
+  // Auto-trigger payout modal for verify step 3.5
+  useEffect(() => {
+    const verifiedRequest = requests.find(r => r.step === 3.5);
+    if (verifiedRequest && !autoOpenPayoutId) {
+       setAutoOpenPayoutId(verifiedRequest.id);
+    } else if (!verifiedRequest) {
+       setAutoOpenPayoutId(null);
+    }
+  }, [requests, autoOpenPayoutId]);
+
 
   const handleStartChat = async (donationId: string, participantId: string) => {
     try {
@@ -294,6 +319,8 @@ export default function NgoRequestsPage() {
               </motion.section>
            )}
         </AnimatePresence>
+
+
       </section>
 
       {/* Logistics Segments */}
@@ -403,6 +430,31 @@ export default function NgoRequestsPage() {
             </motion.div>
          )}
       </AnimatePresence>
+
+       {/* Mission Verified Modal - Auto-triggered for step 3.5 payout */}
+       {(() => {
+          const req = requests.find(r => r.id === autoOpenPayoutId);
+          if (!req) return null;
+          return (
+             <TimesheetConfirmation 
+                isOpen={!!autoOpenPayoutId}
+                onClose={() => setAutoOpenPayoutId(null)}
+                clientName={req.ngo?.name || "NGO HUB"}
+                taskName={req.donation.title}
+                timeEntries={[
+                   { date: new Date().toLocaleDateString(), duration: "VERIFIED DROPOFF" }
+                ]}
+                financials={[
+                   { label: "VERIFIED DROPOFF", value: 1, isCommission: true },
+                   { label: "RIDER COMMISSION", value: req.amount || 50, isCommission: false }
+                ]}
+                totalHours="1 MISSION"
+                takeHomeAmount={req.amount || 50}
+                className="[&_h2]:text-orange-600"
+             />
+          );
+       })()}
+
     </div>
   );
 }

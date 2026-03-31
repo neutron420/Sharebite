@@ -29,7 +29,12 @@ interface TimesheetConfirmationProps {
   totalHours: string;
   takeHomeAmount: number;
   className?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  showAction?: boolean;
+  actionNode?: React.ReactNode;
 }
+
 
 // --- CURRENCY FORMATTER ---
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
@@ -48,7 +53,12 @@ export function TimesheetConfirmation({
   totalHours,
   takeHomeAmount,
   className,
+  actionLabel = "Claim Rewards",
+  onAction,
+  showAction = true,
+  actionNode,
 }: TimesheetConfirmationProps) {
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -79,14 +89,26 @@ export function TimesheetConfirmation({
                 >
                   <CheckCircle2 className="h-16 w-16 text-green-500" />
                 </motion.div>
-                <h2 className="text-3xl font-black italic tracking-tighter uppercase">Mission Accomplished!</h2>
+                <h2 className="text-3xl font-black italic tracking-tighter uppercase">Mission Verified</h2>
                 <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                  Your delivery has been verified. The rewards have been credited to your mission wallet.
+                  The rider secured the perimeter and delivered the food. Release their bounty to conclude the grid log.
                 </p>
+
                 <div className="mt-4 flex flex-col w-full max-w-xs gap-2">
-                  <Button onClick={onClose} size="lg" className="bg-orange-600 hover:bg-orange-700 text-white font-black uppercase text-[10px] tracking-widest py-6 rounded-2xl shadow-xl shadow-orange-100">Claim Rewards</Button>
-                  <Button onClick={onClose} variant="ghost" className="font-black uppercase text-[10px] tracking-widest text-slate-400">View Wallet</Button>
+                  {actionNode ? (
+                    actionNode
+                  ) : showAction ? (
+                    <Button 
+                      onClick={onAction || onClose} 
+                      size="lg" 
+                      className="bg-slate-950 hover:bg-orange-600 text-white font-black uppercase text-[10px] tracking-widest py-6 rounded-2xl shadow-xl shadow-slate-200"
+                    >
+                      {actionLabel}
+                    </Button>
+                  ) : null}
+                  <Button onClick={onClose} variant="ghost" className="font-black uppercase text-[10px] tracking-widest text-slate-400">Archive Log</Button>
                 </div>
+
               </div>
 
               {/* Right Panel: Summary */}

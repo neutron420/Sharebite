@@ -3,11 +3,10 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
 import { createNotification } from "@/lib/notifications";
+import { sendEmail } from "@/lib/email";
 
-/**
- * PATCH /api/requests/[id]/assign
- * Allows an NGO to assign a RIDER to their pickup request.
- */
+
+
 async function assignRiderHandler(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -30,8 +29,12 @@ async function assignRiderHandler(
     // 1. Verify the request is in a valid state
     const pickupRequest = await prisma.pickupRequest.findUnique({
       where: { id },
-      include: { donation: true }
+      include: { 
+        donation: true,
+        ngo: true 
+      }
     });
+
 
     if (!pickupRequest) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
@@ -90,6 +93,28 @@ async function assignRiderHandler(
             link: `/ngo/requests`
         });
     }
+
+    // 7. Send PIN to NGO Email
+    if (pickupRequest.ngo?.email) {
+      await sendEmail({
+        to: pickupRequest.ngo.email,
+        subject: `Handover PIN for "${pickupRequest.donation.title}"`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #ea580c;">Handover PIN Generated</h2>
+            <p>A rider has been assigned to your pickup request: <strong>${pickupRequest.donation.title}</strong>.</p>
+            <div style="background: #f8fafc; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
+              <p style="text-transform: uppercase; font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 5px;">Handover PIN</p>
+              <h1 style="font-size: 48px; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: 10px;">${pin}</h1>
+            </div>
+            <p style="font-size: 14px; color: #64748b;">Share this PIN with the donor. The rider will need it to verify the collection.</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="font-size: 12px; color: #94a3b8;">ShareBite Logistics Intelligence Hub</p>
+          </div>
+        `
+      });
+    }
+
 
     return NextResponse.json({
       message: "Rider assigned successfully",

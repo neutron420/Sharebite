@@ -34,7 +34,8 @@ export default function RazorpayPayment({
       });
 
       if (!res.ok) {
-        throw new Error("Failed to initialize payment");
+        const errorData = await res.json();
+        throw new Error(errorData.details || errorData.error || "Failed to initialize payment");
       }
 
       const orderData = await res.json();
