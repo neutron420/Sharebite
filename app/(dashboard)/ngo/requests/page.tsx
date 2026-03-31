@@ -22,7 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import LiveRiderMap from "@/components/ui/live-rider-map";
 import RazorpayPayment from "@/components/payments/razorpay-payout";
-import { TimesheetConfirmation } from "@/components/timesheet-confirmation";
 import { useSocket } from "@/components/providers/socket-provider";
 
 
@@ -40,7 +39,6 @@ export default function NgoRequestsPage() {
   const [reviewComment, setReviewComment] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
   const { addListener } = useSocket();
-  const [autoOpenPayoutId, setAutoOpenPayoutId] = useState<string | null>(null);
 
   const fetchRequests = useCallback(async () => {
 
@@ -68,16 +66,6 @@ export default function NgoRequestsPage() {
 
     return () => removeListener();
   }, [fetchRequests, addListener]);
-
-  // Auto-trigger payout modal for verify step 3.5
-  useEffect(() => {
-    const verifiedRequest = requests.find(r => r.step === 3.5);
-    if (verifiedRequest && !autoOpenPayoutId) {
-       setAutoOpenPayoutId(verifiedRequest.id);
-    } else if (!verifiedRequest) {
-       setAutoOpenPayoutId(null);
-    }
-  }, [requests, autoOpenPayoutId]);
 
 
   const handleStartChat = async (donationId: string, participantId: string) => {
@@ -434,33 +422,6 @@ export default function NgoRequestsPage() {
             </motion.div>
          )}
       </AnimatePresence>
-
-       {/* Mission Verified Modal - Auto-triggered for step 3.5 payout */}
-       {(() => {
-          const req = requests.find(r => r.id === autoOpenPayoutId);
-          if (!req) return null;
-          return (
-             <TimesheetConfirmation 
-                isOpen={!!autoOpenPayoutId}
-                onClose={() => setAutoOpenPayoutId(null)}
-                clientName={req.ngo?.name || "NGO HUB"}
-                taskName={req.donation.title}
-                timeEntries={[
-                   { date: new Date().toLocaleDateString(), duration: "VERIFIED DROPOFF" }
-                ]}
-                financials={[
-                   { label: "VERIFIED DROPOFF", value: 1, isCommission: true },
-                   { label: "RIDER COMMISSION", value: req.amount || 50, isCommission: false }
-                ]}
-                totalHours="1 MISSION"
-                takeHomeAmount={req.amount || 50}
-                className="[&_h2]:text-orange-600"
-                actionLabel="Authorize Protocol"
-                onAction={() => setAutoOpenPayoutId(null)}
-             />
-
-          );
-       })()}
 
     </div>
   );
