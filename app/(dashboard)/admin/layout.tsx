@@ -27,6 +27,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Bug,
+  CreditCard,
   type LucideIcon,
   Zap,
 } from "lucide-react";
@@ -92,6 +93,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { label: "Complaints", icon: AlertTriangle, id: "reports", href: "/admin/reports" },
   { label: "Bug Reports", icon: Bug, id: "bugs", href: "/admin/bugs", badge: "Live" },
   { label: "Reviews", icon: Star, id: "reviews", href: "/admin/reviews" },
+  { label: "Payments", icon: CreditCard, id: "payments", href: "/admin/payments" },
   { label: "Operations Map", icon: Map, id: "map", href: "/admin/map" },
   { label: "Notifications", icon: Bell, id: "notifications", href: "/admin/notifications" },
   { label: "Audit Logs", icon: FileText, id: "audit-logs", href: "/admin/logs" },
