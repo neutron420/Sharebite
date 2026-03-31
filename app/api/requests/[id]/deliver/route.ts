@@ -74,7 +74,7 @@ async function deliveryHandler(
     }
 
     // SECURITY: Ensure food was actually picked up first
-    if (pickupRequest.status !== "ON_THE_WAY" || Math.floor(pickupRequest.step) !== 4) {
+    if (pickupRequest.status !== "ON_THE_WAY" || (pickupRequest.step || 0) < 3) {
       return NextResponse.json(
         { error: "You must collect the food from donor before marking as delivered." },
         { status: 400 }
@@ -86,9 +86,11 @@ async function deliveryHandler(
       prisma.pickupRequest.update({
         where: { id },
         data: {
-          status: "ASSIGNED", // Keep active for payment
+          // Donation flow is complete immediately after verified delivery proof.
+          status: "COMPLETED",
           deliveryImageUrl: deliveryProofUrl,
-          step: 3.5, // Intermediate step for "Delivered, Pending Payment"
+          // Payout flow remains separate and continues after this point.
+          step: 3.4,
           completedAt: new Date()
         }
       }),
@@ -117,8 +119,8 @@ async function deliveryHandler(
     await createNotification({
       userId: pickupRequest.ngoId,
       type: "REQUEST_STATUS",
-      title: "Delivery Received! Please Release Payout 💸",
-      message: `The rider has delivered "${pickupRequest.donation.title}". Please pay the ₹${RIDER_PAYOUT_AMOUNT_INR} fee to release their payout.`,
+      title: "Delivery Received! Share NGO PIN 🔐",
+      message: `The rider has delivered "${pickupRequest.donation.title}". Share the NGO PIN so payout of ₹${RIDER_PAYOUT_AMOUNT_INR} can be released next.`,
       link: `/ngo/requests/${id}`
     });
 

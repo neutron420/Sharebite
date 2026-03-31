@@ -24,19 +24,28 @@ export async function POST(
 
     const existingRequest = await prisma.pickupRequest.findUnique({
       where: { id: requestId },
-      include: { donation: true, ngo: true }
+      include: { donation: true, ngo: true, payment: { select: { status: true } } }
     });
 
     if (!existingRequest || existingRequest.riderId !== session.userId) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-    if (existingRequest.step === 3.5 || existingRequest.status === "COMPLETED") {
-      return NextResponse.json({ error: "NGO takeover is already verified for this mission." }, { status: 400 });
+    if (existingRequest.payment?.status === "SUCCESS" || (existingRequest.step || 0) >= 4) {
+      return NextResponse.json({ error: "Rider payout is already released for this mission." }, { status: 400 });
     }
 
-    if (existingRequest.status !== "ON_THE_WAY" || (existingRequest.step || 0) < 3) {
-      return NextResponse.json({ error: "Donor pickup must be verified before the NGO delivery PIN can be used." }, { status: 400 });
+    const canVerifyNgoTakeover =
+      existingRequest.status === "COMPLETED" &&
+      !!existingRequest.deliveryImageUrl &&
+      (existingRequest.step || 0) >= 3.4 &&
+      (existingRequest.step || 0) < 3.5;
+
+    if (!canVerifyNgoTakeover) {
+      return NextResponse.json(
+        { error: "Complete mission with proof first, then verify the NGO delivery PIN." },
+        { status: 400 }
+      );
     }
 
     const latestOtp = await prisma.oTPVerification.findFirst({
@@ -55,9 +64,9 @@ export async function POST(
       prisma.pickupRequest.update({
         where: { id: requestId },
         data: {
-          status: "ASSIGNED",
+          status: "COMPLETED",
           step: 3.5,
-          completedAt: null,
+          completedAt: existingRequest.completedAt ?? new Date(),
         },
       }),
       prisma.foodDonation.update({

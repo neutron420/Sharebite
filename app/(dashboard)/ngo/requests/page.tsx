@@ -150,13 +150,19 @@ export default function NgoRequestsPage() {
     }
   };
 
-  const activeRequests = requests.filter(r => 
-    r.status === "APPROVED" || 
-    r.status === "ASSIGNED" || 
-    r.status === "ON_THE_WAY"
+  const isPayoutPendingRequest = (request: any) =>
+    request.status === "COMPLETED" && (request.step || 0) >= 3.4 && (request.step || 0) < 4;
+
+  const activeRequests = requests.filter((r) =>
+    r.status === "APPROVED" ||
+    r.status === "ASSIGNED" ||
+    r.status === "ON_THE_WAY" ||
+    isPayoutPendingRequest(r)
   );
   const pendingRequests = requests.filter(r => r.status === "PENDING");
-  const completedRequests = requests.filter(r => r.status === "COMPLETED");
+  const completedRequests = requests.filter(
+    (r) => r.status === "COMPLETED" && !isPayoutPendingRequest(r)
+  );
 
   if (loading) {
     return (
@@ -206,9 +212,25 @@ export default function NgoRequestsPage() {
                  </div>
 
                  <div className="flex-grow space-y-3 text-center md:text-left">
-                    <Badge className={`${req.status === 'ON_THE_WAY' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'} border-none font-black text-[10px] uppercase tracking-widest px-3 py-1 animate-pulse`}>
-                       {req.status}
-                    </Badge>
+                    {(() => {
+                      const isPaymentTake = req.status === "COMPLETED" && (req.step || 0) >= 3.4 && (req.step || 0) < 3.5;
+                      const isReadyToPay = req.status === "COMPLETED" && req.step === 3.5;
+                      const badgeLabel = isPaymentTake
+                        ? "PAYMENT TAKE"
+                        : isReadyToPay
+                          ? "READY TO PAY"
+                          : req.status;
+                      const badgeClass = req.status === "ON_THE_WAY"
+                        ? "bg-blue-50 text-blue-600"
+                        : isReadyToPay
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-orange-50 text-orange-600";
+                      return (
+                        <Badge className={`${badgeClass} border-none font-black text-[10px] uppercase tracking-widest px-3 py-1 animate-pulse`}>
+                          {badgeLabel}
+                        </Badge>
+                      );
+                    })()}
                     <h3 className="text-3xl font-black tracking-tighter italic text-slate-950 uppercase">{req.donation.title}</h3>
                     <div className="flex flex-wrap justify-center md:justify-start gap-5 mt-2">
                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -221,7 +243,7 @@ export default function NgoRequestsPage() {
                  </div>
 
                   <div className="shrink-0 flex flex-col items-center gap-3 w-full md:w-auto">
-                    {req.step === 3.5 ? (
+                    {req.status === "COMPLETED" && (req.step || 0) >= 3.5 && (req.step || 0) < 4 ? (
                        <RazorpayPayment 
                           requestId={req.id} 
                           amount={RIDER_PAYOUT_AMOUNT_INR}

@@ -51,9 +51,17 @@ export async function POST(request: Request) {
         });
 
         if (pickupRequest) {
+          const isPayoutFlow = (pickupRequest.step || 0) >= 3.5;
+
           await prisma.pickupRequest.update({
             where: { id: pickupRequest.id },
-            data: { status: "ASSIGNED" }
+            data: isPayoutFlow
+              ? {
+                  status: "COMPLETED",
+                  step: 4,
+                  completedAt: pickupRequest.completedAt ?? new Date(),
+                }
+              : { status: "ASSIGNED" }
           });
 
           // Trigger real-time notification to the NGO via WebSocket
@@ -61,7 +69,9 @@ export async function POST(request: Request) {
             userId: payment.userId,
             type: "REQUEST_STATUS",
             title: "Payment Confirmed (Webhook)",
-            message: "Your payment has been successfully recorded in our system through the failsafe relay.",
+            message: isPayoutFlow
+              ? "Rider payout has been successfully recorded through the failsafe relay."
+              : "Your payment has been successfully recorded in our system through the failsafe relay.",
             link: `/ngo/requests/${pickupRequest.id}`
           });
         }

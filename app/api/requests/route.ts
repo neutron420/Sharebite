@@ -176,7 +176,10 @@ async function getRequestsHandler(request: Request) {
           },
           ngo: {
              select: { name: true, city: true, address: true, latitude: true, longitude: true }
-          }
+          },
+          payment: {
+            select: { status: true, razorpayOrderId: true }
+          },
         }
       });
       requests = requests.map((pickupRequest: any) => ({

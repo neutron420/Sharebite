@@ -37,11 +37,29 @@ export async function POST(request: Request) {
 
     const pickupRequest = await prisma.pickupRequest.findUnique({
       where: { id: requestId },
-      include: { donation: true }
+      include: { donation: true, payment: { select: { status: true } } }
     });
 
     if (!pickupRequest || pickupRequest.ngoId !== session.userId) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    if (
+      pickupRequest.status !== "COMPLETED" ||
+      (pickupRequest.step || 0) < 3.5 ||
+      (pickupRequest.step || 0) >= 4
+    ) {
+      return NextResponse.json(
+        { error: "Rider payout can only be released after NGO PIN verification." },
+        { status: 400 }
+      );
+    }
+
+    if (pickupRequest.payment?.status === "SUCCESS") {
+      return NextResponse.json(
+        { error: "Rider payout is already released for this mission." },
+        { status: 400 }
+      );
     }
 
     const numericAmount = Number(amount);

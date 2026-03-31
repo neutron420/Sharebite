@@ -69,7 +69,7 @@ export default function RazorpayPayment({
             });
 
             if (verifyRes.ok) {
-              toast.success("Payment Received! Rider will be assigned.");
+              toast.success("Payment successful. Rider payout released.");
               onSuccess();
             } else {
               toast.error("Payment verification failed.");

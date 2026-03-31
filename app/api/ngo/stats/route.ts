@@ -58,8 +58,11 @@ async function getNgoStatsHandler(request: Request) {
       }),
       prisma.pickupRequest.findMany({
         where: { 
-          ngoId: userId, 
-          status: { in: ["APPROVED", "ASSIGNED", "ON_THE_WAY"] } 
+          ngoId: userId,
+          OR: [
+            { status: { in: ["APPROVED", "ASSIGNED", "ON_THE_WAY"] } },
+            { status: "COMPLETED", step: { lt: 4 } },
+          ]
         },
         include: {
           donation: {

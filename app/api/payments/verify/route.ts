@@ -37,11 +37,11 @@ export async function POST(request: Request) {
     let isPayout = false;
 
     // Handle post-delivery payout flow
-    if (pickupRequest.step === 3.5) {
+    if ((pickupRequest.step || 0) >= 3.5) {
       statusUpdate = {
         status: "COMPLETED",
         step: 4,
-        completedAt: new Date()
+        completedAt: pickupRequest.completedAt ?? new Date()
       };
       isPayout = true;
     }
@@ -72,8 +72,8 @@ export async function POST(request: Request) {
       userId: payment.userId,
       type: "REQUEST_STATUS",
       title: isPayout ? "Payout Released!" : "Payment Successful",
-      message: isPayout 
-        ? "The rider has been paid. Thank you for using ShareBite!" 
+      message: isPayout
+        ? "The rider payout has been released successfully. Thank you for using ShareBite!"
         : "Your payment for delivery has been received. A rider will be assigned shortly.",
       link: `/ngo/requests/${requestId}`
     });

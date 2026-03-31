@@ -203,21 +203,33 @@ export default function NgoDashboard() {
                           <p className="text-[8px] sm:text-[10px] uppercase font-black tracking-widest text-orange-400 mb-1">Status</p>
                           <div className="flex items-center gap-2 justify-end">
                             <ShieldCheck className="w-4 h-4 text-green-500" />
-                            <p className="text-base sm:text-xl font-black tracking-tight uppercase whitespace-nowrap">{req.status}</p>
+                            <p className="text-base sm:text-xl font-black tracking-tight uppercase whitespace-nowrap">
+                              {req.status === "COMPLETED" && (req.step || 0) >= 3.4 && (req.step || 0) < 3.5
+                                ? "PAYMENT TAKE"
+                                : req.status === "COMPLETED" && (req.step || 0) >= 3.5 && (req.step || 0) < 4
+                                  ? "READY TO PAY"
+                                  : req.status}
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
                     
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTrackingId(trackingId === req.id ? null : req.id);
-                      }}
-                      className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
-                    >
-                      {trackingId === req.id ? 'Close Pursuit Grid' : 'Open Pursuit Grid'} <Navigation className="w-4 h-4" />
-                    </button>
+                    {(req.status === "ASSIGNED" || req.status === "ON_THE_WAY") ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTrackingId(trackingId === req.id ? null : req.id);
+                        }}
+                        className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                      >
+                        {trackingId === req.id ? 'Close Pursuit Grid' : 'Open Pursuit Grid'} <Navigation className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <div className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-center text-xs font-black uppercase tracking-widest text-orange-300">
+                        Open Mission To Release Payout
+                      </div>
+                    )}
                   </div>
                 </div>
 

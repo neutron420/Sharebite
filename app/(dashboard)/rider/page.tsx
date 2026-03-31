@@ -28,9 +28,13 @@ import { RIDER_PAYOUT_AMOUNT_INR } from "@/lib/payout";
 interface Task {
   id: string;
   status: string;
+  step?: number;
   riderId?: string;
   donationId: string;
   ngoId: string;
+  payment?: {
+    status: string;
+  };
   donation: {
     id: string;
     title: string;
@@ -186,7 +190,15 @@ export default function RiderDashboard() {
     }
   };
 
-  const activeMission = tasks.find(t => t.riderId && (t.status === "ASSIGNED" || t.status === "ON_THE_WAY"));
+  const isPayoutPendingMission = (task: Task) =>
+    task.status === "COMPLETED" &&
+    (task.step || 0) >= 3.4 &&
+    (task.step || 0) < 4 &&
+    task.payment?.status !== "SUCCESS";
+
+  const activeMission = tasks.find(
+    (t) => t.riderId && (t.status === "ASSIGNED" || t.status === "ON_THE_WAY" || isPayoutPendingMission(t))
+  );
   const availableBounties = tasks.filter(t => !t.riderId && t.status === "APPROVED");
 
   if (loading) return (
@@ -248,13 +260,32 @@ export default function RiderDashboard() {
              
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 items-center relative z-10">
                 <div className="space-y-4 sm:space-y-6">
-                   <div className="space-y-2">
-                      <Badge className="bg-orange-500 text-white border-none py-1">
-                         {activeMission.status}
-                      </Badge>
+                    <div className="space-y-2">
+                      {(() => {
+                        const step = activeMission.step || 0;
+                        const isPaymentTake = activeMission.status === "COMPLETED" && step >= 3.4 && step < 3.5;
+                        const isWaitingPayout = activeMission.status === "COMPLETED" && step >= 3.5 && step < 4;
+                        const badgeLabel = isPaymentTake
+                          ? "PAYMENT TAKE"
+                          : isWaitingPayout
+                            ? "PAYOUT PENDING"
+                            : activeMission.status;
+                        return (
+                          <Badge className="bg-orange-500 text-white border-none py-1">
+                            {badgeLabel}
+                          </Badge>
+                        );
+                      })()}
                       <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{activeMission.donation.title}</h3>
                       <div className="text-xs font-medium text-orange-600 uppercase tracking-wide">
-                         {activeMission.status === 'ASSIGNED' ? 'Objective: Pickup Food' : 'Objective: Deliver to NGO'}
+                         {(() => {
+                            const step = activeMission.step || 0;
+                            if (activeMission.status === "ASSIGNED") return "Objective: Pickup Food";
+                            if (activeMission.status === "ON_THE_WAY") return "Objective: Deliver to NGO";
+                            if (activeMission.status === "COMPLETED" && step >= 3.4 && step < 3.5) return "Objective: Take Payment (Send NGO PIN)";
+                            if (activeMission.status === "COMPLETED" && step >= 3.5 && step < 4) return "Objective: Waiting For NGO Payout";
+                            return "Objective: Mission Finalized";
+                         })()}
                       </div>
                    </div>
 
@@ -273,14 +304,14 @@ export default function RiderDashboard() {
                 </div>
 
                 <div className="flex flex-col items-center gap-4">
-                    {activeMission.status === 'ON_THE_WAY' ? (
+                    {activeMission.status === "COMPLETED" && (activeMission.step || 0) < 3.5 ? (
                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
                           <button 
                              onClick={() => handleSendOtp(activeMission.id)}
                              disabled={actionLoading}
                              className="py-4 bg-white border-2 border-orange-600 text-orange-600 font-bold rounded-2xl text-xs hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
                           >
-                             <Zap className="w-4 h-4" /> Send NGO PIN
+                             <Zap className="w-4 h-4" /> Take Payment (Send PIN)
                           </button>
                           <button 
                              onClick={() => {
@@ -291,6 +322,10 @@ export default function RiderDashboard() {
                           >
                              <ShieldCheck className="w-4 h-4" /> Verify NGO PIN
                           </button>
+                       </div>
+                    ) : activeMission.status === "COMPLETED" && (activeMission.step || 0) >= 3.5 && (activeMission.step || 0) < 4 ? (
+                       <div className="w-full p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold uppercase tracking-widest text-center">
+                          NGO PIN verified. Waiting for NGO to release payout.
                        </div>
                     ) : (
                        <button 

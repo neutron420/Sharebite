@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 interface Task {
   id: string;
   status: string;
+  step?: number;
   riderId?: string;
   donationId: string;
   ngoId: string;
@@ -128,8 +129,18 @@ export default function RiderMissionsPage() {
     }
   };
 
-  const myActiveMissions = tasks.filter(t => t.riderId && (t.status === "ASSIGNED" || t.status === "ON_THE_WAY"));
-  const myCompletedMissions = tasks.filter(t => t.riderId && t.status === "COMPLETED");
+  const isPayoutPendingMission = (task: Task) =>
+    task.status === "COMPLETED" &&
+    (task.step || 0) >= 3.4 &&
+    (task.step || 0) < 4 &&
+    task.payment?.status !== "SUCCESS";
+
+  const myActiveMissions = tasks.filter(
+    (t) => t.riderId && (t.status === "ASSIGNED" || t.status === "ON_THE_WAY" || isPayoutPendingMission(t))
+  );
+  const myCompletedMissions = tasks.filter(
+    (t) => t.riderId && t.status === "COMPLETED" && (t.step || 0) >= 4
+  );
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 gap-4">
@@ -172,9 +183,21 @@ export default function RiderMissionsPage() {
                  <div className="relative z-10 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-6">
                        <div className="space-y-2">
-                          <Badge className="bg-gray-900 text-white border-none py-1">
-                             {task.status}
-                          </Badge>
+                          {(() => {
+                            const step = task.step || 0;
+                            const isPaymentTake = task.status === "COMPLETED" && step >= 3.4 && step < 3.5;
+                            const isWaitingPayout = task.status === "COMPLETED" && step >= 3.5 && step < 4;
+                            const badgeLabel = isPaymentTake
+                              ? "PAYMENT TAKE"
+                              : isWaitingPayout
+                                ? "PAYOUT PENDING"
+                                : task.status;
+                            return (
+                              <Badge className="bg-gray-900 text-white border-none py-1">
+                                {badgeLabel}
+                              </Badge>
+                            );
+                          })()}
                           <h3 className="text-2xl font-bold text-gray-900">{task.donation.title}</h3>
                        </div>
                        <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-600">
@@ -194,14 +217,14 @@ export default function RiderMissionsPage() {
                     </div>
 
                     <div className="mt-auto flex flex-col gap-3">
-                       {task.status === 'ON_THE_WAY' ? (
+                       {task.status === "COMPLETED" && (task.step || 0) < 3.5 ? (
                           <div className="grid grid-cols-2 gap-3">
                              <button 
                                 onClick={() => handleSendOtp(task.id)}
                                 disabled={actionLoading}
                                 className="py-4 bg-white border-2 border-orange-600 text-orange-600 font-bold rounded-2xl text-xs hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
                              >
-                                <Zap className="w-4 h-4" /> Send NGO PIN
+                                <Zap className="w-4 h-4" /> Take Payment (Send PIN)
                              </button>
                              <button 
                                 onClick={() => {
@@ -212,6 +235,10 @@ export default function RiderMissionsPage() {
                              >
                                 <ShieldCheck className="w-4 h-4" /> Verify NGO PIN
                              </button>
+                          </div>
+                       ) : task.status === "COMPLETED" && (task.step || 0) >= 3.5 && (task.step || 0) < 4 ? (
+                          <div className="w-full py-4 px-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold uppercase tracking-widest text-center">
+                             NGO PIN verified. Waiting for payout release.
                           </div>
                        ) : (
                           <button 

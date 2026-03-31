@@ -110,6 +110,8 @@ export default function RequestDetailPage() {
   }
 
   const isLive = request.status === "ASSIGNED" || request.status === "ON_THE_WAY";
+  const isPayoutStage = request.status === "COMPLETED" && (request.step || 0) >= 3.4 && (request.step || 0) < 4;
+  const isReadyToReleasePayout = (request.step || 0) >= 3.5 && (request.step || 0) < 4;
 
   return (
     <>
@@ -190,30 +192,32 @@ export default function RequestDetailPage() {
              </section>
           )}
 
-          {request.step === 3.5 && (
+          {isPayoutStage && (
              <section className="p-16 rounded-[4rem] bg-slate-950 text-white flex flex-col items-center justify-center text-center space-y-6">
                 <div className="w-20 h-20 bg-orange-600 rounded-[2rem] flex items-center justify-center shadow-xl shadow-orange-600/20">
                    <ShieldCheck className="w-10 h-10" />
                 </div>
-                <h3 className="text-3xl font-black italic uppercase tracking-tight">Mission On Hold</h3>
+                <h3 className="text-3xl font-black italic uppercase tracking-tight">Payout Control Center</h3>
                 <p className="text-slate-400 text-xs font-bold uppercase tracking-widest max-w-sm">
-                   {request.step === 3.5 
-                      ? "The delivery manifest is verified. Please release the mandated payout to finalize this operation and credit the rider's wallet."
-                      : "The logistics channel is currently locked. Complete the mandated delivery fee to dispatch a cognitive vertical logistics asset."}
+                   {isReadyToReleasePayout
+                      ? "Donation is completed and NGO PIN verification is done. Release rider payout to fully close this mission."
+                      : "Donation is completed. Share the NGO PIN with the rider first. Once verified, payout release will unlock here."}
                 </p>
-                <div className="pt-4 w-full max-w-xs">
-                   <RazorpayPayment 
-                      requestId={id} 
-                      amount={RIDER_PAYOUT_AMOUNT_INR}
-                      onSuccess={fetchRequest}
-                      className="w-full"
-                      label={request.step === 3.5 ? "Release Rider Payout" : "Pay Delivery Fee"}
-                   />
-                </div>
+                {isReadyToReleasePayout ? (
+                  <div className="pt-4 w-full max-w-xs">
+                     <RazorpayPayment 
+                        requestId={id} 
+                        amount={RIDER_PAYOUT_AMOUNT_INR}
+                        onSuccess={fetchRequest}
+                        className="w-full"
+                        label="Release Rider Payout"
+                     />
+                  </div>
+                ) : null}
              </section>
           )}
 
-          {request.status === 'COMPLETED' && (
+          {request.status === 'COMPLETED' && (request.step || 0) >= 4 && (
              <section className="p-16 rounded-[4rem] bg-orange-600 text-white flex flex-col items-center justify-center text-center space-y-6 shadow-2xl shadow-orange-100">
                 <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center border border-white/30">
                    <CheckCircle2 className="w-12 h-12" />
