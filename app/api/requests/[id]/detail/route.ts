@@ -52,7 +52,6 @@ async function getRequestDetailHandler(
       return NextResponse.json({ error: "Mission not found" }, { status: 404 });
     }
 
-    // Security check: Only Donor, NGO, or Assigned Rider can see full details
     const isDonor = pickupRequest.donation.donorId === session.userId;
     const isNGO = pickupRequest.ngoId === session.userId;
     const isRider = pickupRequest.riderId === session.userId;
@@ -63,7 +62,11 @@ async function getRequestDetailHandler(
       return NextResponse.json({ error: "Access Denied. Mission Confidential." }, { status: 403 });
     }
 
-    return NextResponse.json(pickupRequest);
+    const responseData = !isDonor && !isAdmin
+      ? { ...pickupRequest, handoverPin: undefined }
+      : pickupRequest;
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Mission detail error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

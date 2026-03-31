@@ -13,6 +13,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only NGOs can pay for delivery" }, { status: 401 });
     }
 
+    const serverKeyId = process.env.RAZORPAY_KEY_ID;
+    const serverKeySecret = process.env.RAZORPAY_KEY_SECRET;
+    const publicKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || serverKeyId;
+
+    if (!serverKeyId || !serverKeySecret) {
+       console.error("RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is missing!", {
+         hasServerKeyId: !!serverKeyId,
+         hasServerKeySecret: !!serverKeySecret,
+         hasPublicKeyId: !!publicKeyId,
+         nodeEnv: process.env.NODE_ENV,
+       });
+       return NextResponse.json({ error: "Server Configuration Error: Razorpay keys are missing." }, { status: 500 });
+    }
+
     const body = await request.json();
     requestId = body.requestId;
     amount = body.amount;
@@ -52,17 +66,24 @@ export async function POST(request: Request) {
       amount: order.amount,
       currency: order.currency,
       paymentId: payment.id,
+      keyId: publicKeyId,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    let message = "Unknown error";
+    let stack = undefined;
+    if (error instanceof Error) {
+      message = error.message;
+      stack = error.stack;
+    }
     console.error("Payment creation error details:", {
-      message: error.message,
-      stack: error.stack,
+      message,
+      stack,
       requestId,
       amount
     });
     return NextResponse.json({ 
       error: "Failed to initialize payment", 
-      details: error.message 
+      details: message 
     }, { status: 500 });
   }
 }

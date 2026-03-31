@@ -70,7 +70,7 @@ export default function RequestDetailPage() {
 
   const handleVerifyHandover = async () => {
     if (pin.length < 4) {
-      toast.error("Enter 4-digit Handover PIN");
+      toast.error("Enter the 4-digit donor pickup PIN");
       return;
     }
     setVerifying(true);
@@ -197,7 +197,7 @@ export default function RequestDetailPage() {
              </section>
           )}
 
-          {((!isLive && request.status !== 'COMPLETED') || request.step === 3.5) && (
+          {request.step === 3.5 && (
              <section className="p-16 rounded-[4rem] bg-slate-950 text-white flex flex-col items-center justify-center text-center space-y-6">
                 <div className="w-20 h-20 bg-orange-600 rounded-[2rem] flex items-center justify-center shadow-xl shadow-orange-600/20">
                    <ShieldCheck className="w-10 h-10" />
@@ -272,16 +272,16 @@ export default function RequestDetailPage() {
               </div>
            </section>
 
-           {request.status === 'ASSIGNED' && (
+           {request.status === 'APPROVED' && !request.riderId && (
               <section className="bg-white p-8 rounded-[3rem] border border-slate-950/10 space-y-8 shadow-xl shadow-slate-200/50">
                  <div className="space-y-1">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-orange-600">Verification Locked</h3>
-                    <p className="text-lg font-black text-slate-950 leading-tight">Manual handover override initiated.</p>
+                    <h3 className="text-xs font-black uppercase tracking-widest text-orange-600">Direct Pickup Verification</h3>
+                    <p className="text-lg font-black text-slate-950 leading-tight">Donor-to-NGO handover is waiting for the donor PIN.</p>
                  </div>
 
                  <div className="space-y-4">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                       Enter the 4-digit handover sequence provided by the donor manifest.
+                       Enter the 4-digit pickup PIN shared by the donor. This step is only for direct NGO collection without a rider.
                     </p>
                     <input 
                        type="text" 
@@ -297,7 +297,7 @@ export default function RequestDetailPage() {
                        className="w-full py-5 bg-orange-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-[0.3em] shadow-xl shadow-orange-200 disabled:opacity-50 flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-95"
                     >
                        {verifying ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
-                       Authenticate Handover
+                       Verify Direct Pickup
                     </button>
                  </div>
               </section>

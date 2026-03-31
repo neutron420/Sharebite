@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
 import redis from "@/lib/redis";
+import { RequestStatus } from "@/app/generated/prisma";
 
 export async function GET(
   request: Request,
@@ -67,7 +68,11 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    return NextResponse.json(pickupRequest);
+    const responseData = !isDonor && !isAdmin
+      ? { ...pickupRequest, handoverPin: undefined }
+      : pickupRequest;
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Fetch request error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -107,8 +112,12 @@ export async function PATCH(
     }
 
     // Logic for updating status
-    const updateData: any = {};
-    if (status) updateData.status = status;
+    const updateData: {
+      status?: RequestStatus;
+      handoverPin?: string;
+      step?: number;
+    } = {};
+    if (status) updateData.status = status as RequestStatus;
     const { step } = body;
 
     // 1. Approval Logic (Donor/Admin only)
@@ -138,7 +147,7 @@ export async function PATCH(
         userId: pickupRequest.ngoId,
         type: "REQUEST_STATUS",
         title: "Request Approved!",
-        message: `Your request for "${pickupRequest.donation.title}" is approved. Check your dashboard for the Handover PIN.`,
+        message: `Your request for "${pickupRequest.donation.title}" is approved. The donor pickup PIN is separate and will be shared at collection time.`,
         link: `/ngo/requests/${id}`
       });
 

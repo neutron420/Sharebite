@@ -132,6 +132,10 @@ async function getRequestsHandler(request: Request) {
           }
         }
       });
+      requests = requests.map((pickupRequest: any) => ({
+        ...pickupRequest,
+        handoverPin: undefined,
+      }));
     } else if (session.role === "DONOR") {
       // Donor views requests for their items
       requests = await prisma.pickupRequest.findMany({
@@ -175,6 +179,10 @@ async function getRequestsHandler(request: Request) {
           }
         }
       });
+      requests = requests.map((pickupRequest: any) => ({
+        ...pickupRequest,
+        handoverPin: undefined,
+      }));
     }
 
     return NextResponse.json(requests);

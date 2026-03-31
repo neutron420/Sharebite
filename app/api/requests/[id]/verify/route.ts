@@ -30,6 +30,23 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    if (pickupRequest.riderId) {
+      return NextResponse.json(
+        {
+          error:
+            "This donor pickup PIN is only for direct NGO collection. Once a rider is assigned, pickup happens only between the donor and rider.",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (pickupRequest.status !== "APPROVED") {
+      return NextResponse.json(
+        { error: "Direct NGO handover can only be verified on approved requests." },
+        { status: 400 }
+      );
+    }
+
     if (pickupRequest.handoverPin !== pin) {
       return NextResponse.json({ error: "Invalid PIN. Please ask the donor for the correct code." }, { status: 400 });
     }
@@ -41,6 +58,7 @@ export async function POST(
         status: "COMPLETED",
         step: 4,
         deliveryImageUrl: deliveryImageUrl || null,
+        completedAt: new Date(),
       },
     });
 
@@ -67,7 +85,7 @@ export async function POST(
     await redis.zincrby("leaderboard:karma", 50, pickupRequest.donation.donorId);
 
     return NextResponse.json({
-      message: "Handover verified successfully!",
+      message: "Direct NGO handover verified successfully!",
       request: updatedRequest,
     });
   } catch (error) {

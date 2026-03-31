@@ -80,7 +80,7 @@ export default function RiderMissionsPage() {
 
   const handleHandover = async () => {
     if (!verifyingId || pin.length < 4) {
-      toast.error(isDeliveryVerify ? "Enter the 6-digit OTP" : "Enter the 4-digit Handover PIN");
+      toast.error(isDeliveryVerify ? "Enter the 4-digit NGO release PIN" : "Enter the 4-digit donor pickup PIN");
       return;
     }
     setActionLoading(true);
@@ -101,7 +101,7 @@ export default function RiderMissionsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Operation failed.");
 
-      toast.success(isDeliveryVerify ? "Delivery Success! Payment Released." : "Handover Success! Move to NGO location.");
+      toast.success(isDeliveryVerify ? "NGO takeover verified. Awaiting payout release." : "Donor pickup verified. Move to NGO location.");
       setVerifyingId(null);
       setPin("");
       fetchTasks();
@@ -120,7 +120,7 @@ export default function RiderMissionsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
-      toast.success("OTP sent to NGO coordinate email!");
+      toast.success("NGO release PIN sent to the NGO email.");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -201,7 +201,7 @@ export default function RiderMissionsPage() {
                                 disabled={actionLoading}
                                 className="py-4 bg-white border-2 border-orange-600 text-orange-600 font-bold rounded-2xl text-xs hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
                              >
-                                <Zap className="w-4 h-4" /> Send OTP
+                                <Zap className="w-4 h-4" /> Send NGO PIN
                              </button>
                              <button 
                                 onClick={() => {
@@ -210,7 +210,7 @@ export default function RiderMissionsPage() {
                                 }}
                                 className="py-4 bg-orange-600 text-white font-bold rounded-2xl text-xs hover:bg-orange-700 shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
                              >
-                                <ShieldCheck className="w-4 h-4" /> Verify Delivery
+                                <ShieldCheck className="w-4 h-4" /> Verify NGO PIN
                              </button>
                           </div>
                        ) : (
@@ -296,7 +296,7 @@ export default function RiderMissionsPage() {
          </div>
       </section>
 
-      {/* Handover PIN Modal */}
+      {/* Pickup / NGO PIN Modal */}
       <AnimatePresence>
          {verifyingId && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/80 backdrop-blur-md">
@@ -305,19 +305,19 @@ export default function RiderMissionsPage() {
                      <ShieldCheck className="w-10 h-10 text-white" />
                   </div>
                     <div className="space-y-2">
-                       <h2 className="text-2xl font-bold text-gray-900">{isDeliveryVerify ? "Delivery OTP" : "Handover PIN"}</h2>
+                       <h2 className="text-2xl font-bold text-gray-900">{isDeliveryVerify ? "NGO Release PIN" : "Donor Pickup PIN"}</h2>
                        <p className="text-gray-500 text-xs px-4">
                           {isDeliveryVerify 
-                             ? "Enter the 6-digit code shared by the NGO coordinator." 
-                             : "Enter the 4-digit verification code provided by the donor."}
+                             ? "Enter the 4-digit PIN shared by the NGO coordinator." 
+                             : "Enter the 4-digit pickup PIN provided by the donor."}
                        </p>
                     </div>
 
                     <div className="space-y-6">
                        <input 
                           type="text" 
-                          maxLength={isDeliveryVerify ? 6 : 4}
-                          placeholder={isDeliveryVerify ? "------" : "----"}
+                          maxLength={4}
+                          placeholder="----"
                           autoFocus
                           className="w-full text-center text-5xl font-bold tracking-[0.5em] py-8 rounded-2xl bg-gray-50 border border-gray-200 focus:border-orange-500 focus:bg-white focus:outline-none transition-all placeholder:text-gray-200"
                           value={pin}
@@ -327,11 +327,11 @@ export default function RiderMissionsPage() {
                           <button onClick={() => setVerifyingId(null)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
                           <button 
                              onClick={handleHandover}
-                             disabled={actionLoading || pin.length < (isDeliveryVerify ? 6 : 4)}
+                             disabled={actionLoading || pin.length < 4}
                              className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
                           >
                              {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                             {isDeliveryVerify ? "Verify Delivery" : "Verify PIN"}
+                             {isDeliveryVerify ? "Verify NGO PIN" : "Verify Pickup"}
                           </button>
                        </div>
                     </div>

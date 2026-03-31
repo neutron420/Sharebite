@@ -225,11 +225,6 @@ export default function NgoRequestsPage() {
                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
                           <MapPin className="w-4 h-4 text-orange-600" /> {req.donation.city}
                        </div>
-                       {req.handoverPin && (
-                           <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-slate-200">
-                              <ShieldCheck className="w-4 h-4 text-orange-600" /> PIN: {req.handoverPin}
-                           </div>
-                        )}
                        <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-orange-600 hover:text-slate-950 transition-colors group/call">
                           <Phone className="w-4 h-4 group-hover/call:animate-bounce" /> Call Donor
                        </button>
@@ -254,12 +249,21 @@ export default function NgoRequestsPage() {
                            >
                               <MessageSquare className="w-7 h-7 group-hover/msg:scale-110 transition-transform" />
                            </button>
-                           <button 
-                              onClick={() => setVerifyingId(req.id)}
-                              className="flex-1 px-8 py-5 bg-slate-950 text-white font-black rounded-[2rem] flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest active:scale-95 group/ver"
-                           >
-                              Verify Handover <ShieldCheck className="w-5 h-5 group-hover/ver:rotate-12 transition-transform" />
-                           </button>
+                           {!req.riderId ? (
+                             <button 
+                                onClick={() => setVerifyingId(req.id)}
+                                className="flex-1 px-8 py-5 bg-slate-950 text-white font-black rounded-[2rem] flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest active:scale-95 group/ver"
+                             >
+                                Verify Pickup <ShieldCheck className="w-5 h-5 group-hover/ver:rotate-12 transition-transform" />
+                             </button>
+                           ) : (
+                             <button 
+                                onClick={() => router.push(`/ngo/requests/${req.id}`)}
+                                className="flex-1 px-8 py-5 bg-slate-950 text-white font-black rounded-[2rem] flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest active:scale-95"
+                             >
+                                Track Mission <Navigation className="w-5 h-5" />
+                             </button>
+                           )}
                            <button 
                               onClick={() => router.push(`/ngo/requests/${req.id}`)}
                               className="w-16 h-16 rounded-[2rem] bg-orange-600 text-white flex items-center justify-center hover:bg-slate-950 transition-all shadow-xl shadow-orange-100 active:scale-90 group/man"
@@ -381,7 +385,7 @@ export default function NgoRequestsPage() {
                         <ShieldCheck className="w-12 h-12 text-orange-600" />
                      </div>
                      <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 uppercase italic underline decoration-orange-600/20 underline-offset-8">Authorize</h2>
-                     <p className="font-bold text-slate-400 text-[10px] uppercase tracking-widest">Input the donor&apos;s 4-digit verification key.</p>
+                     <p className="font-bold text-slate-400 text-[10px] uppercase tracking-widest">Input the donor&apos;s 4-digit pickup PIN for direct collection.</p>
                   </div>
                   <div className="space-y-6">
                      <input 
