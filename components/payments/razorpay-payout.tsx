@@ -41,8 +41,14 @@ export default function RazorpayPayment({
       const orderData = await res.json();
 
       // 2. Configure Razorpay Options
+      const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      if (!razorpayKey) {
+        toast.error("Razorpay Public Key is missing! Check your environment variables.");
+        return;
+      }
+
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, 
+        key: razorpayKey, 
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Sharebite Delivery",

@@ -5,12 +5,20 @@ let _razorpay: Razorpay | null = null;
 
 function getRazorpay() {
   if (!_razorpay) {
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-      throw new Error("Razorpay keys are missing in environment variables.");
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+      console.error("Critical: Razorpay keys are missing in environment variables.", {
+        hasKeyId: !!keyId,
+        hasKeySecret: !!keySecret,
+        nodeEnv: process.env.NODE_ENV
+      });
+      throw new Error(`Razorpay keys missing: ${!keyId ? 'RAZORPAY_KEY_ID ' : ''}${!keySecret ? 'RAZORPAY_KEY_SECRET' : ''}`);
     }
     _razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
+      key_id: keyId,
+      key_secret: keySecret,
     });
   }
   return _razorpay;
