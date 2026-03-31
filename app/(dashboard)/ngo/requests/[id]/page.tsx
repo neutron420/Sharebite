@@ -20,6 +20,9 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import LiveRiderMap from "@/components/ui/live-rider-map";
 import RazorpayPayment from "@/components/payments/razorpay-payout";
+import { TimesheetConfirmation } from "@/components/timesheet-confirmation";
+import { useSocket } from "@/components/providers/socket-provider";
+
 
 export default function RequestDetailPage() {
   const params = useParams();
@@ -30,6 +33,9 @@ export default function RequestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
   const [pin, setPin] = useState("");
+  const { addListener } = useSocket();
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+
 
   const fetchRequest = useCallback(async () => {
     try {
@@ -47,7 +53,20 @@ export default function RequestDetailPage() {
 
   useEffect(() => {
     if (id) fetchRequest();
-  }, [id, fetchRequest]);
+
+    const removeListener = addListener("mission_update", (data) => {
+       if (data.requestId === id) fetchRequest();
+    });
+
+    return () => removeListener();
+  }, [id, fetchRequest, addListener]);
+
+  useEffect(() => {
+    if (request?.step === 3.5 && !showPayoutModal) {
+       setShowPayoutModal(true);
+    }
+  }, [request, showPayoutModal]);
+
 
   const handleVerifyHandover = async () => {
     if (pin.length < 4) {
@@ -100,6 +119,7 @@ export default function RequestDetailPage() {
   const isLive = request.status === "ASSIGNED" || request.status === "ON_THE_WAY";
 
   return (
+    <>
     <div className="max-w-7xl mx-auto space-y-12 pb-20">
       <header className="flex items-center gap-6">
         <button 
@@ -270,5 +290,38 @@ export default function RequestDetailPage() {
         </div>
       </div>
     </div>
+
+    {request && (
+      <TimesheetConfirmation 
+         isOpen={showPayoutModal}
+         onClose={() => setShowPayoutModal(false)}
+         clientName={request.ngo?.name || "NGO HUB"}
+         taskName={request.donation.title}
+         timeEntries={[
+            { date: new Date().toLocaleDateString(), duration: "VERIFIED DROPOFF" }
+         ]}
+         financials={[
+            { label: "LOGISTICS ACTIVATED", value: 1, isCommission: true },
+            { label: "BASE LOGISTICS FEE", value: 40, isCommission: false },
+            { label: "PLATFORM MAINTENANCE", value: 10, isCommission: false }
+         ]}
+         totalHours="1.8 LBS CARGO"
+         takeHomeAmount={50.00}
+         className="[&_h2]:text-orange-600"
+         actionNode={
+           <RazorpayPayment 
+              requestId={id} 
+              amount={50} 
+              onSuccess={() => {
+                 setShowPayoutModal(false);
+                 fetchRequest();
+              }}
+              className="w-full bg-slate-950 text-white font-black py-6 rounded-2xl hover:bg-orange-600 transition-all font-black text-xs uppercase tracking-widest mt-8"
+              label="Authorize Protocol (₹50)"
+           />
+         }
+      />
+    )}
+    </>
   );
 }
