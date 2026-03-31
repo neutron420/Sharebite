@@ -451,7 +451,10 @@ export default function NgoRequestsPage() {
                 totalHours="1 MISSION"
                 takeHomeAmount={req.amount || 50}
                 className="[&_h2]:text-orange-600"
+                actionLabel="Authorize Protocol"
+                onAction={() => setAutoOpenPayoutId(null)}
              />
+
           );
        })()}
 

@@ -78,10 +78,27 @@ export async function POST(request: Request) {
       link: `/ngo/requests/${requestId}`
     });
 
+    // 6. Signal the Frontend via Socket (Inter-service sync)
+    try {
+      if (process.env.INTERNAL_WS_URL) {
+        await fetch(`${process.env.INTERNAL_WS_URL}/broadcast`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: "mission_update",
+            data: { requestId, status: "COMPLETED", ngoId: payment.userId }
+          })
+        });
+      }
+    } catch (e) {
+      console.error("Socket broadcast failed:", e);
+    }
+
     return NextResponse.json({
       message: "Payment verified successfully!",
       payment
     });
+
   } catch (error) {
     console.error("Payment verification error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

@@ -5,21 +5,28 @@ if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     exit
 }
 
-if (-not (Test-Path ".env")) {
-    Write-Host "X .env file not found!" -ForegroundColor Red
-    exit
-}
+$envFiles = @(".env", ".env.production")
+$found = $false
 
-Write-Host "Syncing ShareBite secrets to GitHub..." -ForegroundColor Cyan
-
-Get-Content .env | ForEach-Object {
-    if ($_ -match "^(?<key>[A-Z0-9_]+)=(?<value>.*)$") {
-        $key = $Matches.key
-        $value = $Matches.value.Trim('"').Trim("'")
-        
-        Write-Host "-> Setting $key..." -ForegroundColor Gray
-        $value | gh secret set $key
+foreach ($file in $envFiles) {
+    if (Test-Path $file) {
+        $found = $true
+        Write-Host "🚀 Syncing secrets from $file..." -ForegroundColor Cyan
+        Get-Content $file | ForEach-Object {
+            if ($_ -match "^(?<key>[A-Z0-9_]+)=(?<value>.*)$") {
+                $key = $Matches.key
+                $value = $Matches.value.Trim('"').Trim("'")
+                
+                Write-Host "-> Setting $key..." -ForegroundColor Gray
+                $value | gh secret set $key
+            }
+        }
     }
 }
 
-Write-Host "✅ All secrets synced to GitHub Repo: neutron420/Sharebite" -ForegroundColor Green
+if (-not $found) {
+    Write-Host "X No .env or .env.production files found!" -ForegroundColor Red
+    exit
+}
+
+Write-Host "All secrets synced to GitHub Repo: neutron420/Sharebite" -ForegroundColor Green

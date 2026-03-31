@@ -197,7 +197,6 @@ export default function RequestDetailPage() {
              </section>
           )}
 
-          {/* Show payment button if it's awaiting initial payment OR awaiting post-delivery payout */}
           {((!isLive && request.status !== 'COMPLETED') || request.step === 3.5) && (
              <section className="p-16 rounded-[4rem] bg-slate-950 text-white flex flex-col items-center justify-center text-center space-y-6">
                 <div className="w-20 h-20 bg-orange-600 rounded-[2rem] flex items-center justify-center shadow-xl shadow-orange-600/20">
@@ -217,6 +216,22 @@ export default function RequestDetailPage() {
                       className="w-full"
                       label={request.step === 3.5 ? "Release Rider Payout" : "Pay Delivery Fee"}
                    />
+                </div>
+             </section>
+          )}
+
+          {request.status === 'COMPLETED' && (
+             <section className="p-16 rounded-[4rem] bg-orange-600 text-white flex flex-col items-center justify-center text-center space-y-6 shadow-2xl shadow-orange-100">
+                <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center border border-white/30">
+                   <CheckCircle2 className="w-12 h-12" />
+                </div>
+                <h3 className="text-4xl font-black italic uppercase tracking-tight">Mission Accomplished</h3>
+                <p className="text-orange-50/80 text-xs font-bold uppercase tracking-widest max-w-sm">
+                   The logistics grid log is finalized. The cargo was successfully extracted and delivered. All rewards have been credited.
+                </p>
+                <div className="pt-4 flex gap-4">
+                   <button onClick={() => router.push('/ngo/history')} className="px-10 py-5 bg-slate-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all">Archived Logs</button>
+                   <button onClick={() => router.push('/ngo/requests')} className="px-10 py-5 bg-white text-orange-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-orange-700/20">Back to Hub</button>
                 </div>
              </section>
           )}
@@ -317,7 +332,7 @@ export default function RequestDetailPage() {
                  fetchRequest();
               }}
               className="w-full bg-slate-950 text-white font-black py-6 rounded-2xl hover:bg-orange-600 transition-all font-black text-xs uppercase tracking-widest mt-8"
-              label="Authorize Protocol (₹50)"
+              label="Authorize Protocol"
            />
          }
       />
