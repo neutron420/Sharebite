@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, Trophy, Coins, CreditCard } from "lucide-react";
 import { TimesheetConfirmation } from "@/components/timesheet-confirmation";
+import { RIDER_PAYOUT_AMOUNT_INR } from "@/lib/payout";
 
 interface Task {
   id: string;
@@ -148,11 +149,10 @@ export default function RiderDashboard() {
               { date: "Delivery Verified", duration: "Step 2 ✓" }
             ],
             financials: [
-              { label: "Base Payout", value: 40 },
-              { label: "Production Bonus", value: 10 }
+              { label: "Base Payout", value: RIDER_PAYOUT_AMOUNT_INR }
             ],
             totalHours: "10 Karma Pts",
-            takeHomeAmount: 50
+            takeHomeAmount: RIDER_PAYOUT_AMOUNT_INR
           });
           setShowSuccessModal(true);
         }

@@ -23,6 +23,7 @@ import { useRouter } from "next/navigation";
 import LiveRiderMap from "@/components/ui/live-rider-map";
 import RazorpayPayment from "@/components/payments/razorpay-payout";
 import { useSocket } from "@/components/providers/socket-provider";
+import { RIDER_PAYOUT_AMOUNT_INR } from "@/lib/payout";
 
 
 export default function NgoRequestsPage() {
@@ -223,7 +224,7 @@ export default function NgoRequestsPage() {
                     {req.step === 3.5 ? (
                        <RazorpayPayment 
                           requestId={req.id} 
-                          amount={50} 
+                          amount={RIDER_PAYOUT_AMOUNT_INR}
                           onSuccess={fetchRequests} 
                           className="w-full"
                           label="Release Rider Payout"

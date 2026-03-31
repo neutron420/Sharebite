@@ -6,6 +6,7 @@ import { createNotification } from "@/lib/notifications";
 import redis from "@/lib/redis";
 import { sendThankYouEmail } from "@/lib/email";
 import { validateFoodImage, compareFoodImages } from "@/lib/vision";
+import { RIDER_PAYOUT_AMOUNT_INR } from "@/lib/payout";
 
 async function deliveryHandler(
   request: Request,
@@ -117,7 +118,7 @@ async function deliveryHandler(
       userId: pickupRequest.ngoId,
       type: "REQUEST_STATUS",
       title: "Delivery Received! Please Release Payout 💸",
-      message: `The rider has delivered "${pickupRequest.donation.title}". Please pay the ₹50 fee to release their payout.`,
+      message: `The rider has delivered "${pickupRequest.donation.title}". Please pay the ₹${RIDER_PAYOUT_AMOUNT_INR} fee to release their payout.`,
       link: `/ngo/requests/${id}`
     });
 

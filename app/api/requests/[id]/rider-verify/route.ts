@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
 import { sendEmail } from "@/lib/email";
+import { RIDER_PAYOUT_AMOUNT_INR } from "@/lib/payout";
 
 export async function POST(
   request: Request,
@@ -76,7 +77,7 @@ export async function POST(
       link: `/ngo/requests/${requestId}`
     });
 
-    const payoutAmount = 50;
+    const payoutAmount = RIDER_PAYOUT_AMOUNT_INR;
 
     await createNotification({
       userId: session.userId,

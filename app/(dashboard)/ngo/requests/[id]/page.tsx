@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import LiveRiderMap from "@/components/ui/live-rider-map";
 import RazorpayPayment from "@/components/payments/razorpay-payout";
 import { useSocket } from "@/components/providers/socket-provider";
+import { RIDER_PAYOUT_AMOUNT_INR } from "@/lib/payout";
 
 
 export default function RequestDetailPage() {
@@ -203,7 +204,7 @@ export default function RequestDetailPage() {
                 <div className="pt-4 w-full max-w-xs">
                    <RazorpayPayment 
                       requestId={id} 
-                      amount={50} 
+                      amount={RIDER_PAYOUT_AMOUNT_INR}
                       onSuccess={fetchRequest}
                       className="w-full"
                       label={request.step === 3.5 ? "Release Rider Payout" : "Pay Delivery Fee"}
