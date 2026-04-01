@@ -22,6 +22,7 @@ import {
   X,
   ShieldCheck,
   Zap,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -71,6 +72,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: Plus,
     id: "donate",
     href: "/donor/donate",
+  },
+  {
+    label: "Community",
+    icon: Users,
+    id: "community",
+    href: "/community",
   },
   {
     label: "My History",

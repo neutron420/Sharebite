@@ -4,7 +4,7 @@ export const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   name: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["DONOR", "NGO", "ADMIN", "RIDER"]).default("DONOR"),
+  role: z.enum(["DONOR", "NGO", "ADMIN", "RIDER", "COMMUNITY"]).default("DONOR"),
   phoneNumber: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -21,7 +21,7 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
-  role: z.enum(["DONOR", "NGO", "ADMIN", "RIDER"]).optional(),
+  role: z.enum(["DONOR", "NGO", "ADMIN", "RIDER", "COMMUNITY"]).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

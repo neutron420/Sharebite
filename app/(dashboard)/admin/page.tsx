@@ -52,6 +52,7 @@ interface UserRoles {
   donors: number;
   ngos: number;
   admins: number;
+  community: number;
 }
 
 interface DonationStatuses {
@@ -255,6 +256,7 @@ export default function AdminDashboard() {
     { name: "Donors", value: userRoles.donors, color: "#f97316" },
     { name: "NGOs", value: userRoles.ngos, color: "#3b82f6" },
     { name: "Admins", value: userRoles.admins, color: "#8b5cf6" },
+    { name: "Community", value: userRoles.community, color: "#ec4899" },
   ];
 
   const statusData = Object.entries(donationStatuses).map(([key, value]) => ({

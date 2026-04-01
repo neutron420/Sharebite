@@ -85,7 +85,14 @@ sub.on("message", (channel, message) => {
     try {
       const { type, userId, userIds, targetRole, payload, riderId, lat, lng } = JSON.parse(message);
       
-      if (type === "RIDER_LOCATION_UPDATE" && userIds) {
+      // COMMUNITY_POST: Global broadcast to ALL connected clients for real-time feed
+      if (type === "COMMUNITY_POST") {
+        localClients.forEach((client) => {
+          if (client.ws.readyState === WebSocket.OPEN) {
+            client.ws.send(JSON.stringify({ type: "COMMUNITY_POST", payload }));
+          }
+        });
+      } else if (type === "RIDER_LOCATION_UPDATE" && userIds) {
         userIds.forEach((id: string) => {
           const client = localClients.get(id);
           if (client && client.ws.readyState === WebSocket.OPEN) {

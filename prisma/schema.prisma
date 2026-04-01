@@ -56,6 +56,10 @@ model User {
   payments             Payment[]       @relation("UserPayments")
   wallet               Wallet?
   rewardPoints         Int             @default(0)
+  communityPosts       CommunityPost[] @relation("AuthorPosts")
+  communityLikes       CommunityLike[]
+  communityComments    CommunityComment[]
+  communityReports     CommunityReport[]
 
   @@index([email])
   @@index([role])
@@ -320,6 +324,7 @@ enum UserRole {
   NGO
   ADMIN
   RIDER
+  COMMUNITY
 }
 
 enum DonationStatus {
@@ -406,3 +411,61 @@ enum PaymentStatus {
   SUCCESS
   FAILED
 }
+
+model CommunityPost {
+  id        String   @id @default(uuid())
+  caption   String
+  imageUrl  String
+  authorId  String
+  author    User     @relation("AuthorPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  likes     CommunityLike[]
+  comments  CommunityComment[]
+  reports   CommunityReport[]
+
+  @@index([authorId])
+}
+
+model CommunityLike {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model CommunityComment {
+  id        String   @id @default(uuid())
+  content   String
+  postId    String
+  authorId  String
+  createdAt DateTime @default(now())
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+}
+
+model CommunityReport {
+  id         String   @id @default(uuid())
+  reason     String
+  details    String?
+  status     String   @default("PENDING")
+  reporterId String
+  postId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  post       CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reporter   User          @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([reporterId])
+}
+

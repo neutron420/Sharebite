@@ -11,13 +11,14 @@ const getSecretKey = () => {
   return new TextEncoder().encode(process.env.JWT_SECRET);
 };
 
-const sessionRoles = ["ADMIN", "DONOR", "NGO", "RIDER"] as const;
+const sessionRoles = ["ADMIN", "DONOR", "NGO", "RIDER", "COMMUNITY"] as const;
 export const SESSION_COOKIE_NAMES = [
   "session",
   "admin_session",
   "donor_session",
   "ngo_session",
   "rider_session",
+  "community_session",
 ] as const;
 
 export type SessionRole = (typeof sessionRoles)[number];
@@ -38,6 +39,7 @@ export function getCookieName(role: string): string {
   if (role === "DONOR") return "donor_session";
   if (role === "NGO") return "ngo_session";
   if (role === "RIDER") return "rider_session";
+  if (role === "COMMUNITY") return "community_session";
   return "session";
 }
 
@@ -58,6 +60,7 @@ function inferPreferredRole(currentPath: string): SessionRole | undefined {
   if (currentPath.includes("/donor")) return "DONOR";
   if (currentPath.includes("/ngo")) return "NGO";
   if (currentPath.includes("/rider")) return "RIDER";
+  if (currentPath.includes("/community")) return "COMMUNITY";
   return undefined;
 }
 
@@ -128,6 +131,7 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
   const donorToken = cookieStore.get("donor_session")?.value;
   const ngoToken = cookieStore.get("ngo_session")?.value;
   const riderToken = cookieStore.get("rider_session")?.value;
+  const communityToken = cookieStore.get("community_session")?.value;
   const generalToken = cookieStore.get("session")?.value;
 
   // 3. Priority check based on path context
@@ -136,6 +140,7 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
     DONOR: donorToken,
     NGO: ngoToken,
     RIDER: riderToken,
+    COMMUNITY: communityToken,
   };
   const tokenChecks: Array<string | undefined> = [];
   const preferredRole = options?.preferredRole ?? inferPreferredRole(currentPath);
@@ -150,7 +155,7 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
     }
   } else {
     // Default order: check all tokens
-    tokenChecks.push(generalToken, adminToken, donorToken, ngoToken, riderToken);
+    tokenChecks.push(generalToken, adminToken, donorToken, ngoToken, riderToken, communityToken);
   }
 
   // 4. Verify tokens in priority order

@@ -74,6 +74,11 @@ async function handleUserAction(
             where: { id: reportId },
             data: { status: "RESOLVED" }
           }));
+        } else if (reportType === "COMMUNITY_REPORT") {
+          transaction.push(prisma.communityReport.update({
+            where: { id: reportId },
+            data: { status: "RESOLVED" }
+          }));
         } else {
           transaction.push(prisma.report.update({
             where: { id: reportId },

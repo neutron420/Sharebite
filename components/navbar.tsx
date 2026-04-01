@@ -11,6 +11,7 @@ const menuItems = [
     { name: <Translate>Tech Stack</Translate>, href: '#features' },
     { name: <Translate>Impact Log</Translate>, href: '#impact' },
     { name: <Translate>Coalition</Translate>, href: '#roles' },
+    { name: <Translate>Community</Translate>, href: '/community' },
     { name: <Translate>Portal</Translate>, href: '/login' },
 ]
 
