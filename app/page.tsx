@@ -68,6 +68,12 @@ import { Header } from "@/components/navbar";
  * Balanced Typography & Expanded Header
  */
 export default function Home() {
+  const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch("/api/community/posts?sort=newest").then(res => res.json()).then(data => setPosts(data.slice(0, 10))).catch(() => {});
+  }, []);
+
   const partners = [
     { name: "UNICEF", img: "/unicef.png" },
     { name: "RED CROSS", img: "/redcross.png" },
@@ -129,52 +135,41 @@ export default function Home() {
       <main className="relative z-10 w-full pt-32 md:pt-56">
         {/* Refined Hero Section */}
         <section className="px-6 flex flex-col items-center text-center max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="px-5 py-2 rounded-full border border-orange-100 bg-orange-50 text-[11px] font-medium uppercase tracking-[0.25em] text-orange-600 mb-10 inline-flex items-center gap-3"
+          <div
+            className="px-5 py-2 rounded-full border border-orange-100 bg-orange-50 text-[11px] font-medium uppercase tracking-[0.25em] text-orange-600 mb-10 inline-flex items-center gap-3 animate-float"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-600"></span>
             </span>
             <Translate>Active Logistics in</Translate> <Counter value={12} /> <Translate>Major Cities</Translate>
-          </motion.div>
+          </div>
 
-          <motion.h1 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+          <h1 
             className="text-4xl xs:text-5xl sm:text-7xl md:text-[80px] font-medium tracking-tight leading-[1.1] md:leading-[0.95] mb-8 sm:mb-10 text-slate-950"
           >
             <Translate>Zero Waste.</Translate> <br className="hidden sm:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 ">
                <Translate>Unlimited Hope.</Translate>
             </span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+          <p
             className="text-base sm:text-lg text-slate-500 max-w-2xl mb-10 sm:mb-14 font-medium leading-relaxed px-4 sm:px-0"
           >
             <Translate>The world's most sophisticated food-sharing engine. We connect high-volume donors with NGOs and professional riders to eliminate hunger with sub-second precision.</Translate>
-          </motion.p>
+          </p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+          <div
             className="flex flex-col sm:flex-row gap-4 sm:gap-5 w-full sm:w-auto px-6 sm:px-0"
           >
-            <Link href="/register" className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-orange-600 text-white font-medium text-base sm:text-lg rounded-[1.2rem] sm:rounded-[1.5rem] hover:bg-orange-700 hover:shadow-2xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center justify-center gap-3">
+            <Link href="/register" className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-orange-600 text-white font-medium text-base sm:text-lg rounded-[1.2rem] sm:rounded-[1.5rem] hover:bg-orange-700 hover:shadow-2xl hover:shadow-orange-100 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl shadow-orange-100">
               <Translate>Start Donating</Translate> <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link href="#features" className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-white border border-slate-200 text-slate-950 font-medium text-base sm:text-lg rounded-[1.2rem] sm:rounded-[1.5rem] hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3">
+            <Link href="#features" className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 bg-white border border-slate-200 text-slate-950 font-medium text-base sm:text-lg rounded-[1.2rem] sm:rounded-[1.5rem] hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-sm">
               <Translate>Watch Impact</Translate> <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-50 flex items-center justify-center text-orange-600"><Play className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-current" /></div>
             </Link>
-          </motion.div>
+          </div>
 
           {/* Luxury Marquee */}
           <div className="mt-20 sm:mt-32 w-full max-w-6xl">
@@ -203,10 +198,57 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Epic Impact Gallery - Now natively full width outside the padded hero container */}
         <div className="w-full">
           <ImpactGallery />
         </div>
+
+        {/* Live Community Highlights Section */}
+        {posts.length > 0 && (
+          <section className="py-24 sm:py-32 overflow-hidden border-y border-slate-100 bg-white relative">
+             <div className="max-w-7xl mx-auto px-6 mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="max-w-xl">
+                   <p className="text-orange-600 text-[11px] font-black uppercase tracking-[0.5em] mb-4 animate-pulse"><Translate>Live From the Hive</Translate></p>
+                   <h2 className="text-4xl md:text-6xl font-medium tracking-tight text-slate-950 mb-4"><Translate>Community</Translate> <span className="italic underline decoration-orange-600/20"><Translate>Highlights</Translate></span></h2>
+                   <p className="text-slate-500 font-medium text-lg leading-relaxed"><Translate>Real people, real impact. Experience the latest moments shared by our global community.</Translate></p>
+                </div>
+                <Link href="/community" className="px-8 py-4 bg-orange-50 text-orange-600 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] hover:bg-orange-100 transition-all active:scale-95 flex items-center gap-3 self-start md:self-auto">
+                   <Translate>Explore all Moments</Translate> <ArrowRight size={16} />
+                </Link>
+             </div>
+
+             <Marquee pauseOnHover className="[--duration:60s] [--gap:2rem] py-4">
+                {posts.map((post) => (
+                   <div key={post.id} className="w-[320px] xs:w-[380px] aspect-[10/12] relative rounded-[2.5rem] overflow-hidden group border border-slate-100 bg-white shadow-sm flex-shrink-0">
+                      <Image 
+                        src={post.imageUrl} 
+                        alt="Highlight" 
+                        fill 
+                        sizes="380px"
+                        className="object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                      
+                      <div className="absolute top-6 left-6 bg-white/10 backdrop-blur-xl rounded-full px-4 py-2 border border-white/20 flex items-center gap-2">
+                         <div className="w-6 h-6 rounded-lg overflow-hidden relative border border-white/40 bg-slate-800">
+                            {post.author.imageUrl ? (
+                              <Image src={post.author.imageUrl} fill sizes="24px" alt="A" className="object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[10px] text-white font-black">{post.author.name.charAt(0)}</div>
+                            )}
+                         </div>
+                         <span className="text-[10px] font-black text-white uppercase tracking-widest truncate max-w-[100px]">{post.author.name}</span>
+                      </div>
+
+                      <div className="absolute bottom-8 left-8 right-8">
+                         <p className="text-white text-base font-medium leading-relaxed drop-shadow-md">
+                           &ldquo;{post.caption}&rdquo;
+                         </p>
+                      </div>
+                   </div>
+                ))}
+             </Marquee>
+          </section>
+        )}
 
         {/* Polished Bento Grid */}
         <section id="features" className="px-6 py-24 sm:py-40 max-w-7xl mx-auto">
