@@ -158,24 +158,32 @@ async function getDonationsHandler(request: Request) {
     const city = searchParams.get("city");
     const search = searchParams.get("search");
     const session = await getSession({ request });
+    const now = new Date();
 
-    console.log("[DONATIONS] Session:", { hasSession: !!session, role: session?.role, userId: session?.userId });
-
-    // If donorId is provided or if user is a DONOR, we might want to show all their items (not just available ones)
-    const effectiveStatus = (status === "AVAILABLE" && (donorId || session?.role === "DONOR")) ? undefined : status;
+    // 🛡️ Live Expiry Sentinel: Auto-expire any stale AVAILABLE listings.
+    await prisma.foodDonation.updateMany({
+      where: {
+        status: "AVAILABLE",
+        expiryTime: { lt: now }
+      },
+      data: { status: "EXPIRED" }
+    });
 
     const donations = await prisma.foodDonation.findMany({
       where: {
-        ...(effectiveStatus && { status: effectiveStatus as any }),
         ...(category && { category: category as any }),
-        ...((donorId || (session?.role === "DONOR" && !search)) && { donorId: donorId || (session?.userId as string) }),
         ...(city && { city }),
         ...(search && {
-          title: {
-            contains: search,
-            mode: "insensitive",
-          },
+          title: { contains: search, mode: "insensitive" },
         }),
+        // Case 1: Donor is looking at their own stuff (Show all states, No expiry filter)
+        ...((donorId || (session?.role === "DONOR" && !search)) ? {
+          donorId: donorId || (session?.userId as string)
+        } : {
+          // Case 2: Public View (NGOs/Riders) -> ONLY show AVAILABLE & NON-EXPIRED
+          status: "AVAILABLE",
+          expiryTime: { gt: now }
+        })
       },
       include: {
         donor: {
@@ -222,8 +230,6 @@ async function getDonationsHandler(request: Request) {
       },
     });
 
-    // Add 'isUrgent' flag for food expiring in less than 3 hours
-    const now = new Date();
     const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
 
     const donationsWithUrgency = donations.map((donation: any) => ({
@@ -231,10 +237,9 @@ async function getDonationsHandler(request: Request) {
       isUrgent: new Date(donation.expiryTime) <= threeHoursFromNow,
     }));
 
-    // 2. If lat/lng and radius are provided, filter by proximity using Redis
     const lat = searchParams.get("lat");
     const lng = searchParams.get("lng");
-    const radius = searchParams.get("radius"); // in km
+    const radius = searchParams.get("radius"); 
 
     if (lat && lng && radius) {
       try {

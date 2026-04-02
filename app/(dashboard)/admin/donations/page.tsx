@@ -260,9 +260,27 @@ export default function DonationsPage() {
                     </td>
                     <td className="px-6 py-4 hidden lg:table-cell text-sm text-gray-500">{formatDate(d.createdAt)}</td>
                     <td className="px-6 py-4">
-                      <button onClick={() => setSelectedDonation(d)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900">
-                        <Eye className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setSelectedDonation(d)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900">
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            if(window.confirm("Admin Alert: Are you sure you want to permanently delete this donation across the entire platform?")) {
+                              try {
+                                const res = await fetch(`/api/donations/${d.id}`, { method: "DELETE" });
+                                if(!res.ok) throw new Error();
+                                setDonations(prev => prev.filter(item => item.id !== d.id));
+                              } catch(e) {
+                                alert("Failed to delete donation.");
+                              }
+                            }
+                          }}
+                          className="p-2 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -310,9 +328,28 @@ export default function DonationsPage() {
           <div className="relative bg-white/90 backdrop-blur-xl rounded-2xl border border-white/20 w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-300 shadow-none" onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white/50 backdrop-blur-md border-b border-white/20 px-6 py-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Donation Details</h2>
-              <button onClick={() => setSelectedDonation(null)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
-                <X className="h-5 w-5" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                   onClick={async () => {
+                     if(window.confirm("Admin Alert: Are you sure you want to permanently delete this donation?")) {
+                       try {
+                         const res = await fetch(`/api/donations/${selectedDonation.id}`, { method: "DELETE" });
+                         if(!res.ok) throw new Error();
+                         setDonations(prev => prev.filter(item => item.id !== selectedDonation.id));
+                         setSelectedDonation(null);
+                       } catch(e) {
+                         alert("Failed to delete.");
+                       }
+                     }
+                   }}
+                   className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-600 hover:text-white transition-colors"
+                >
+                   <Trash2 className="h-3.5 w-3.5" /> Purge Donation
+                </button>
+                <button onClick={() => setSelectedDonation(null)} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
             <div className="p-6 space-y-6">
               {selectedDonation.imageUrl && (

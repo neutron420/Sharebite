@@ -13,8 +13,6 @@ async function postRequestHandler(request: Request) {
         { status: 401 }
       );
     }
-
-    // Check for verification, blocks, and license suspension
     const user = await prisma.user.findUnique({
       where: { id: session.userId as string },
       select: { 
@@ -53,7 +51,7 @@ async function postRequestHandler(request: Request) {
       return NextResponse.json({ error: "Donation ID is required" }, { status: 400 });
     }
 
-    // Check if donation is still available
+    // Check if donation is still available and not expired
     const donation = await prisma.foodDonation.findUnique({
       where: { id: donationId },
     });
@@ -65,12 +63,24 @@ async function postRequestHandler(request: Request) {
       );
     }
 
+    if (new Date(donation.expiryTime) < new Date()) {
+       // Mark it as expired in the DB for safety consistency
+       await prisma.foodDonation.update({
+         where: { id: donationId },
+         data: { status: "EXPIRED" }
+       });
+       return NextResponse.json(
+         { error: "Access Denied. This donation has expired and is no longer safe for human consumption." },
+         { status: 400 }
+       );
+    }
+
     // Create pickup request with NGO details for the notification
     const pickupRequest = await prisma.pickupRequest.create({
       data: {
         donationId,
         ngoId: session.userId as string,
-        message,
+        message: message || "",
         status: "PENDING",
       },
       include: {
@@ -165,6 +175,9 @@ async function getRequestsHandler(request: Request) {
             { 
               riderId: null, 
               status: { in: ["APPROVED", "ASSIGNED"] }, 
+              donation: { 
+                status: { not: "EXPIRED" }
+              }
             }
           ]
         },

@@ -19,7 +19,8 @@ import {
    Building2,
    History,
    UtensilsCrossed,
-   TrendingUp
+   TrendingUp,
+   Trash2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as AvatarPrimitive from '@radix-ui/react-avatar';
@@ -117,9 +118,10 @@ function AvatarFallback({
 
 interface DonationListProps extends React.HTMLAttributes<HTMLDivElement> {
    donations: any[];
+   onDelete?: (id: string) => void;
 }
 
-const DonationList = React.forwardRef<HTMLDivElement, DonationListProps>(({ donations, className, ...props }, ref) => {
+const DonationList = React.forwardRef<HTMLDivElement, DonationListProps>(({ donations, className, onDelete, ...props }, ref) => {
    const [expandedId, setExpandedId] = useState<string | null>(null);
 
    const toggleExpand = (id: string) => {
@@ -330,6 +332,21 @@ const DonationList = React.forwardRef<HTMLDivElement, DonationListProps>(({ dona
                                                       </div>
                                                    </div>
                                                 )}
+
+                                                {/* Deletion Option */}
+                                                <div className="pt-6 mt-4 border-t border-slate-50 flex justify-end">
+                                                   <button 
+                                                      onClick={(e) => {
+                                                         e.stopPropagation();
+                                                         if(onDelete && window.confirm("Are you sure you want to permanently delete this mission record? This cannot be undone.")) {
+                                                            onDelete(d.id);
+                                                         }
+                                                      }}
+                                                      className="group flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95"
+                                                   >
+                                                      <Trash2 className="w-3.5 h-3.5" /> Purge Mission Data
+                                                   </button>
+                                                </div>
                                              </div>
 
                                              {/* Visual Intelligence Grid */}

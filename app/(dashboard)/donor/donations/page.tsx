@@ -65,6 +65,20 @@ export default function DonorHistory() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/donations/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete donation");
+      
+      setDonations(prev => prev.filter(d => d.id !== id));
+      toast.success("Donation record purged successfully.");
+    } catch (error) {
+      toast.error("Could not delete this donation.");
+    }
+  };
+
 
 
   if (loading) {
@@ -96,7 +110,10 @@ export default function DonorHistory() {
 
           <div className="space-y-8">
              <div className="h-auto">
-                <DonationList donations={donations.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)} />
+                <DonationList 
+                  donations={donations.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)} 
+                  onDelete={handleDelete}
+                />
              </div>
 
              {donations.length > itemsPerPage && (
