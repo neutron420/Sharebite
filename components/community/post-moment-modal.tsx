@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Upload, Loader2, Image as ImageIcon, Sparkles } from "lucide-react";
+import { X, Upload, Loader2, Image as ImageIcon, Sparkles, ShieldAlert, AlertTriangle, Ban } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
@@ -11,11 +11,18 @@ interface PostMomentModalProps {
   onSuccess: (post: any) => void;
 }
 
+interface InterceptionData {
+  reason: string;
+  isImageBad?: boolean;
+  isTextBad?: boolean;
+}
+
 export default function PostMomentModal({ isOpen, onClose, onSuccess }: PostMomentModalProps) {
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [loadingPhase, setLoadingPhase] = useState<"IDLE" | "UPLOAD" | "SCAN">("IDLE");
+  const [interception, setInterception] = useState<InterceptionData | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,7 +47,7 @@ export default function PostMomentModal({ isOpen, onClose, onSuccess }: PostMome
       return;
     }
 
-    setIsUploading(true);
+    setLoadingPhase("UPLOAD");
 
     try {
       // 1. Get presigned URL
@@ -65,6 +72,8 @@ export default function PostMomentModal({ isOpen, onClose, onSuccess }: PostMome
 
       if (!putRes.ok) throw new Error("Failed to upload image to storage");
 
+      setLoadingPhase("SCAN");
+
       // 3. Create post in database
       const postRes = await fetch("/api/community/posts", {
         method: "POST",
@@ -75,8 +84,21 @@ export default function PostMomentModal({ isOpen, onClose, onSuccess }: PostMome
         }),
       });
 
-      if (!postRes.ok) throw new Error("Failed to save post");
-      const post = await postRes.json();
+      const resData = await postRes.json().catch(() => ({}));
+
+      if (!postRes.ok) {
+        if (resData.error?.startsWith("Hive Guard:")) {
+          setInterception({
+            reason: resData.error.replace("Hive Guard: ", ""),
+            isImageBad: resData.isImageBad,
+            isTextBad: resData.isTextBad
+          });
+          return;
+        }
+        throw new Error(resData.error || "Failed to save post");
+      }
+      
+      const post = resData;
 
       toast.success("Moment shared with the community!");
       onSuccess(post);
@@ -87,9 +109,17 @@ export default function PostMomentModal({ isOpen, onClose, onSuccess }: PostMome
       setPreview(null);
     } catch (error: any) {
       console.error(error);
-      toast.error(error.message || "Something went wrong");
+      if (error.message?.startsWith("Hive Guard:")) {
+        toast.error(error.message, { 
+          style: { background: "#FEF2F2", color: "#991B1B", border: "1px solid #FCA5A5" },
+          icon: '🛡️',
+          duration: 6000
+        });
+      } else {
+        toast.error(error.message || "Something went wrong");
+      }
     } finally {
-      setIsUploading(false);
+      setLoadingPhase("IDLE");
     }
   };
 
@@ -153,7 +183,7 @@ export default function PostMomentModal({ isOpen, onClose, onSuccess }: PostMome
                   accept="image/*"
                   className="hidden"
                   onChange={handleImageChange}
-                  disabled={isUploading}
+                  disabled={loadingPhase !== "IDLE"}
                 />
               </div>
 
@@ -165,23 +195,79 @@ export default function PostMomentModal({ isOpen, onClose, onSuccess }: PostMome
                   placeholder="Tell the community about this moment..."
                   required
                   rows={4}
-                  disabled={isUploading}
+                  disabled={loadingPhase !== "IDLE"}
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all resize-none"
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={isUploading || !image || !caption}
+                disabled={loadingPhase !== "IDLE" || !image || !caption}
                 className="w-full py-4 bg-slate-950 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-orange-600 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-3"
               >
-                {isUploading ? (
-                  <><Loader2 className="w-5 h-5 animate-spin" /> Sharing...</>
+                {loadingPhase === "UPLOAD" ? (
+                  <><Loader2 className="w-5 h-5 animate-spin" /> Signal Uploading...</>
+                ) : loadingPhase === "SCAN" ? (
+                  <><ShieldAlert className="w-5 h-5 animate-pulse text-orange-400" /> Hive Security Check...</>
                 ) : (
                   <><Sparkles className="w-5 h-5" /> Share Moment</>
                 )}
               </button>
             </form>
+
+            {/* AI Interception Overlay */}
+            <AnimatePresence>
+              {interception && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-50 bg-white/95 backdrop-blur-md flex flex-col items-center justify-center p-8 text-center"
+                >
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-red-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
+                    <div className="relative bg-red-500 text-white p-6 rounded-3xl shadow-2xl shadow-red-500/40">
+                      <ShieldAlert size={48} className="animate-bounce" />
+                    </div>
+                  </div>
+
+                  <h3 className="text-2xl font-black text-slate-900 mb-2 uppercase tracking-tighter">
+                    Security Interception
+                  </h3>
+                  <p className="text-slate-500 text-sm mb-8 font-medium max-w-xs">
+                    Our AI Guard flagged your content for violating community guidelines.
+                  </p>
+
+                  <div className="w-full space-y-3 mb-10">
+                    <div className={`p-4 rounded-2xl border flex items-center gap-4 transition-all ${interception.isImageBad ? 'bg-red-50 border-red-100 text-red-600' : 'bg-slate-50 border-slate-100 text-slate-400 opacity-50'}`}>
+                      {interception.isImageBad ? <AlertTriangle size={20} /> : <Ban size={20} />}
+                      <div className="text-left">
+                        <p className="text-xs font-black uppercase tracking-widest">Image Security</p>
+                        <p className="text-sm font-bold">{interception.isImageBad ? 'Flagged: ' + interception.reason : 'Clear'}</p>
+                      </div>
+                    </div>
+
+                    <div className={`p-4 rounded-2xl border flex items-center gap-4 transition-all ${interception.isTextBad ? 'bg-red-50 border-red-100 text-red-600' : 'bg-slate-50 border-slate-100 text-slate-400 opacity-50'}`}>
+                      {interception.isTextBad ? <Ban size={20} /> : <Ban size={20} />}
+                      <div className="text-left">
+                        <p className="text-xs font-black uppercase tracking-widest">Language Scan</p>
+                        <p className="text-sm font-bold">{interception.isTextBad ? 'Flagged: Profanity Detected' : 'Clear'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => setInterception(null)}
+                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95"
+                  >
+                    Acknowledge & Edit
+                  </button>
+                  <p className="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    This incident has been logged for review.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       )}

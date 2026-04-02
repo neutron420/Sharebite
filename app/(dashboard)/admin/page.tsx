@@ -14,8 +14,10 @@ import {
   RefreshCw,
   ArrowUpRight,
   ShieldCheck,
+  ShieldAlert,
   BarChart3,
   Activity,
+  Bike,
 } from "lucide-react";
 import {
   AreaChart,
@@ -46,6 +48,7 @@ interface Stats {
   totalWeightSaved: number;
   pendingReports: number;
   pendingVerifications: number;
+  hiveViolations: number;
 }
 
 interface UserRoles {
@@ -98,6 +101,11 @@ interface AuditLog {
 interface DashboardData {
   stats: Stats;
   userRoles: UserRoles;
+  deliveryStats: {
+    activeRiders: number;
+    assignedTasks: number;
+    onTheWayTasks: number;
+  };
   donationStatuses: DonationStatuses;
   monthlyDonations: MonthlyDonation[];
   categoryBreakdown: CategoryBreakdown[];
@@ -243,7 +251,7 @@ export default function AdminDashboard() {
   }
 
   if (!data) return null;
-  const { stats, userRoles, donationStatuses, monthlyDonations, categoryBreakdown, recentDonations, recentLogs } = data;
+  const { stats, userRoles, donationStatuses, monthlyDonations, categoryBreakdown, recentDonations, recentLogs, deliveryStats } = data;
 
   const statCards = [
     { label: "Total Users", value: stats.totalUsers, icon: Users, lightColor: "bg-blue-50", textColor: "text-blue-600", trend: "+12%", up: true },
@@ -293,6 +301,19 @@ export default function AdminDashboard() {
           label="NGO Verifications" 
           icon={ShieldCheck} 
           color="#3b82f6" 
+        />
+        <AnimatedCounter 
+          value={stats.hiveViolations || 0} 
+          label="Hive Guard Alerts" 
+          icon={ShieldAlert} 
+          color="#ef4444" 
+          limit={0}
+        />
+        <AnimatedCounter 
+          value={deliveryStats?.onTheWayTasks || 0} 
+          label="Active Deliveries" 
+          icon={Bike} 
+          color="#f97316" 
         />
         <div className="bg-orange-500 rounded-2xl p-5 flex flex-col justify-between text-white lg:col-span-2 group cursor-pointer hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200">
            <div className="flex items-center justify-between">

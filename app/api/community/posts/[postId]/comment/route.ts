@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { validateCommunityText } from "@/lib/self/moderation";
 
 export async function GET(
   request: Request,
@@ -44,6 +45,20 @@ export async function POST(
     const { content } = await request.json();
     if (!content) {
       return NextResponse.json({ error: "Comment content is required" }, { status: 400 });
+    }
+
+    // 🛡️ Hive Guard: AI Toxicity Check
+    const textMod = await validateCommunityText(content);
+    if (!textMod.isSafe) {
+       await prisma.hiveViolation.create({
+         data: {
+           userId: session.userId,
+           type: "TEXT",
+           content: content,
+           reason: textMod.reason || "Toxic language detected",
+         }
+       });
+       return NextResponse.json({ error: `Hive Guard: ${textMod.reason}` }, { status: 400 });
     }
 
     const comment = await prisma.communityComment.create({

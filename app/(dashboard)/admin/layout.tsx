@@ -30,6 +30,8 @@ import {
   CreditCard,
   type LucideIcon,
   Zap,
+  ShieldAlert,
+  LayoutGrid,
 } from "lucide-react";
 import { useSocket } from "@/components/providers/socket-provider";
 import { 
@@ -47,6 +49,7 @@ import {
   Chip
 } from "@mui/material";
 import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
+
 
 interface AdminUser {
   id: string;
@@ -93,7 +96,9 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { label: "NGO Partners", icon: Building2, id: "ngo-partners", href: "/admin/ngo" },
   { label: "Complaints", icon: AlertTriangle, id: "reports", href: "/admin/reports" },
   { label: "Bug Reports", icon: Bug, id: "bugs", href: "/admin/bugs", badge: "Live" },
+  { label: "Hive Feed", icon: LayoutGrid, id: "community-posts", href: "/admin/community-posts" },
   { label: "Community Reports", icon: ShieldCheck, id: "community-reports", href: "/admin/community-reports", badge: "New" },
+  { label: "Hive Safety", icon: ShieldAlert, id: "hive-safety", href: "/admin/hive-safety", badge: "AI" },
   { label: "Reviews", icon: Star, id: "reviews", href: "/admin/reviews" },
   { label: "Payments", icon: CreditCard, id: "payments", href: "/admin/payments" },
   { label: "Operations Map", icon: Map, id: "map", href: "/admin/map" },

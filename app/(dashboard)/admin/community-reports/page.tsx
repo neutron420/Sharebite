@@ -21,7 +21,8 @@ import {
   X,
   Mail,
   ShieldCheck,
-  MoreHorizontal
+  MoreHorizontal,
+  Trash2
 } from "lucide-react";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -139,6 +140,26 @@ export default function CommunityReportsAdminPage() {
       toast.error("Failed to apply action");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeletePost = async (postId: string, reportId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this post?")) return;
+    try {
+      const res = await fetch(`/api/community/posts/${postId}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      if (res.ok) {
+        toast.success("Post deleted successfully");
+        handleUpdateStatus(reportId, "RESOLVED");
+        setDetailReport(null);
+        fetchReports();
+      } else {
+        throw new Error("Failed to delete post");
+      }
+    } catch {
+      toast.error("Failed to delete post");
     }
   };
 
@@ -366,21 +387,29 @@ export default function CommunityReportsAdminPage() {
               <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
                   <button onClick={() => setDetailReport(null)} className="flex-1 py-4 font-black text-sm uppercase bg-white border text-slate-500 rounded-2xl hover:bg-slate-100 transition-all">Close</button>
                   {detailReport.status === "PENDING" && (
-                    <button 
-                      onClick={() => {
-                        setStrikeModal({
-                          reportId: detailReport.id,
-                          userId: detailReport.post.author.id,
-                          userName: detailReport.post.author.name,
-                          reason: detailReport.reason,
-                          reportType: "COMMUNITY_REPORT"
-                        });
-                        setDetailReport(null);
-                      }}
-                      className="flex-1 py-4 font-black text-sm uppercase bg-red-600 text-white rounded-2xl hover:bg-red-700 shadow-xl shadow-red-200 transition-all active:scale-95"
-                    >
-                      Issue Penalty
-                    </button>
+                    <>
+                      <button 
+                        onClick={() => handleDeletePost(detailReport.post.id, detailReport.id)}
+                        className="flex-1 py-4 font-black text-sm uppercase bg-slate-900 text-white rounded-2xl hover:bg-slate-800 shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                      >
+                        <Trash2 size={18} /> Delete Post
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setStrikeModal({
+                            reportId: detailReport.id,
+                            userId: detailReport.post.author.id,
+                            userName: detailReport.post.author.name,
+                            reason: detailReport.reason,
+                            reportType: "COMMUNITY_REPORT"
+                          });
+                          setDetailReport(null);
+                        }}
+                        className="flex-1 py-4 font-black text-sm uppercase bg-red-600 text-white rounded-2xl hover:bg-red-700 shadow-xl shadow-red-200 transition-all active:scale-95"
+                      >
+                        Issue Penalty
+                      </button>
+                    </>
                   )}
               </div>
            </div>

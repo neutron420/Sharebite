@@ -41,6 +41,7 @@ async function getAdminStatsHandler(request: Request) {
       assignedTaskCount,
       onTheWayTaskCount,
       communityUserCount,
+      hiveViolationsCount,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.foodDonation.count(),
@@ -82,6 +83,7 @@ async function getAdminStatsHandler(request: Request) {
       prisma.pickupRequest.count({ where: { status: "ASSIGNED" } }),
       prisma.pickupRequest.count({ where: { status: "ON_THE_WAY" } }),
       prisma.user.count({ where: { role: "COMMUNITY" } }),
+      prisma.hiveViolation.count(),
     ]);
 
     // Build monthly donation counts for the last 12 months
@@ -119,6 +121,7 @@ async function getAdminStatsHandler(request: Request) {
         totalWeightSaved: totalWeightResult._sum.weight || 0,
         pendingReports,
         pendingVerifications,
+        hiveViolations: hiveViolationsCount,
       },
       userRoles: { 
         donors: donorCount, 

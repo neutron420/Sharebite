@@ -366,15 +366,27 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
         body: JSON.stringify({ content: newComment }),
         credentials: "include"
       });
-      if (res.ok) {
-        const comment = await res.json();
-        setComments([...comments, comment]);
-        setNewComment("");
-        setCommentCount((prev: number) => prev + 1);
-        toast.success("Moment shared!");
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to post comment");
       }
-    } catch {
-      toast.error("Message delivery failed");
+
+      const comment = await res.json();
+      setComments([...comments, comment]);
+      setNewComment("");
+      setCommentCount((prev: number) => prev + 1);
+      toast.success("Moment shared!");
+    } catch (error: any) {
+      if (error.message?.startsWith("Hive Guard:")) {
+        toast.error(error.message, { 
+          style: { background: "#FEF2F2", color: "#991B1B", border: "1px solid #FCA5A5" },
+          icon: '🛡️',
+          duration: 6000
+        });
+      } else {
+        toast.error(error.message || "Message delivery failed");
+      }
     } finally {
       setIsSubmittingComment(false);
     }

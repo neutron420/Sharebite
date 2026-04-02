@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { validateCommunityImage, validateCommunityText } from "@/lib/self/moderation";
 
 export async function GET(request: Request) {
   try {
@@ -75,6 +76,59 @@ export async function POST(request: Request) {
 
     if (!caption || !imageUrl) {
       return NextResponse.json({ error: "Caption and image are required" }, { status: 400 });
+    }
+
+    const [textMod, imgModResult] = await Promise.all([
+      validateCommunityText(caption),
+      (async () => {
+        try {
+          const imgRes = await fetch(imageUrl);
+          const buffer = await imgRes.arrayBuffer();
+          const base64 = Buffer.from(buffer).toString("base64");
+          const mime = imgRes.headers.get("content-type") || "image/jpeg";
+          return await validateCommunityImage(base64, mime);
+        } catch (e) {
+          console.warn("Signal check bypassed due to network error:", e);
+          return { isSafe: true };
+        }
+      })()
+    ]);
+
+    // Handle Violations
+    if (!textMod.isSafe || !imgModResult.isSafe) {
+      // Log Text Violation if any
+      if (!textMod.isSafe) {
+        await prisma.hiveViolation.create({
+          data: {
+            userId: session.userId,
+            type: "TEXT",
+            content: caption,
+            reason: textMod.reason || "Inappropriate language",
+          }
+        });
+      }
+
+      // Log Image Violation if any
+      if (!imgModResult.isSafe) {
+        await prisma.hiveViolation.create({
+          data: {
+            userId: session.userId,
+            type: "IMAGE",
+            content: imageUrl,
+            reason: imgModResult.reason || "Inappropriate image content",
+          }
+        });
+      }
+      
+      const finalReason = !imgModResult.isSafe 
+        ? imgModResult.reason 
+        : textMod.reason;
+
+      return NextResponse.json({ 
+        error: `Hive Guard: ${finalReason}`,
+        isImageBad: !imgModResult.isSafe,
+        isTextBad: !textMod.isSafe
+      }, { status: 400 });
     }
 
     const post = await prisma.communityPost.create({

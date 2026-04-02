@@ -60,6 +60,7 @@ model User {
   communityLikes       CommunityLike[]
   communityComments    CommunityComment[]
   communityReports     CommunityReport[]
+  hiveViolations       HiveViolation[] @relation("UserHiveViolations")
 
   @@index([email])
   @@index([role])
@@ -469,3 +470,14 @@ model CommunityReport {
   @@index([reporterId])
 }
 
+model HiveViolation {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation("UserHiveViolations", fields: [userId], references: [id], onDelete: Cascade)
+  type        String   
+  content     String   
+  reason      String   
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
