@@ -12,6 +12,7 @@ vi.mock('@/lib/prisma', () => ({
     foodDonation: {
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }));

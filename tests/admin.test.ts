@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 vi.mock('@/lib/prisma', () => ({
   default: {
     user: { findMany: vi.fn(), update: vi.fn(), delete: vi.fn(), count: vi.fn() },
-    foodDonation: { count: vi.fn(), findMany: vi.fn() },
+    foodDonation: { count: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     pickupRequest: { count: vi.fn(), findMany: vi.fn() },
     report: { findMany: vi.fn(), update: vi.fn() },
     donorReport: { findMany: vi.fn(), update: vi.fn() },
