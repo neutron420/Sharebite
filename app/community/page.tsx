@@ -140,7 +140,9 @@ export default function CommunityPage() {
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-600 rounded-xl sm:rounded-2xl shadow-[0_8px_20px_rgba(234,88,12,0.2)] flex items-center justify-center group-hover:rotate-6 transition-all shrink-0">
               <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="white" />
             </div>
-            <span className="text-sm sm:text-2xl font-medium tracking-tighter text-slate-900 uppercase italic underline decoration-orange-600/10">ShareBite <span className="text-slate-400">Hive</span></span>
+            <span className="text-sm sm:text-2xl font-black tracking-tighter text-slate-900 uppercase italic">
+              ShareBite <span className="text-orange-600">Hive</span>
+            </span>
           </a>
           
           <div className="flex items-center gap-2 sm:gap-4">
@@ -191,19 +193,19 @@ export default function CommunityPage() {
 
       <main className="flex-1 pt-6 sm:pt-12 pb-20">
         {/* Viral Discovery & Search */}
-        <section className="px-4 max-w-2xl mx-auto w-full mb-12">
-           <div className="flex flex-col gap-6">
+        <section className="px-4 max-w-2xl mx-auto w-full mb-8 sm:mb-12">
+           <div className="flex flex-col gap-4 sm:gap-6">
               {/* Premium Search Pill */}
               <div className="relative group">
-                 <div className="absolute inset-0 bg-orange-100/50 blur-2xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-                 <div className="relative flex items-center bg-white border border-slate-200 rounded-[2rem] px-6 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] focus-within:shadow-[0_15px_40px_rgba(234,88,12,0.1)] focus-within:border-orange-200 transition-all duration-300">
-                    <Search className="text-slate-400 mr-4 group-focus-within:text-orange-500 transition-colors" size={20} />
+                 <div className="absolute inset-0 bg-orange-100/30 blur-3xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                 <div className="relative flex items-center bg-white border border-slate-200/60 rounded-2xl sm:rounded-[2rem] px-4 sm:px-6 py-3 sm:py-4 shadow-[0_4px_20px_rgba(0,0,0,0.02)] focus-within:shadow-[0_10px_30px_rgba(234,88,12,0.08)] focus-within:border-orange-200 transition-all duration-300">
+                    <Search className="text-slate-400 mr-3 sm:mr-4 group-focus-within:text-orange-500 transition-colors" size={18} />
                     <input 
                       type="text" 
-                      placeholder="Search moments, rescuers, or vibes..." 
+                      placeholder="Search vibes..." 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                      className="flex-1 bg-transparent border-none outline-none text-[13px] sm:text-sm font-bold text-slate-900 placeholder:text-slate-400"
                     />
                     {searchQuery && (
                       <button onClick={() => setSearchQuery("")} className="text-slate-300 hover:text-slate-900 px-2 transition-colors">
@@ -214,18 +216,18 @@ export default function CommunityPage() {
               </div>
 
               {/* Feed Filters */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
                  <button 
                    onClick={() => setSortBy("popular")}
-                   className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === "popular" ? "bg-slate-950 text-white shadow-xl shadow-slate-200" : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100"}`}
+                   className={`flex items-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${sortBy === "popular" ? "bg-slate-950 text-white shadow-xl shadow-slate-200" : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100"}`}
                  >
-                    <TrendingUp size={14} /> Trending
+                    <TrendingUp size={12} className="sm:w-[14px] sm:h-[14px]" /> Trending
                  </button>
                  <button 
                    onClick={() => setSortBy("newest")}
-                   className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === "newest" ? "bg-slate-950 text-white shadow-xl shadow-slate-200" : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100"}`}
+                   className={`flex items-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${sortBy === "newest" ? "bg-slate-950 text-white shadow-xl shadow-slate-200" : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100"}`}
                  >
-                    <Clock size={14} /> Newest
+                    <Clock size={12} className="sm:w-[14px] sm:h-[14px]" /> Newest
                  </button>
               </div>
            </div>
@@ -419,18 +421,18 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
       className="bg-white border-y sm:border sm:border-slate-100 rounded-none sm:rounded-[2rem] shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col pt-6"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-6 mb-4">
-         <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden border shadow-sm relative">
+      <div className="flex items-center justify-between px-4 sm:px-6 mb-4">
+         <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden border shadow-sm relative shrink-0">
                {post.author.imageUrl ? (
                  <Image src={post.author.imageUrl} alt={post.author.name} fill className="object-cover" />
                ) : (
-                 <UserIcon size={20} className="text-orange-600" />
+                 <UserIcon size={18} className="text-orange-600" />
                )}
             </div>
-            <div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-900 leading-none mb-1">{post.author.name}</h4>
-              <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest leading-none">{post.author.role}</p>
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-900 leading-none mb-1 truncate">{post.author.name}</h4>
+              <p className="text-[9px] sm:text-[10px] font-bold text-orange-600 uppercase tracking-widest leading-none">{post.author.role}</p>
             </div>
          </div>
 
@@ -444,8 +446,8 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
       </div>
 
       {/* Caption Content */}
-      <div className="px-6 mb-4">
-        <p className="text-slate-700 text-base leading-relaxed">
+      <div className="px-4 sm:px-6 mb-4">
+        <p className="text-slate-800 text-[15px] sm:text-base leading-relaxed font-medium">
           {post.caption}
         </p>
       </div>
@@ -464,17 +466,17 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
       </div>
 
       {/* Footer / Actions */}
-      <div className="p-6 pb-2">
+      <div className="px-4 sm:px-6 py-4 sm:py-6 pb-2">
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-           <div className="flex items-center gap-4">
+           <div className="flex items-center gap-3 sm:gap-4">
               <button 
                 onClick={handleLike} 
                 className="flex items-center gap-2 hover:text-orange-500 transition-colors cursor-pointer group"
               >
-                <div className={`p-2 rounded-full transition-colors ${isLiked ? "bg-orange-50" : "bg-slate-50 group-hover:bg-orange-50"}`}>
-                  <Heart size={22} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "text-orange-500" : "text-slate-400 group-hover:text-orange-500"} />
+                <div className={`p-1.5 sm:p-2 rounded-full transition-colors ${isLiked ? "bg-orange-50" : "bg-slate-50 group-hover:bg-orange-50"}`}>
+                  <Heart size={20} fill={isLiked ? "currentColor" : "none"} className={isLiked ? "text-orange-500" : "text-slate-400 group-hover:text-orange-500"} />
                 </div>
-                <span className={`text-sm font-bold ${isLiked ? "text-orange-500" : "text-slate-500"}`}>
+                <span className={`text-xs sm:text-sm font-bold ${isLiked ? "text-orange-500" : "text-slate-500"}`}>
                   {likeCount}
                 </span>
               </button>
@@ -483,10 +485,10 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
                 onClick={toggleComments}
                 className="flex items-center gap-2 hover:text-orange-500 transition-colors cursor-pointer group"
               >
-                <div className={`p-2 rounded-full transition-colors ${isCommentsOpen ? "bg-orange-50" : "bg-slate-50 group-hover:bg-orange-50"}`}>
-                  <MessageCircle size={22} className={isCommentsOpen ? "text-orange-500" : "text-slate-400 group-hover:text-orange-500"} />
+                <div className={`p-1.5 sm:p-2 rounded-full transition-colors ${isCommentsOpen ? "bg-orange-50" : "bg-slate-50 group-hover:bg-orange-50"}`}>
+                  <MessageCircle size={20} className={isCommentsOpen ? "text-orange-500" : "text-slate-400 group-hover:text-orange-500"} />
                 </div>
-                <span className={`text-sm font-bold ${isCommentsOpen ? "text-orange-500" : "text-slate-500"}`}>{commentCount}</span>
+                <span className={`text-xs sm:text-sm font-bold ${isCommentsOpen ? "text-orange-500" : "text-slate-500"}`}>{commentCount}</span>
               </button>
            </div>
            
@@ -530,21 +532,21 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
                       key={comment.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="flex gap-3"
+                      className="flex gap-2 sm:gap-3"
                     >
-                       <div className="w-8 h-8 rounded-full bg-white border shrink-0 overflow-hidden relative shadow-sm">
+                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border shrink-0 overflow-hidden relative shadow-sm">
                           {comment.author.imageUrl ? (
                              <Image src={comment.author.imageUrl} alt="U" fill className="object-cover" />
                           ) : (
-                             <div className="w-full h-full flex items-center justify-center font-bold text-[10px] text-slate-300 uppercase">{comment.author.name.charAt(0)}</div>
+                             <div className="w-full h-full flex items-center justify-center font-bold text-[9px] text-slate-300 uppercase">{comment.author.name.charAt(0)}</div>
                           )}
                        </div>
-                       <div className="flex-1 bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 shadow-sm shadow-slate-100/50">
-                          <div className="flex items-center justify-between mb-1">
-                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">{comment.author.name}</span>
-                             <span className="text-[9px] text-slate-400">{new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                       <div className="flex-1 bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl rounded-tl-none border border-slate-100 shadow-sm shadow-slate-100/50 min-w-0">
+                          <div className="flex items-center justify-between mb-1 gap-2">
+                             <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-900 truncate">{comment.author.name}</span>
+                             <span className="text-[8px] sm:text-[9px] text-slate-400 whitespace-nowrap">{new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          <p className="text-xs text-slate-600 leading-relaxed">{comment.content}</p>
+                          <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed break-words">{comment.content}</p>
                        </div>
                     </motion.div>
                   ))
