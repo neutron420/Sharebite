@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Header } from "@/components/navbar";
 import { Footerdemo as Footer } from "@/components/ui/footer-section";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Camera, MapPin, Heart, Share2, MessageCircle, User as UserIcon, Plus, LogOut, Utensils, Bell, Send, Flag, MoreHorizontal } from "lucide-react";
+import { Sparkles, Camera, MapPin, Heart, Share2, MessageCircle, User as UserIcon, Plus, LogOut, Utensils, Bell, Send, Flag, MoreHorizontal, Search, TrendingUp, Clock } from "lucide-react";
 import PostMomentModal from "@/components/community/post-moment-modal";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -19,11 +19,22 @@ export default function CommunityPage() {
   const [user, setUser] = useState<any>(null);
   const { addListener } = useSocket();
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("popular");
+
   useEffect(() => {
     checkAuth().then(() => {
        fetchPosts();
     });
-  }, []);
+  }, [sortBy]); // Refetch on sort change
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isAuthLoading) fetchPosts();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     const unsubscribe = addListener("COMMUNITY_POST", (newPost) => {
@@ -50,8 +61,9 @@ export default function CommunityPage() {
   }, [addListener]);
 
   const fetchPosts = async () => {
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/community/posts");
+      const res = await fetch(`/api/community/posts?q=${encodeURIComponent(searchQuery)}&sort=${sortBy}`);
       if (res.ok) {
         const data = await res.json();
         setPosts(data);
@@ -178,6 +190,47 @@ export default function CommunityPage() {
       </nav>
 
       <main className="flex-1 pt-6 sm:pt-12 pb-20">
+        {/* Viral Discovery & Search */}
+        <section className="px-4 max-w-2xl mx-auto w-full mb-12">
+           <div className="flex flex-col gap-6">
+              {/* Premium Search Pill */}
+              <div className="relative group">
+                 <div className="absolute inset-0 bg-orange-100/50 blur-2xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                 <div className="relative flex items-center bg-white border border-slate-200 rounded-[2rem] px-6 py-4 shadow-[0_10px_30px_rgba(0,0,0,0.03)] focus-within:shadow-[0_15px_40px_rgba(234,88,12,0.1)] focus-within:border-orange-200 transition-all duration-300">
+                    <Search className="text-slate-400 mr-4 group-focus-within:text-orange-500 transition-colors" size={20} />
+                    <input 
+                      type="text" 
+                      placeholder="Search moments, rescuers, or vibes..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-slate-900 placeholder:text-slate-400"
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery("")} className="text-slate-300 hover:text-slate-900 px-2 transition-colors">
+                        <Plus className="rotate-45" size={18} />
+                      </button>
+                    )}
+                 </div>
+              </div>
+
+              {/* Feed Filters */}
+              <div className="flex items-center gap-3">
+                 <button 
+                   onClick={() => setSortBy("popular")}
+                   className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === "popular" ? "bg-slate-950 text-white shadow-xl shadow-slate-200" : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100"}`}
+                 >
+                    <TrendingUp size={14} /> Trending
+                 </button>
+                 <button 
+                   onClick={() => setSortBy("newest")}
+                   className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${sortBy === "newest" ? "bg-slate-950 text-white shadow-xl shadow-slate-200" : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100"}`}
+                 >
+                    <Clock size={14} /> Newest
+                 </button>
+              </div>
+           </div>
+        </section>
+
         {/* Feed Section - Single Column */}
         <section className="px-0 sm:px-4 max-w-2xl mx-auto w-full">
           {isLoading ? (

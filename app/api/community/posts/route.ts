@@ -2,12 +2,21 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getSession();
     const userId = session?.userId;
+    const { searchParams } = new URL(request.url);
+    const q = searchParams.get("q") || "";
+    const sort = searchParams.get("sort") || "popular";
 
     const posts = await prisma.communityPost.findMany({
+      where: {
+        OR: [
+          { caption: { contains: q, mode: "insensitive" } },
+          { author: { name: { contains: q, mode: "insensitive" } } },
+        ],
+      },
       include: {
         author: {
           select: {
@@ -34,21 +43,18 @@ export async function GET() {
           }
         } : {})
       },
-      orderBy: [
-        {
-          likes: {
-            _count: "desc",
-          },
-        },
-        {
-          createdAt: "desc",
-        },
+      orderBy: sort === "newest" ? [
+        { createdAt: "desc" }
+      ] : [
+        { likes: { _count: "desc" } },
+        { createdAt: "desc" },
       ],
     });
 
     const postsWithLikes = posts.map((p: any) => ({
       ...p,
-      isLiked: p.likes && p.likes.length > 0
+      isLiked: p.likes && p.likes.length > 0,
+      likes: undefined
     }));
 
     return NextResponse.json(postsWithLikes);
