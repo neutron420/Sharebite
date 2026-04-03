@@ -180,6 +180,9 @@ export default function RegisterPage() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const [ngoOptions, setNgoOptions] = useState<NgoOption[]>([]);
   const [loadingNgos, setLoadingNgos] = useState(false);
+  const turnstileSiteKey = (process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyInputRef = useRef<HTMLInputElement>(null);
@@ -915,7 +918,7 @@ export default function RegisterPage() {
                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Human Verification</label>
                        <div className="flex flex-col items-center justify-center p-4 border border-slate-100 rounded-2xl bg-slate-50/30 min-h-[74px]">
                           <Turnstile 
-                            sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO"} 
+                            sitekey={turnstileSiteKey}
                             onVerify={(token) => setTurnstileToken(token)}
                             theme="light"
                           />

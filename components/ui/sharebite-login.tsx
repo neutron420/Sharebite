@@ -170,8 +170,11 @@ export default function ShareBiteLogin({
   const [turnstileToken, setTurnstileToken] = useState("");
   const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER" | "ADMIN" | "COMMUNITY">(defaultRole);
   const [isHydrated, setIsHydrated] = useState(false);
+  const turnstileSiteKey = (process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim();
   const searchParams = useSearchParams();
-  const [success, setSuccess] = useState(searchParams.get("registered") === "true" ? "Registration Successful! Log in to deploy your first mission." : "");
+  const success = searchParams.get("registered") === "true" ? "Registration Successful! Log in to deploy your first mission." : "";
 
   // Persistence logic
   useEffect(() => {
@@ -184,7 +187,7 @@ export default function ShareBiteLogin({
     // If not (Admin Portal), FORCE the default role to ensure access.
     if (showRoleSelector) {
       if (savedRole && (savedRole === "DONOR" || savedRole === "NGO" || savedRole === "RIDER" || savedRole === "COMMUNITY")) {
-        setLoginRole(savedRole as any);
+        setLoginRole(savedRole as "DONOR" | "NGO" | "RIDER" | "COMMUNITY");
       }
     } else {
       setLoginRole(defaultRole);
@@ -398,7 +401,7 @@ export default function ShareBiteLogin({
               {/* Cloudflare Turnstile */}
               <div className="flex items-center justify-center py-1">
                 <Turnstile
-                  sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO"}
+                  sitekey={turnstileSiteKey}
                   onVerify={(token) => setTurnstileToken(token)}
                   theme="light"
                 />

@@ -45,6 +45,9 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileSiteKey = (process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim();
 
   const triggerConfetti = () => {
     const duration = 3 * 1000;
@@ -271,7 +274,7 @@ export default function ForgotPasswordPage() {
 
                 <div className="flex justify-center border border-slate-50 rounded-2xl p-4 bg-slate-50/30 scale-95 opacity-80 hover:opacity-100 transition-opacity">
                   <Turnstile 
-                    sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"} 
+                    sitekey={turnstileSiteKey}
                     onVerify={(token) => setTurnstileToken(token)}
                   />
                 </div>

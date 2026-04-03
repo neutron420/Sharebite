@@ -9,15 +9,24 @@ async function registerHandler(request: Request) {
   try {
     const body = await request.json();
     const { turnstileToken, ...registerData } = body;
+    const normalizedTurnstileToken = typeof turnstileToken === "string"
+      ? turnstileToken.replace(/[\u200B-\u200D\uFEFF]/g, "").trim()
+      : "";
+
+    if (!normalizedTurnstileToken) {
+      return NextResponse.json({ error: "Security verification required." }, { status: 400 });
+    }
 
     // 1. Mandatory Turnstile Check
-    const TURNSTILE_SECRET_KEY = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY || "0x4AAAAAACtsY-pmCM5GL9xHM5ivTIxV9jQ";
+    const TURNSTILE_SECRET_KEY = (process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY || "0x4AAAAAACtsY-pmCM5GL9xHM5ivTIxV9jQ")
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .trim();
     const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         secret: TURNSTILE_SECRET_KEY,
-        response: turnstileToken,
+        response: normalizedTurnstileToken,
       }),
     });
 

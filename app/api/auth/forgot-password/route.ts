@@ -4,13 +4,18 @@ import redis from "@/lib/redis";
 import { Resend } from "resend";
 import { withSecurity } from "@/lib/api-handler";
 
-const TURNSTILE_SITE_SECRET = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY || "1x0000000000000000000000000000000AA";
+const TURNSTILE_SITE_SECRET = (process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY || "1x0000000000000000000000000000000AA")
+  .replace(/[\u200B-\u200D\uFEFF]/g, "")
+  .trim();
 
 async function forgotPasswordHandler(req: Request) {
   try {
     const { email, role, turnstileToken } = await req.json();
+    const normalizedTurnstileToken = typeof turnstileToken === "string"
+      ? turnstileToken.replace(/[\u200B-\u200D\uFEFF]/g, "").trim()
+      : "";
 
-    if (!email || !turnstileToken || !role) {
+    if (!email || !normalizedTurnstileToken || !role) {
       return NextResponse.json({ error: "Email, Role and Security Check are required" }, { status: 400 });
     }
 
@@ -25,7 +30,7 @@ async function forgotPasswordHandler(req: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         secret: TURNSTILE_SITE_SECRET,
-        response: turnstileToken,
+        response: normalizedTurnstileToken,
       }),
     });
 
