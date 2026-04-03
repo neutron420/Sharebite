@@ -18,15 +18,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 
 interface Report {
@@ -51,8 +42,6 @@ export default function DonorComplaintsPage() {
   const [showForm, setShowForm] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [filter, setFilter] = useState("ALL");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
   // Form state
   const [ngoSearch, setNgoSearch] = useState("");
@@ -163,41 +152,41 @@ export default function DonorComplaintsPage() {
   ];
 
   return (
-    <div className="w-full py-10 space-y-8">
+    <div className="w-full py-10 px-4 space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tighter italic text-slate-900 leading-none">
-            <ShieldAlert className="w-8 h-8 md:w-10 md:h-10 inline-block text-orange-600 mr-2 -mt-2" />
-            My Complaints
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <Link href="/donor" className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-colors mb-3">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
+          </Link>
+          <h1 className="text-3xl font-black tracking-tight italic">
+            <ShieldAlert className="w-8 h-8 inline-block text-orange-600 mr-2 -mt-1" />
+            Complaints
           </h1>
-          <p className="text-sm text-slate-400 font-bold max-w-sm leading-tight">Report NGOs for misconduct. Admin will review and take action.</p>
+          <p className="text-sm text-slate-400 font-bold mt-1">Report NGOs for misconduct or issues. Admin will review and take action.</p>
         </div>
 
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center justify-center gap-3 px-8 py-5 bg-orange-600 text-white font-black rounded-[1.5rem] text-[10px] uppercase tracking-widest hover:bg-slate-900 transition-all shadow-[0_20px_40px_-10px_rgba(249,115,22,0.3)] active:scale-95 group border-b-4 border-orange-700 w-full sm:w-auto"
+          className="flex items-center gap-2 px-6 py-3.5 bg-slate-950 text-white font-black rounded-2xl text-xs uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl active:scale-95"
         >
-          <MessageSquarePlus className="w-5 h-5 group-hover:rotate-12 transition-transform" strokeWidth={3} /> 
-          Rapid File Complaint
+          <MessageSquarePlus className="w-4 h-4" /> File Complaint
         </button>
       </div>
 
       {/* Filter Tabs */}
-      <div className="sticky top-0 z-20 -mx-4 px-4 py-2 sm:mx-0 sm:px-0 sm:py-0 sm:relative">
-        <div className="flex bg-white/80 backdrop-blur-md p-1.5 rounded-3xl w-full sm:w-fit overflow-x-auto scrollbar-hide border border-slate-200/60 shadow-sm snap-x">
-          {["ALL", "PENDING", "RESOLVED", "DISMISSED"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`flex-1 min-w-[110px] py-3 px-6 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all snap-start ${
-                filter === s ? "bg-orange-600 text-white shadow-xl shadow-orange-100" : "text-slate-400 hover:text-slate-600"
-              }`}
-            >
-              {s === "ALL" ? "All" : s === "PENDING" ? "Under Review" : s === "RESOLVED" ? "Resolved" : "Dismissed"}
-            </button>
-          ))}
-        </div>
+      <div className="flex bg-slate-50 p-1.5 rounded-2xl w-full sm:w-auto">
+        {["ALL", "PENDING", "RESOLVED", "DISMISSED"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilter(s)}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              filter === s ? "bg-white text-orange-600 shadow-sm" : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            {s === "ALL" ? "All" : s === "PENDING" ? "Under Review" : s === "RESOLVED" ? "Resolved" : "Dismissed"}
+          </button>
+        ))}
       </div>
 
       {/* Complaint List */}
@@ -220,7 +209,7 @@ export default function DonorComplaintsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {reports.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((report, i) => {
+          {reports.map((report, i) => {
             const cfg = statusConfig[report.status] || statusConfig.PENDING;
             return (
               <motion.div
@@ -228,82 +217,39 @@ export default function DonorComplaintsPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="p-5 sm:p-7 rounded-[2.5rem] bg-white border border-slate-100 transition-all shadow-sm hover:shadow-xl hover:shadow-orange-100/20 group relative overflow-hidden"
+                className="p-6 rounded-[2rem] bg-white border border-slate-100 hover:border-orange-200/50 transition-all shadow-sm hover:shadow-lg hover:shadow-orange-50/50 group"
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50/50 blur-[50px] -mr-16 -mt-16 pointer-events-none" />
-                
-                <div className="relative z-10">
-                  <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-[1.5rem] bg-red-50 flex items-center justify-center text-red-500 shrink-0 border border-red-100">
-                        <AlertTriangle className="w-7 h-7" strokeWidth={2.5} />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="font-black text-xl tracking-tight text-slate-900 truncate">Target: {report.ngo.name}</h4>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{report.ngo.email}</p>
-                      </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 shrink-0 border border-red-100">
+                      <AlertTriangle className="w-5 h-5" />
                     </div>
-                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2">
-                       <Badge className={cn(cfg.color, "border-2 font-black text-[9px] px-3 py-1.5 rounded-full uppercase")}>
-                         {cfg.label}
-                       </Badge>
-                       <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                         {formatDistanceToNow(new Date(report.createdAt))} ago
-                       </span>
+                    <div>
+                      <h4 className="font-black text-base tracking-tight">Against: {report.ngo.name}</h4>
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                        {report.ngo.email}
+                      </p>
+                      <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <p className="text-xs font-black text-orange-600 uppercase tracking-wider mb-1">Reason</p>
+                        <p className="text-sm font-bold text-slate-700">{report.reason}</p>
+                        {report.details && (
+                          <p className="text-xs text-slate-500 mt-2 leading-relaxed">{report.details}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 transition-all group-hover:bg-white group-hover:shadow-inner group-hover:border-orange-100">
-                      <div className="flex items-center gap-2 mb-4">
-                         <div className="w-2 h-2 rounded-full bg-orange-600 animate-pulse" />
-                         <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Incident Root Cause</p>
-                      </div>
-                      <p className="text-base font-black text-slate-800 leading-tight mb-3">{report.reason}</p>
-                      {report.details && (
-                        <div className="mt-4 pt-4 border-t border-slate-200/60">
-                           <p className="text-sm font-bold text-slate-500 leading-relaxed opacity-80">{report.details}</p>
-                        </div>
-                      )}
-                    </div>
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <Badge className={`${cfg.color} border font-black text-[10px] flex items-center gap-1.5 px-3 py-1`}>
+                      {cfg.icon} {cfg.label}
+                    </Badge>
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                      {formatDistanceToNow(new Date(report.createdAt))} ago
+                    </span>
                   </div>
                 </div>
               </motion.div>
             );
           })}
-
-          {reports.length > itemsPerPage && (
-            <Pagination className="mt-10">
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious 
-                    href="#" 
-                    onClick={(e) => { e.preventDefault(); if(currentPage > 1) setCurrentPage(currentPage - 1); }}
-                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-                {Array.from({ length: Math.ceil(reports.length / itemsPerPage) }).map((_, i) => (
-                  <PaginationItem key={i}>
-                    <PaginationLink 
-                      href="#" 
-                      onClick={(e) => { e.preventDefault(); setCurrentPage(i + 1); }}
-                      isActive={currentPage === i + 1}
-                      className="cursor-pointer"
-                    >
-                      {i + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext 
-                    href="#" 
-                    onClick={(e) => { e.preventDefault(); if(currentPage < Math.ceil(reports.length / itemsPerPage)) setCurrentPage(currentPage + 1); }}
-                    className={currentPage === Math.ceil(reports.length / itemsPerPage) ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          )}
         </div>
       )}
 

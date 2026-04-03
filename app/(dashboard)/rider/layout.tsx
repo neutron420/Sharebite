@@ -429,7 +429,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-28 lg:pb-6 relative z-10">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10">{children}</main>
 
         {/* Mobile Bottom Navigation - Rider Tactical Deck */}
         <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">

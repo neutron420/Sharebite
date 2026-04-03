@@ -13,11 +13,12 @@ import {
   X,
   XCircle,
   Search,
+  Badge,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface DonorReport {
   id: string;

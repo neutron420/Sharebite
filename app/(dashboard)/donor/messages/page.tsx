@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ConversationList } from "@/components/chat/conversation-list";
 import { ChatBox } from "@/components/chat/chat-box";
 import { Loader2, MessageSquare, ShieldCheck, Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface User {
   id: string;
@@ -86,7 +87,7 @@ function MessagesContent() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center p-20 bg-white rounded-[3rem] border border-slate-100 italic shadow-sm">
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center p-20 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
         <Loader2 className="h-12 w-12 text-orange-600 animate-spin" strokeWidth={3} />
         <p className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 animate-pulse ml-4">Syncing Ops Intelligence...</p>
       </div>
@@ -96,8 +97,11 @@ function MessagesContent() {
   if (!user) return null;
 
   return (
-    <div className="h-[calc(100vh-8.5rem)] bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden flex shadow-2xl shadow-slate-200/50 -mt-2">
-      <div className="w-80 md:w-96 flex-shrink-0 border-r border-slate-50 transition-all duration-300">
+    <div className="h-[calc(100vh-8.5rem)] bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 overflow-hidden flex shadow-2xl shadow-slate-200/50 -mt-2">
+      <div className={cn(
+        "w-full md:w-80 lg:w-96 flex-shrink-0 border-r border-slate-50 transition-all duration-300",
+        selectedId ? "hidden md:flex" : "flex"
+      )}>
         <ConversationList
           currentUserId={user.id}
           selectedId={selectedId || undefined}
@@ -105,7 +109,10 @@ function MessagesContent() {
         />
       </div>
 
-      <div className="flex-1 min-w-0 bg-slate-50">
+      <div className={cn(
+        "flex-1 min-w-0 bg-slate-50",
+        !selectedId ? "hidden md:flex" : "flex"
+      )}>
         {activeConversation ? (
           <ChatBox
             currentUserId={user.id}
@@ -116,6 +123,7 @@ function MessagesContent() {
                 : activeConversation.participantA
             }
             donationTitle={activeConversation.donation.title}
+            onBack={() => router.push("/donor/messages")}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full relative group">
@@ -128,7 +136,7 @@ function MessagesContent() {
                     </div>
                 </div>
                 <div>
-                   <h2 className="text-3xl font-black italic tracking-tighter text-slate-950 uppercase mb-4">Select a Mission Log</h2>
+                   <h2 className="text-3xl font-black tracking-tighter text-slate-950 uppercase mb-4">Select a Mission Log</h2>
                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 max-w-[300px] mx-auto leading-relaxed">
                      Open a thread to coordinate food rescue operations with NGOs and Riders in real-time.
                    </p>

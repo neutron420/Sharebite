@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ConversationList } from "@/components/chat/conversation-list";
 import { ChatBox } from "@/components/chat/chat-box";
 import { Loader2, MessageSquare, ShieldCheck, Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface User {
   id: string;
@@ -97,7 +98,7 @@ function MessagesContent() {
 
   return (
     <div className="h-[calc(100vh-5rem)] bg-white border-t border-slate-100 overflow-hidden flex shadow-2xl shadow-slate-200/50 mt-4 lg:mx-0">
-      <div className="w-80 md:w-96 flex-shrink-0 border-r border-slate-50">
+      <div className={cn("w-full md:w-96 flex-shrink-0 border-r border-slate-50 overflow-y-auto duration-300", selectedId ? "hidden md:block" : "block")}>
         <ConversationList
           currentUserId={user.id}
           selectedId={selectedId || undefined}
@@ -105,7 +106,7 @@ function MessagesContent() {
         />
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className={cn("flex-1 min-w-0 flex-col", !selectedId ? "hidden md:flex" : "flex")}>
         {activeConversation ? (
           <ChatBox
             currentUserId={user.id}

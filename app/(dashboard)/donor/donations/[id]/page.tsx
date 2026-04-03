@@ -166,7 +166,7 @@ export default function DonorDonationDetails() {
       <aside className="fixed left-0 top-0 h-screen w-20 md:w-64 border-r border-slate-100 bg-white z-50 flex-col py-10 px-4 hidden md:flex">
          <div className="px-2 mb-16">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 italic font-black text-white text-xl">S</div>
+              <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-100 font-black text-white text-xl">S</div>
               <span className="text-xl font-black tracking-tighter">DONOR HUB</span>
             </div>
          </div>
@@ -228,7 +228,7 @@ export default function DonorDonationDetails() {
                      
                      <div className="relative z-10 space-y-8">
                         <div>
-                           <h1 className="text-5xl font-black tracking-tighter italic mb-4 text-slate-950">{donation.title}</h1>
+                           <h1 className="text-5xl font-black tracking-tighter mb-4 text-slate-950">{donation.title}</h1>
                            <div className="flex flex-wrap gap-3">
                               <span className="px-4 py-1.5 bg-slate-50 border border-slate-100 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400">posted: {format(new Date(donation.createdAt), "MMM dd, yyyy")}</span>
                               <span className="px-4 py-1.5 bg-orange-50 border border-orange-100 rounded-full text-[10px] font-black uppercase tracking-widest text-orange-600">expires in {format(new Date(donation.expiryTime), "p")}</span>
@@ -239,7 +239,7 @@ export default function DonorDonationDetails() {
                            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-4 flex items-center gap-2">
                               <MessageSquare className="w-4 h-4" /> Comprehensive Description
                            </h3>
-                           <p className="text-slate-600 font-bold leading-relaxed italic text-lg">&quot;{donation.description || "The donor provided no further intel for this mission."}&quot;</p>
+                           <p className="text-slate-600 font-bold leading-relaxed text-lg">&quot;{donation.description || "The donor provided no further intel for this mission."}&quot;</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -286,7 +286,7 @@ export default function DonorDonationDetails() {
                         </div>
                         <div className="space-y-1">
                            <p className="text-[10px] uppercase font-black tracking-widest text-orange-600">Category Tag</p>
-                           <p className="text-xl font-black tracking-tighter italic">{donation.category || "General Surplus"}</p>
+                           <p className="text-xl font-black tracking-tighter">{donation.category || "General Surplus"}</p>
                         </div>
                      </div>
 
@@ -303,13 +303,13 @@ export default function DonorDonationDetails() {
                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                   <div className="flex items-center justify-between mb-12">
                      <div>
-                        <h2 className="text-2xl font-black italic tracking-tighter">Mission Lifecycle Report</h2>
+                        <h2 className="text-2xl font-black tracking-tighter">Mission Lifecycle Report</h2>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">Real-time status synchronization</p>
                      </div>
                      <Badge className="bg-slate-950 text-white border-none font-black text-[10px] uppercase tracking-widest px-4 py-2 rounded-xl">Step {currentStep} of 5</Badge>
                   </div>
 
-                  <div className="flex items-start justify-between relative px-4">
+                  <div className="flex items-start justify-start md:justify-between relative px-4 overflow-x-auto scrollbar-hide pb-6">
                      {/* Progress Bar Background */}
                      <div className="absolute top-6 left-0 right-0 h-2 bg-slate-50 rounded-full mx-16" />
                      <div 
@@ -322,7 +322,7 @@ export default function DonorDonationDetails() {
                         const isActive = i + 1 <= currentStep;
                         const isCurrent = i + 1 === currentStep;
                         return (
-                           <div key={i} className="flex flex-col items-center relative z-10 flex-1 group">
+                           <div key={i} className="flex flex-col items-center relative z-10 min-w-[120px] md:flex-1 group">
                               <motion.div 
                                  initial={false}
                                  animate={{ scale: isCurrent ? 1.25 : 1, transition: { type: "spring", stiffness: 300, damping: 15 } }}
@@ -352,7 +352,7 @@ export default function DonorDonationDetails() {
                   <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-orange-600 rounded-[3rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-orange-100 border-4 border-orange-500 flex flex-col justify-center">
                      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-[60px] scale-150 rotate-45" />
                      <div className="relative z-10 space-y-6">
-                        <h2 className="text-4xl font-black italic tracking-tighter leading-none text-white underline decoration-white/20 underline-offset-8">Security Clearance</h2>
+                        <h2 className="text-4xl font-black tracking-tighter leading-none text-white underline decoration-white/20 underline-offset-8">Security Clearance</h2>
                         <p className="text-lg font-bold text-orange-50 max-w-sm leading-relaxed">
                            Manual verification required. Do not release cargo without PIN confirmation.
                         </p>
@@ -424,7 +424,7 @@ export default function DonorDonationDetails() {
                               <Badge className="bg-green-600 text-white border-none py-1 px-4 font-black">MISSION COMPLETE</Badge>
                               <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Verified On-Chain</span>
                            </div>
-                           <h2 className="text-5xl font-black italic tracking-tighter leading-none">Victory Achieved!</h2>
+                           <h2 className="text-5xl font-black tracking-tighter leading-none">Victory Achieved!</h2>
                            <p className="text-xl font-bold text-green-50/80 max-w-2xl leading-relaxed">
                               Successfully delivered to <span className="text-white underline decoration-white/20 underline-offset-4 font-black">{completedRequest.ngo?.name}</span>. 
                               The logistics chain is now finalized and and fully reconciled.
@@ -460,7 +460,7 @@ export default function DonorDonationDetails() {
                            >
                               <div className="max-w-xl mx-auto space-y-8">
                                  <div className="text-center">
-                                    <h3 className="text-2xl font-black italic tracking-tight mb-2">Performance Audit</h3>
+                                    <h3 className="text-2xl font-black tracking-tight mb-2">Performance Audit</h3>
                                     <p className="text-xs text-white/40 font-bold uppercase tracking-[0.2em]">Evaluate {completedRequest.ngo?.name}</p>
                                  </div>
                                  
@@ -514,7 +514,7 @@ export default function DonorDonationDetails() {
                <div className="space-y-8 pt-6">
                   <div className="flex items-center justify-between px-8 border-l-8 border-orange-600">
                      <div>
-                        <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 uppercase">Signal Interceptions</h2>
+                        <h2 className="text-4xl font-black tracking-tighter text-slate-950 uppercase">Signal Interceptions</h2>
                         <p className="text-[11px] font-black uppercase tracking-[0.3em] text-orange-600 mt-2">Incoming Extraction Requests Identified</p>
                      </div>
                      <div className="w-16 h-16 rounded-[1.5rem] bg-slate-950 flex items-center justify-center text-white shadow-2xl">
@@ -536,14 +536,14 @@ export default function DonorDonationDetails() {
                                  )}
                               </div>
                               <div>
-                                 <h4 className="font-black text-2xl tracking-tighter leading-none italic">{req.ngo?.name}</h4>
+                                 <h4 className="font-black text-2xl tracking-tighter leading-none">{req.ngo?.name}</h4>
                                  <div className="flex items-center gap-2 mt-1.5 font-black uppercase tracking-widest text-[10px] text-slate-400">
                                     <MapPin className="w-3 h-3" /> {req.ngo?.city} Hub
                                  </div>
                               </div>
                            </div>
 
-                           <div className="bg-slate-50 p-6 rounded-[2rem] mb-10 border border-slate-100 italic font-bold text-slate-600 text-lg leading-relaxed shadow-inner">
+                           <div className="bg-slate-50 p-6 rounded-[2rem] mb-10 border border-slate-100 font-bold text-slate-600 text-lg leading-relaxed shadow-inner">
                               &quot;{req.message || "No message provided."}&quot;
                            </div>
 
@@ -576,7 +576,7 @@ export default function DonorDonationDetails() {
                   <div className="w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center shadow-inner mb-8 animate-pulse">
                      <Users className="w-10 h-10 text-slate-300" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-3xl font-black italic tracking-tighter mb-3 text-slate-950">Quiet Sector...</h3>
+                  <h3 className="text-3xl font-black tracking-tighter mb-3 text-slate-950">Quiet Sector...</h3>
                   <p className="text-slate-400 font-bold max-w-sm mx-auto leading-relaxed">Signal scanning is active. Your donation is visible to all verified NGO hubs in your area. Stand by for contact.</p>
                   <div className="mt-10 flex gap-4">
                      <div className="w-2 h-2 rounded-full bg-orange-600 animate-ping" />

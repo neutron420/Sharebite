@@ -5,7 +5,7 @@ import { useSocket } from "@/components/providers/socket-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, MapPin, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Send, MapPin, Image as ImageIcon, Loader2, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface User {
@@ -36,9 +36,10 @@ interface ChatBoxProps {
   conversationId: string;
   otherUser: User;
   donationTitle: string;
+  onBack?: () => void;
 }
 
-export function ChatBox({ currentUserId, conversationId, otherUser, donationTitle }: ChatBoxProps) {
+export function ChatBox({ currentUserId, conversationId, otherUser, donationTitle, onBack }: ChatBoxProps) {
   const { socket, addListener } = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +106,12 @@ export function ChatBox({ currentUserId, conversationId, otherUser, donationTitl
       {/* Header */}
       <div className="flex items-center justify-between p-6 bg-white border-b border-slate-100 z-10 shrink-0">
         <div className="flex items-center gap-4">
+          <button 
+            onClick={onBack}
+            className="md:hidden p-2 -ml-2 rounded-xl text-slate-400 hover:text-orange-600 hover:bg-orange-50 transition-all active:scale-90"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
           <Avatar className="h-10 w-10 border-2 border-slate-100 ring-2 ring-orange-500/20">
             <AvatarImage src={otherUser.imageUrl || undefined} />
             <AvatarFallback className="bg-slate-50 text-slate-400 font-black text-xs">

@@ -234,7 +234,7 @@ export const AiAssistantCard = ({ onClose }: AiAssistantCardProps) => {
 
 
   return (
-    <Card className="flex h-[min(82vh,700px)] sm:h-[min(78vh,700px)] min-h-[520px] w-[calc(100vw-24px)] sm:w-[480px] flex-col gap-4 p-3 sm:p-4 shadow-2xl bg-background border-border/50 rounded-3xl overflow-hidden">
+    <Card className="flex h-[min(70vh,600px)] sm:h-[min(78vh,700px)] min-h-[500px] w-[calc(100vw-24px)] sm:w-[480px] flex-col gap-4 p-3 sm:p-4 shadow-2xl bg-background border-border/50 rounded-3xl overflow-hidden">
       <div className="flex flex-row items-center justify-between p-0">
         <div className="flex items-center gap-2.5">
           <div className="flex size-9 items-center justify-center rounded-xl bg-orange-50 border border-orange-100">

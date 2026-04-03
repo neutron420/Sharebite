@@ -250,7 +250,7 @@ export default function DonorDashboard() {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-12 h-12 text-orange-600 animate-spin" strokeWidth={3} />
-        <p className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 animate-pulse">Syncing Mission Logs...</p>
+        <p className="font-black text-xs uppercase tracking-[0.3em] text-slate-400 animate-pulse ml-4">Syncing Mission Logs...</p>
       </div>
     );
   }
@@ -313,7 +313,7 @@ export default function DonorDashboard() {
       {liveOps.length > 0 && (
         <motion.section initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-6 overflow-hidden">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-3 text-orange-600"><ShieldCheck className="w-8 h-8" /> Live Operations</h2>
+            <h2 className="text-2xl font-black tracking-tighter flex items-center gap-3 text-orange-600"><ShieldCheck className="w-8 h-8" /> Live Operations</h2>
             <Badge className="bg-orange-50 text-orange-600 border-none font-black">{liveOps.length} Active</Badge>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -404,7 +404,7 @@ export default function DonorDashboard() {
         <div className="lg:col-span-2 space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 border-l-4 border-slate-950">
             <div>
-               <h2 className="text-2xl sm:text-3xl font-black italic tracking-tighter uppercase text-slate-950">Mission Audit Feed</h2>
+               <h2 className="text-2xl sm:text-3xl font-black tracking-tighter uppercase text-slate-950">Mission Audit Feed</h2>
                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Comprehensive logs of all sharing operations</p>
             </div>
             <Link href="/donor/donations" className="w-fit px-5 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-all shadow-sm">Full Archive &rarr;</Link>
@@ -430,7 +430,7 @@ export default function DonorDashboard() {
                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300"><Plus className="w-8 h-8" /></div>
                  <h4 className="font-black text-lg">No active shipments</h4>
                  <p className="text-slate-400 text-sm font-bold mt-1 max-w-[280px]">You haven&apos;t shared any surplus recently. Start your first mission today.</p>
-                 <Link href="/donor/donate" className="mt-8 px-10 py-5 bg-orange-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-950 transition-all shadow-xl shadow-orange-100 italic">Post Donation</Link>
+                 <Link href="/donor/donate" className="mt-8 px-10 py-5 bg-orange-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-slate-950 transition-all shadow-xl shadow-orange-100">Post Donation</Link>
               </div>
             )}
           </div>
@@ -441,7 +441,7 @@ export default function DonorDashboard() {
              <div className="absolute top-0 right-0 h-32 w-32 bg-orange-100/70 blur-3xl" />
              <div className="relative z-10">
                 <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 border border-orange-100 text-orange-600"><UserRound className="w-6 h-6" /></div>
-                <h3 className="text-2xl font-black italic mb-4 tracking-tighter text-slate-950">Profile Center</h3>
+                <h3 className="text-2xl font-black mb-4 tracking-tighter text-slate-950">Profile Center</h3>
                 <p className="text-slate-500 text-[10px] font-bold mb-10 uppercase tracking-[0.2em]">Your account details, badges, and journey now live in one place.</p>
                 <Link href="/donor/profile" className="w-full inline-flex items-center justify-center gap-3 py-5 bg-slate-950 text-white font-black rounded-2xl hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest">Open Profile <ArrowRight className="w-4 h-4" /></Link>
              </div>

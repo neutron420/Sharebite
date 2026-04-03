@@ -238,20 +238,20 @@ const DonationList = React.forwardRef<HTMLDivElement, DonationListProps>(({ dona
                                        >
                                           <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-0 border-b border-slate-100">
                                              {/* Analysis Briefing */}
-                                             <div className="p-6 md:p-12 border-r border-slate-100 flex flex-col gap-8">
+                                             <div className="p-4 sm:p-6 md:p-12 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col gap-8">
                                                 <div className="space-y-4">
                                                    <div className="flex items-center justify-between">
-                                                      <h3 className="text-2xl font-black tracking-tight text-slate-950 uppercase italic underline decoration-orange-600/10">Mission Analysis</h3>
+                                                      <h3 className="text-2xl font-black tracking-tight text-slate-950 uppercase underline decoration-orange-600/10">Mission Analysis</h3>
                                                       <Badge className={cn("px-4 py-1 font-black text-[10px] uppercase tracking-widest shadow-lg", d.status === 'COMPLETED' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-orange-50 text-orange-600 border-orange-100")}>
                                                          {d.status}
                                                       </Badge>
                                                    </div>
-                                                   <p className="text-sm font-medium text-slate-500 leading-relaxed italic">
+                                                   <p className="text-sm font-medium text-slate-500 leading-relaxed">
                                                       &quot;{d.description || "No tactical briefing provided for this share."}&quot;
                                                    </p>
                                                 </div>
 
-                                                <div className="grid grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
                                                          <MapPin className="w-3 h-3 text-orange-500" /> Location Sector
@@ -304,7 +304,7 @@ const DonationList = React.forwardRef<HTMLDivElement, DonationListProps>(({ dona
                                                       <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-500 flex items-center gap-2">
                                                          <CheckCircle2 className="w-3.5 h-3.5" /> Community Feedback
                                                       </h4>
-                                                      <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl shadow-sm italic relative overflow-hidden group/review">
+                                                      <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl shadow-sm relative overflow-hidden group/review">
                                                          <div className="flex items-center gap-1 mb-2">
                                                             {[...Array(5)].map((_, index) => (
                                                                <svg 
@@ -388,7 +388,7 @@ const DonationList = React.forwardRef<HTMLDivElement, DonationListProps>(({ dona
                                                    )}
 
                                                    {d.status === 'AVAILABLE' && (
-                                                      <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-100 rounded-2xl shadow-sm italic">
+                                                      <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-100 rounded-2xl shadow-sm">
                                                          <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
                                                          <p className="text-[11px] font-bold text-orange-800 leading-tight">Waiting for a verified NGO to intercept this share. Signal is currently broadcasting.</p>
                                                       </div>
