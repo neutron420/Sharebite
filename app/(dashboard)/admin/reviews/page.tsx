@@ -48,6 +48,7 @@ export default function ReviewsPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [ratingFilter, setRatingFilter] = useState<string>("all");
+  const [ngoFilter, setNgoFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const itemsPerPage = 10;
@@ -74,8 +75,11 @@ export default function ReviewsPage() {
       r.reviewee.name.toLowerCase().includes(search.toLowerCase()) ||
       r.donation.title.toLowerCase().includes(search.toLowerCase());
     const matchesRating = ratingFilter === "all" || r.rating === parseInt(ratingFilter);
-    return matchesSearch && matchesRating;
+    const matchesNgo = ngoFilter === "all" || r.reviewee.name === ngoFilter || r.reviewer.name === ngoFilter;
+    return matchesSearch && matchesRating && matchesNgo;
   });
+
+  const uniqueNgos = Array.from(new Set(reviews.map(r => r.reviewee.role === "NGO" ? r.reviewee.name : r.reviewer.role === "NGO" ? r.reviewer.name : null).filter(Boolean))) as string[];
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -167,6 +171,16 @@ export default function ReviewsPage() {
               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
+          <select
+            value={ngoFilter}
+            onChange={(e) => { setNgoFilter(e.target.value); setCurrentPage(1); }}
+            className="px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white cursor-pointer"
+          >
+            <option value="all">All NGOs</option>
+            {uniqueNgos.sort().map(ngo => (
+              <option key={ngo} value={ngo}>{ngo}</option>
+            ))}
+          </select>
           <select
             value={ratingFilter}
             onChange={(e) => { setRatingFilter(e.target.value); setCurrentPage(1); }}

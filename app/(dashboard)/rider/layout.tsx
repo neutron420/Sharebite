@@ -259,8 +259,8 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <aside className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
-              <div className="h-9 w-9 rounded-lg bg-orange-500 flex items-center justify-center">
-                <Utensils className="h-5 w-5 text-white" />
+              <div className="h-9 w-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden">
+                <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
               </div>
               <span className="text-lg font-bold text-gray-900">ShareBite</span>
               <button onClick={() => setMobileOpen(false)} className="ml-auto p-1 rounded-md text-gray-400 hover:text-gray-900">
@@ -288,8 +288,8 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       {/* Desktop sidebar */}
       <aside className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 overflow-x-hidden ${sidebarOpen ? "w-64" : "w-20"}`}>
         <div className={`h-16 flex items-center border-b border-gray-200 shrink-0 transition-all duration-300 ${sidebarOpen ? "px-5 gap-3" : "px-3 justify-between"}`}>
-          <div className={`rounded-lg bg-orange-500 flex items-center justify-center shrink-0 transition-all duration-300 ${sidebarOpen ? "h-9 w-9" : "h-10 w-10 mx-auto"}`}>
-            <Utensils className={`text-white transition-all duration-300 ${sidebarOpen ? "h-5 w-5" : "h-5 w-5"}`} />
+          <div className={`rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 transition-all duration-300 ${sidebarOpen ? "h-9 w-9" : "h-10 w-10 mx-auto"}`}>
+            <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div className={`flex items-center overflow-hidden transition-all duration-300 whitespace-nowrap ${sidebarOpen ? "w-[120px] opacity-100" : "w-0 opacity-0"}`}>
             <span className="text-lg font-bold text-gray-900 flex-1 truncate">ShareBite</span>
@@ -317,9 +317,9 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       {/* Main content */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? "lg:ml-64" : "lg:ml-20"}`}>
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
-          <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100">
+          <div className="px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 shrink-0">
                 <Menu className="h-5 w-5" />
               </button>
               <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 w-64 border border-gray-200 focus-within:ring-2 focus-within:ring-orange-50 transition-all">
@@ -340,15 +340,16 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
                 <Zap className={`w-3 h-3 ${isConnected ? 'text-orange-500' : ''}`} />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <DashboardRefreshButton />
               
               <IconButton 
+                size="small"
                 onClick={(e) => setNotifAnchor(e.currentTarget)}
                 className="hover:bg-gray-100 text-gray-500 hover:text-orange-600 transition-colors"
               >
                 <Badge badgeContent={unreadCount} color="error" overlap="circular">
-                  <Bell className="h-4.5 w-4.5" />
+                  <Bell className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                 </Badge>
               </IconButton>
 
@@ -413,17 +414,17 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
                 </MenuItem>
               </MuiMenu>
               {user && (
-                <div className="flex items-center gap-3 ml-2 pl-3 border-l border-gray-200">
+                <div className="flex items-center gap-2 ml-1 sm:ml-2 pl-2 sm:pl-3 border-l border-gray-200">
                   <div className="hidden sm:block text-right">
                     <p className="text-sm font-medium text-gray-900">{user.name}</p>
                     <p className="text-xs text-gray-500">Rider</p>
                   </div>
-                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-sm font-bold">
+                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-xs sm:text-sm font-bold shrink-0">
                     {user.name.charAt(0)}
                   </div>
                 </div>
               )}
-              <button onClick={handleLogout} className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50" title="Logout">
+              <button onClick={handleLogout} className="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 shrink-0" title="Logout">
                 <LogOut className="h-4 w-4" />
               </button>
             </div>

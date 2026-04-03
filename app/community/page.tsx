@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Header } from "@/components/navbar";
 import { Footerdemo as Footer } from "@/components/ui/footer-section";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Camera, MapPin, Heart, Share2, MessageCircle, User as UserIcon, Plus, LogOut, Utensils, Bell, Send, Flag, MoreHorizontal, Search, TrendingUp, Clock } from "lucide-react";
+import { Sparkles, Camera, MapPin, Heart, Share2, MessageCircle, User as UserIcon, Plus, LogOut, Utensils, Bell, Send, Flag, MoreHorizontal, Search, TrendingUp, Clock, Trash2 } from "lucide-react";
 import PostMomentModal from "@/components/community/post-moment-modal";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -21,6 +21,7 @@ export default function CommunityPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("popular");
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   useEffect(() => {
     checkAuth().then(() => {
@@ -81,7 +82,7 @@ export default function CommunityPage() {
       if (res.ok) {
         const data = await res.json();
         setIsLoggedIn(true);
-        setUser(data.user);
+        setUser(data);
         setIsAuthLoading(false);
       } else {
         window.location.href = "/community/login";
@@ -155,18 +156,21 @@ export default function CommunityPage() {
                   <Camera size={14} /> Share Moment
                 </button>
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <button className="p-1.5 sm:p-2 text-slate-400 hover:text-orange-600 transition-colors relative">
-                    <Bell size={18} className="sm:w-5 sm:h-5" />
-                    <span className="absolute top-1 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full animate-pulse"></span>
-                  </button>
+                  <div className="relative">
+                    <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="p-1.5 sm:p-2 text-slate-400 hover:text-orange-600 transition-colors relative focus:outline-none">
+                      <Bell size={18} className="sm:w-5 sm:h-5" />
+                      <span className="absolute top-1 right-1.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                    </button>
+                    <NotificationsDropdown isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+                  </div>
                   <div className="flex items-center gap-1.5 sm:gap-2 pl-2 sm:pl-3 border-l border-slate-200">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden border border-orange-200 shrink-0">
+                    <a href={`/community/profile/${user?.id}`} title="My Profile" className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden border border-orange-200 shrink-0 hover:ring-2 hover:ring-orange-500 transition-all cursor-pointer">
                       {user?.imageUrl ? (
                         <img src={user?.imageUrl} alt={user?.name} className="w-full h-full object-cover" />
                       ) : (
                         <UserIcon size={14} className="text-orange-600" />
                       )}
-                    </div>
+                    </a>
                     <button 
                       onClick={handleLogout}
                       className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -257,7 +261,7 @@ export default function CommunityPage() {
           ) : posts.length > 0 ? (
             <div className="flex flex-col gap-10">
               {posts.map((post, idx) => (
-                <PostCard key={post.id} post={post} delay={idx * 0.1} />
+                <PostCard key={post.id} post={post} currentUser={user} delay={idx * 0.1} onDeletePost={(id) => setPosts(posts.filter((p: any) => p.id !== id))} />
               ))}
             </div>
           ) : (
@@ -299,7 +303,44 @@ export default function CommunityPage() {
   );
 }
 
-function PostCard({ post, delay }: { post: any; delay: number }) {
+function NotificationsDropdown({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if(isOpen) {
+      setLoading(true);
+      fetch('/api/notifications')
+        .then(res => res.json())
+        .then(data => setNotifications(data))
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, [isOpen]);
+  if(!isOpen) return null;
+  return (
+    <div className="absolute top-12 right-0 sm:-right-4 w-64 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 font-sans z-[100] transform-gpu">
+       <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">Notifications</h3>
+       </div>
+       <div className="max-h-[300px] overflow-y-auto p-2 flex flex-col gap-1">
+          {loading ? (
+             <p className="text-[10px] text-center p-6 text-slate-400">Loading...</p>
+          ) : notifications.length > 0 ? (
+             notifications.map(n => (
+               <a key={n.id} href={n.link || "#"} className="p-3 rounded-xl hover:bg-slate-50 flex flex-col gap-1.5 transition-colors">
+                 <p className="text-[10px] sm:text-xs font-bold text-slate-900">{n.title}</p>
+                 <p className="text-[10px] sm:text-[11px] text-slate-500 line-clamp-2">{n.message}</p>
+               </a>
+             ))
+          ) : (
+             <p className="text-[10px] text-center p-6 text-slate-400 uppercase font-black tracking-widest">No Notifications</p>
+          )}
+       </div>
+    </div>
+  )
+}
+
+function PostCard({ post, currentUser, delay, onDeletePost }: { post: any; currentUser: any; delay: number; onDeletePost?: (id: string) => void }) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post._count?.likes || 0);
   const [commentCount, setCommentCount] = useState(post._count?.comments || 0);
@@ -413,6 +454,37 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
      }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      const res = await fetch(`/api/community/posts/${post.id}/comment/${commentId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setComments(comments.filter(c => c.id !== commentId));
+        setCommentCount((prev: number) => prev - 1);
+        toast.success("Comment deleted");
+      } else {
+        toast.error("Failed to delete comment");
+      }
+    } catch {
+      toast.error("An error occurred deleting the comment");
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!confirm("Are you sure you want to completely delete this moment?")) return;
+    try {
+      const res = await fetch(`/api/community/posts/${post.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.success("Moment deleted successfully");
+        if (onDeletePost) onDeletePost(post.id);
+      } else {
+        toast.error("Failed to delete moment");
+      }
+    } catch {
+      toast.error("An error occurred deleting the moment");
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -423,26 +495,41 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 sm:px-6 mb-4">
          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden border shadow-sm relative shrink-0">
+            <a href={`/community/profile/${post.author.id}`} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden border shadow-sm relative shrink-0 hover:ring-2 hover:ring-orange-500 transition-all cursor-pointer">
                {post.author.imageUrl ? (
                  <Image src={post.author.imageUrl} alt={post.author.name} fill className="object-cover" />
                ) : (
                  <UserIcon size={18} className="text-orange-600" />
                )}
-            </div>
+            </a>
             <div className="min-w-0">
-              <h4 className="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-900 leading-none mb-1 truncate">{post.author.name}</h4>
-              <p className="text-[9px] sm:text-[10px] font-bold text-orange-600 uppercase tracking-widest leading-none">{post.author.role}</p>
+              <a href={`/community/profile/${post.author.id}`} className="hover:underline">
+                <h4 className="text-xs sm:text-sm font-black uppercase tracking-widest text-slate-900 leading-none mb-1 truncate">{post.author.name}</h4>
+              </a>
+              <p className="text-[9px] sm:text-[10px] font-bold text-orange-600 uppercase tracking-widest leading-none">
+                 {post.author.role === "ADMIN" ? "HIVE MODERATOR" : "HIVE CONTRIBUTOR"}
+              </p>
             </div>
          </div>
 
-         <button 
-           onClick={handleReport}
-           className="p-2 text-slate-300 hover:text-red-400 transition-colors"
-           title="Report misbehavior"
-         >
-            <Flag size={18} />
-         </button>
+         <div className="flex items-center gap-2">
+            {currentUser?.id === post.author.id && (
+               <button 
+                 onClick={handleDeletePost}
+                 className="p-2 text-slate-300 hover:bg-red-50 hover:text-red-500 rounded-xl transition-colors"
+                 title="Delete Post"
+               >
+                  <Trash2 size={18} />
+               </button>
+            )}
+            <button 
+              onClick={handleReport}
+              className="p-2 text-slate-300 hover:text-red-400 transition-colors"
+              title="Report misbehavior"
+            >
+               <Flag size={18} />
+            </button>
+         </div>
       </div>
 
       {/* Caption Content */}
@@ -534,19 +621,24 @@ function PostCard({ post, delay }: { post: any; delay: number }) {
                       animate={{ opacity: 1, x: 0 }}
                       className="flex gap-2 sm:gap-3"
                     >
-                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border shrink-0 overflow-hidden relative shadow-sm">
+                       <a href={`/community/profile/${comment.author.id}`} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border shrink-0 overflow-hidden relative shadow-sm hover:ring-2 hover:ring-orange-500 cursor-pointer transition-all">
                           {comment.author.imageUrl ? (
                              <Image src={comment.author.imageUrl} alt="U" fill className="object-cover" />
                           ) : (
                              <div className="w-full h-full flex items-center justify-center font-bold text-[9px] text-slate-300 uppercase">{comment.author.name.charAt(0)}</div>
                           )}
-                       </div>
-                       <div className="flex-1 bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl rounded-tl-none border border-slate-100 shadow-sm shadow-slate-100/50 min-w-0">
+                       </a>
+                       <div className="flex-1 bg-white p-2.5 sm:p-3 rounded-xl sm:rounded-2xl rounded-tl-none border border-slate-100 shadow-sm shadow-slate-100/50 min-w-0 relative group">
                           <div className="flex items-center justify-between mb-1 gap-2">
-                             <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-900 truncate">{comment.author.name}</span>
+                             <a href={`/community/profile/${comment.author.id}`} className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-900 truncate hover:underline">{comment.author.name}</a>
                              <span className="text-[8px] sm:text-[9px] text-slate-400 whitespace-nowrap">{new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                           <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed break-words">{comment.content}</p>
+                          {(currentUser?.id === comment.author.id || currentUser?.id === post.author.id) && (
+                             <button onClick={() => handleDeleteComment(comment.id)} className="absolute -right-2 -top-2 p-1.5 bg-white text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-md border border-slate-100 z-10" title="Delete comment">
+                               <Trash2 size={12} />
+                             </button>
+                          )}
                        </div>
                     </motion.div>
                   ))

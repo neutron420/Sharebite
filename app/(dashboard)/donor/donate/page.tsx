@@ -69,7 +69,7 @@ const categories = [
   { value: "COOKED_FOOD", label: "Cooked", icon: <GiHotMeal /> },
   { value: "STAPLES", label: "Grains", icon: <GiWheat /> },
   { value: "PACKAGED_FOOD", label: "Packaged", icon: <GiBoxUnpacking /> },
-  { value: "BEVERAGES", label: "Beverages", icon: <GiSodaCan /> },
+  { value: "BEVERAGES", label: "Non-Alcoholic Beverages/Water", icon: <GiSodaCan /> },
   { value: "CANNED_GOODS", label: "Canned", icon: <GiOpenedFoodCan /> },
   { value: "FROZEN_FOOD", label: "Frozen", icon: <GiSnowflake1 /> },
   { value: "OTHERS", label: "Others", icon: <GiStarsStack /> },

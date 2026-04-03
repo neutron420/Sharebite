@@ -199,7 +199,7 @@ export default function RequestsPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginated.map((r) => {
-                const statusStyle = STATUS_STYLES[r.status];
+                const statusStyle = STATUS_STYLES[r.status] || { bg: "bg-gray-50", text: "text-gray-600", icon: Package };
                 const StatusIcon = statusStyle.icon;
                 return (
                   <tr key={r.id} className="hover:bg-gray-50 transition-colors">

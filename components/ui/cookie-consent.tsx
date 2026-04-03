@@ -17,26 +17,22 @@ export default function CookieConsent() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // DEV MODE: Always show on refresh for testing
-    // const consent = localStorage.getItem("cookie-consent-v5");
-    // if (!consent) {
-      console.log("🛡️ Shield Active: Initializing Cookie Protocol (2s target)...");
-      // Delay appearance slightly
+    const consent = localStorage.getItem("cookie-consent-v5");
+    if (!consent) {
       const timer = setTimeout(() => {
-        console.log("✅ Shield Deployed: Showing Cookie Hub.");
         setIsVisible(true);
       }, 2000);
       return () => clearTimeout(timer);
-    // }
+    }
   }, []);
 
   const handleAccept = () => {
-    // localStorage.setItem("cookie-consent-v5", "accepted");
+    localStorage.setItem("cookie-consent-v5", "accepted");
     setIsVisible(false);
   };
 
   const handleDecline = () => {
-    // localStorage.setItem("cookie-consent-v5", "declined");
+    localStorage.setItem("cookie-consent-v5", "declined");
     setIsVisible(false);
   };
 

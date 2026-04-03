@@ -222,23 +222,23 @@ export default function RiderDashboard() {
           <p className="text-[10px] sm:text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">Manage deployments & source new bounties.</p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex gap-4">
-           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 min-w-[180px]">
-              <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600">
-                 <Wallet className="w-6 h-6" />
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="grid grid-cols-2 gap-3 sm:gap-4 w-full md:w-auto">
+           <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-100 shadow-sm flex items-center gap-3 sm:gap-4">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-50 rounded-xl sm:rounded-2xl flex items-center justify-center text-orange-600 shrink-0">
+                 <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Earnings</p>
-                 <p className="text-xl font-black text-gray-950 tracking-tighter">₹{stats.balance.toFixed(2)}</p>
+              <div className="min-w-0">
+                 <p className="text-[9px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest">Earnings</p>
+                 <p className="text-base sm:text-xl font-black text-gray-950 tracking-tighter truncate">₹{stats.balance.toFixed(2)}</p>
               </div>
            </div>
-           <div className="bg-slate-950 p-6 rounded-3xl shadow-xl flex items-center gap-4 min-w-[180px] text-white">
-              <div className="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center text-white">
-                 <Trophy className="w-6 h-6" />
+           <div className="bg-slate-950 p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-xl flex items-center gap-3 sm:gap-4 text-white">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shrink-0">
+                 <Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <div>
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rewards</p>
-                 <p className="text-xl font-black text-white tracking-tighter">{stats.rewardPoints} Pts</p>
+              <div className="min-w-0">
+                 <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rewards</p>
+                 <p className="text-base sm:text-xl font-black text-white tracking-tighter truncate">{stats.rewardPoints} Pts</p>
               </div>
            </div>
         </motion.div>

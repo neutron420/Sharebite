@@ -71,6 +71,7 @@ export default function NGOPartnersPage() {
   const [restoreReason, setRestoreReason] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingDetailId, setLoadingDetailId] = useState<string | null>(null);
   const itemsPerPage = 12;
 
   const fetchNGOs = useCallback(async () => {
@@ -88,12 +89,15 @@ export default function NGOPartnersPage() {
 
   const fetchNGODetail = async (id: string) => {
     try {
+      setLoadingDetailId(id);
       const res = await fetch(`/api/admin/ngos/${id}`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed to fetch NGO details");
       const data = await res.json();
       setSelectedNGO(data);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoadingDetailId(null);
     }
   };
 
@@ -391,9 +395,10 @@ export default function NGOPartnersPage() {
                 )}
                 <button
                   onClick={() => fetchNGODetail(ngo.id)}
-                  className="px-4 py-2 text-xs font-black bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95"
+                  disabled={loadingDetailId === ngo.id}
+                  className="px-4 py-2 text-xs font-black bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  View Detail
+                  {loadingDetailId === ngo.id ? "Loading..." : "View Detail"}
                 </button>
               </div>
             </div>

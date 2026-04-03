@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Users,
   Package,
@@ -191,7 +192,7 @@ function AnimatedCounter({ value, label, icon: Icon, color, limit = 4 }: {
         )}
       </div>
       <div className="mt-4 relative z-10">
-        <p className={`text-3xl font-black transition-all duration-300 ${isCapped ? 'text-red-500 scale-110' : 'text-gray-900'}`}>
+        <p className={`text-3xl font-black transition-all duration-300 ${isCapped ? 'text-red-500 scale-110 origin-left' : 'text-gray-900'}`}>
           {displayText}
         </p>
         <p className="text-sm font-medium text-gray-500 mt-1">{label}</p>
@@ -202,6 +203,7 @@ function AnimatedCounter({ value, label, icon: Icon, color, limit = 4 }: {
 
 // ── Component ──────────────────────────────────────────
 export default function AdminDashboard() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -315,7 +317,10 @@ export default function AdminDashboard() {
           icon={Bike} 
           color="#f97316" 
         />
-        <div className="bg-orange-500 rounded-2xl p-5 flex flex-col justify-between text-white lg:col-span-2 group cursor-pointer hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200">
+        <div 
+          onClick={() => router.push('/admin/donations')}
+          className="bg-orange-500 rounded-2xl p-5 flex flex-col justify-between text-white lg:col-span-2 group cursor-pointer hover:bg-orange-600 transition-colors shadow-lg shadow-orange-200"
+        >
            <div className="flex items-center justify-between">
               <div className="bg-white/20 p-2 rounded-xl">
                  <Package className="h-5 w-5" />
