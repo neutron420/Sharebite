@@ -1,0 +1,31 @@
+prometheus.scrape "sharebite_web" {
+  targets = [{
+    __address__ = "web:3000",
+  }]
+
+  metrics_path    = "/api/metrics"
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.metrics_hosted_prometheus.receiver]
+}
+
+prometheus.scrape "sharebite_ws" {
+  targets = [{
+    __address__ = "ws:8080",
+  }]
+
+  metrics_path    = "/metrics"
+  scrape_interval = "15s"
+  forward_to      = [prometheus.remote_write.metrics_hosted_prometheus.receiver]
+}
+
+prometheus.remote_write "metrics_hosted_prometheus" {
+  endpoint {
+    name = "hosted-prometheus"
+    url  = sys.env("GRAFANA_CLOUD_PROM_REMOTE_WRITE_URL")
+
+    basic_auth {
+      username = sys.env("GRAFANA_CLOUD_PROM_USERNAME")
+      password = sys.env("GRAFANA_CLOUD_API_KEY")
+    }
+  }
+}

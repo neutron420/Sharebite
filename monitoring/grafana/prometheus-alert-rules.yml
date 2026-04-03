@@ -1,0 +1,63 @@
+groups:
+  - name: sharebite-monitoring
+    interval: 30s
+    rules:
+      - alert: ShareBiteApi5xxRateHigh
+        expr: sum(rate(sharebite_api_requests_total{status=~"5.."}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: sharebite-web
+        annotations:
+          summary: API 5xx error rate is high
+          description: API is serving more than 1 error request/sec over 5 minutes.
+
+      - alert: ShareBiteApiP95LatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(sharebite_api_request_duration_seconds_bucket[5m])) by (le)) > 1.5
+        for: 10m
+        labels:
+          severity: warning
+          service: sharebite-web
+        annotations:
+          summary: API p95 latency is high
+          description: API p95 latency is above 1.5 seconds for 10 minutes.
+
+      - alert: ShareBiteWebDown
+        expr: up{job="sharebite_web"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: sharebite-web
+        annotations:
+          summary: ShareBite web target is down
+          description: Alloy cannot scrape sharebite_web for more than 2 minutes.
+
+      - alert: ShareBiteWsDown
+        expr: up{job="sharebite_ws"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: sharebite-ws
+        annotations:
+          summary: ShareBite websocket target is down
+          description: Alloy cannot scrape sharebite_ws for more than 2 minutes.
+
+      - alert: ShareBiteWsRedisUnavailable
+        expr: min_over_time(sharebite_ws_redis_available[3m]) < 1
+        for: 3m
+        labels:
+          severity: warning
+          service: sharebite-ws
+        annotations:
+          summary: Websocket Redis fanout unavailable
+          description: Redis appears unavailable for websocket pubsub operations.
+
+      - alert: ShareBiteWsErrorSpike
+        expr: sum(rate(sharebite_ws_errors_total[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: sharebite-ws
+        annotations:
+          summary: Websocket error rate spiking
+          description: Websocket server errors exceeded normal baseline over 10 minutes.

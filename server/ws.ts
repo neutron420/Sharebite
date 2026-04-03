@@ -5,7 +5,48 @@ import { PrismaClient } from "../app/generated/prisma";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { createServer } from "http";
 import Redis from "ioredis";
+import { Counter, Gauge, Registry, collectDefaultMetrics } from "prom-client";
 import "dotenv/config";
+
+const wsMetricsRegistry = new Registry();
+collectDefaultMetrics({ register: wsMetricsRegistry, prefix: "sharebite_ws_" });
+
+const wsConnectionsActive = new Gauge({
+  name: "sharebite_ws_connections_active",
+  help: "Current number of active websocket connections.",
+  registers: [wsMetricsRegistry],
+});
+
+const wsMessagesTotal = new Counter({
+  name: "sharebite_ws_messages_total",
+  help: "Total websocket messages by direction and type.",
+  labelNames: ["direction", "type"],
+  registers: [wsMetricsRegistry],
+});
+
+const wsErrorsTotal = new Counter({
+  name: "sharebite_ws_errors_total",
+  help: "Total websocket server errors by stage.",
+  labelNames: ["stage"],
+  registers: [wsMetricsRegistry],
+});
+
+const wsNotifyRequestsTotal = new Counter({
+  name: "sharebite_ws_notify_requests_total",
+  help: "Total HTTP /notify requests accepted by websocket server.",
+  registers: [wsMetricsRegistry],
+});
+
+const wsRedisAvailable = new Gauge({
+  name: "sharebite_ws_redis_available",
+  help: "Redis availability status for websocket fanout (1=up, 0=down).",
+  registers: [wsMetricsRegistry],
+});
+
+function sendWsMessage(ws: WebSocket, type: string, payload: any) {
+  ws.send(JSON.stringify({ type, payload }));
+  wsMessagesTotal.inc({ direction: "out", type });
+}
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -15,6 +56,7 @@ const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 // Track Redis availability
 let redisAvailable = false;
 let lastRedisLog = 0;
+wsRedisAvailable.set(0);
 
 function logRedis(msg: string) {
   const now = Date.now();
@@ -52,10 +94,14 @@ async function initRedis() {
 
     pub.on("ready", () => {
       redisAvailable = true;
+      wsRedisAvailable.set(1);
       console.log("✅ Redis connected");
     });
     
-    pub.on("close", () => { redisAvailable = false; });
+    pub.on("close", () => {
+      redisAvailable = false;
+      wsRedisAvailable.set(0);
+    });
 
     sub.on("ready", () => {
       sub!.subscribe("notifications", (err) => {
@@ -78,7 +124,7 @@ async function initRedis() {
 function deliverToUser(userId: string, type: string, payload: any) {
   const client = localClients.get(userId);
   if (client && client.ws.readyState === WebSocket.OPEN) {
-    client.ws.send(JSON.stringify({ type, payload }));
+    sendWsMessage(client.ws, type, payload);
   }
 }
 
@@ -89,7 +135,7 @@ function handleBroadcast(channel: string, message: string) {
 
     if (type === "COMMUNITY_POST") {
       localClients.forEach(c => {
-        if (c.ws.readyState === WebSocket.OPEN) c.ws.send(JSON.stringify({ type, payload }));
+        if (c.ws.readyState === WebSocket.OPEN) sendWsMessage(c.ws, type, payload);
       });
     } else if (type === "RIDER_LOCATION_UPDATE" && userIds) {
       userIds.forEach((id: string) => deliverToUser(id, "RIDER_LOCATION", { riderId, lat, lng }));
@@ -105,6 +151,7 @@ function handleBroadcast(channel: string, message: string) {
       userIds.forEach((id: string) => deliverToUser(id, "NOTIFICATION", payload));
     }
   } catch (err) {
+    wsErrorsTotal.inc({ stage: "broadcast" });
     console.error("Message processing error:", err);
   }
 }
@@ -125,12 +172,19 @@ const wss = new WebSocketServer({ noServer: true });
 
 server.on("request", async (req, res) => {
   const { pathname } = parse(req.url || "", true);
+  if (pathname === "/metrics") {
+    res.writeHead(200, { "Content-Type": wsMetricsRegistry.contentType });
+    res.end(await wsMetricsRegistry.metrics());
+    return;
+  }
+
   if (pathname === "/") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ status: "healthy", connected: localClients.size, redis: redisAvailable }));
     return;
   }
   if (req.method === "POST" && pathname === "/notify") {
+    wsNotifyRequestsTotal.inc();
     let body = "";
     req.on("data", c => body += c);
     req.on("end", async () => {
@@ -139,6 +193,7 @@ server.on("request", async (req, res) => {
         else handleBroadcast("notifications", body);
         res.writeHead(200); res.end(JSON.stringify({ success: true }));
       } catch (err) {
+        wsErrorsTotal.inc({ stage: "notify_route" });
         res.writeHead(500); res.end();
       }
     });
@@ -167,11 +222,13 @@ wss.on("connection", async (ws, req) => {
     const userId = payload.userId as string;
     const role = (payload.role as string) || "GUEST";
     localClients.set(userId, { ws, role });
+    wsConnectionsActive.inc();
 
     ws.on("message", async (data) => {
       try {
         const message = JSON.parse(data.toString());
         const { type, payload: msgPayload } = message;
+        wsMessagesTotal.inc({ direction: "in", type: type || "UNKNOWN" });
 
         if (type === "SEND_MESSAGE") {
           const { conversationId, text, receiverId, imageUrl, location } = msgPayload;
@@ -197,15 +254,20 @@ wss.on("connection", async (ws, req) => {
           if (redisAvailable) pub!.publish("notifications", typingMsg).catch(() => {});
           else deliverToUser(receiverId, "TYPING_INDICATOR", { conversationId, isTyping, userId });
         } else if (type === "HEARTBEAT") {
-          ws.send(JSON.stringify({ type: "HEARTBEAT_ACK" }));
+          sendWsMessage(ws, "HEARTBEAT_ACK", undefined);
         }
       } catch (err) {
+        wsErrorsTotal.inc({ stage: "message_handler" });
         console.error("Error processing message:", err);
       }
     });
 
-    ws.on("close", () => { localClients.delete(userId); });
+    ws.on("close", () => {
+      localClients.delete(userId);
+      wsConnectionsActive.dec();
+    });
   } catch {
+    wsErrorsTotal.inc({ stage: "auth" });
     ws.close(1008, "Invalid token");
   }
 });

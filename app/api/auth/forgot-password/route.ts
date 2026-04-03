@@ -4,7 +4,6 @@ import redis from "@/lib/redis";
 import { Resend } from "resend";
 import { withSecurity } from "@/lib/api-handler";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const TURNSTILE_SITE_SECRET = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY || "1x0000000000000000000000000000000AA";
 
 async function forgotPasswordHandler(req: Request) {
@@ -52,6 +51,15 @@ async function forgotPasswordHandler(req: Request) {
     // 5. Secure Email Dispatch via Resend
     let emailStatus = "Dispatched via Resend";
     try {
+      const resendApiKey = process.env.RESEND_API_KEY;
+      if (!resendApiKey) {
+        return NextResponse.json(
+          { error: "Email service is not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL." },
+          { status: 500 }
+        );
+      }
+
+      const resend = new Resend(resendApiKey);
       const fromEmail = process.env.RESEND_FROM_EMAIL || "ShareBite Support <support@neutrondev.in>";
       
       const { data, error } = await resend.emails.send({

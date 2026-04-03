@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit } from "./ratelimit";
 import { getSession } from "./auth";
+import { normalizeRoute, observeApiRequest } from "./monitoring/prometheus";
 
 type ApiHandler<TArgs extends unknown[] = unknown[]> = (
 	req: Request,
@@ -15,6 +16,15 @@ export function withSecurity<TArgs extends unknown[]>(
 	options?: { limit?: number; window?: number }
 ) {
 	return async (req: Request, ...args: TArgs) => {
+		const startedAt = Date.now();
+		let route = "/unknown";
+
+		try {
+			route = normalizeRoute(new URL(req.url).pathname);
+		} catch {
+			// keep fallback route
+		}
+
 		try {
 			// 1. Identify User (IP or Session ID)
 			const session = await getSession({ request: req });
@@ -45,9 +55,22 @@ export function withSecurity<TArgs extends unknown[]>(
 			response.headers.set("X-Content-Type-Options", "nosniff");
 			response.headers.set("X-Frame-Options", "DENY");
 
+			observeApiRequest({
+				method: req.method,
+				route,
+				status: response.status,
+				durationMs: Date.now() - startedAt,
+			});
+
 			return response;
 		} catch (error) {
 			console.error("Security Wrapper Error:", error);
+			observeApiRequest({
+				method: req.method,
+				route,
+				status: 500,
+				durationMs: Date.now() - startedAt,
+			});
 			return NextResponse.json(
 				{ error: "Internal Server Error" },
 				{ status: 500 }
