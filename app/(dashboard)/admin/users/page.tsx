@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Users,
   Search,
@@ -48,6 +48,7 @@ function formatDate(d: string) {
 }
 
 export default function UsersPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const roleParam = searchParams.get("role");
   
@@ -85,6 +86,11 @@ export default function UsersPage() {
   }, [roleParam]);
 
   const handleVerify = async (user: User, isVerified: boolean) => {
+    if (user.role === "RIDER") {
+      alert("Use the Riders Verification page for final rider approvals.");
+      return;
+    }
+
     try {
       setActionLoading(true);
       const res = await fetch(`/api/admin/users/${user.id}/verify`, {
@@ -414,7 +420,17 @@ export default function UsersPage() {
               <div className="flex gap-3 pt-2">
                 {selectedUser.role !== "ADMIN" && (
                   <>
-                    {selectedUser.isVerified ? (
+                    {selectedUser.role === "RIDER" ? (
+                      <button
+                        onClick={() => {
+                          setSelectedUser(null);
+                          router.push("/admin/riders-verification");
+                        }}
+                        className="flex-1 px-4 py-2 border border-orange-200 rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100"
+                      >
+                        Open Riders Verification
+                      </button>
+                    ) : selectedUser.isVerified ? (
                       <button onClick={() => handleVerify(selectedUser, false)} disabled={actionLoading} className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50">
                         Unverify
                       </button>

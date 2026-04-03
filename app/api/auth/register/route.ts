@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/auth";
 import { withSecurity } from "@/lib/api-handler";
+import { createNotification } from "@/lib/notifications";
 
 async function registerHandler(request: Request) {
   try {
@@ -46,6 +47,47 @@ async function registerHandler(request: Request) {
     // SECURITY NOTE: In production, you should wrap ADMIN registration behind an invite code or secret key.
     // For now, allowing direct ADMIN creation as requested for the /admin/register portal.
     let assignedRole = validatedData.role;
+    let selectedNgo: { id: string; name: string } | null = null;
+
+    if (assignedRole === "RIDER") {
+      if (!validatedData.riderNgoId) {
+        return NextResponse.json(
+          { error: "Please select an NGO before registering as a rider." },
+          { status: 400 }
+        );
+      }
+
+      const ngo = await prisma.user.findUnique({
+        where: { id: validatedData.riderNgoId },
+        select: {
+          id: true,
+          name: true,
+          role: true,
+          isVerified: true,
+          isLicenseSuspended: true,
+          suspensionExpiresAt: true,
+        },
+      });
+
+      if (!ngo || ngo.role !== "NGO") {
+        return NextResponse.json(
+          { error: "Selected NGO is invalid. Please choose another NGO." },
+          { status: 400 }
+        );
+      }
+
+      const ngoTemporarilySuspended =
+        !!ngo.suspensionExpiresAt && new Date(ngo.suspensionExpiresAt) > new Date();
+
+      if (!ngo.isVerified || ngo.isLicenseSuspended || ngoTemporarilySuspended) {
+        return NextResponse.json(
+          { error: "Selected NGO is not currently eligible for rider onboarding." },
+          { status: 400 }
+        );
+      }
+
+      selectedNgo = { id: ngo.id, name: ngo.name };
+    }
 
     // Create user
     const user = await prisma.user.create({
@@ -69,6 +111,23 @@ async function registerHandler(request: Request) {
 
     });
 
+    if (user.role === "RIDER" && selectedNgo) {
+      await prisma.riderVerificationRequest.create({
+        data: {
+          riderId: user.id,
+          ngoId: selectedNgo.id,
+        },
+      });
+
+      await createNotification({
+        userId: selectedNgo.id,
+        type: "SYSTEM",
+        title: "New Rider Verification Request",
+        message: `Rider "${user.name}" has applied to join your NGO fleet. Please review and approve from your dashboard.`,
+        link: "/ngo/riders",
+      });
+    }
+
     // NOTIFY ADMINS: Real-time registration alert
     try {
       const admins = await prisma.user.findMany({
@@ -80,7 +139,9 @@ async function registerHandler(request: Request) {
         userId: admin.id,
         type: "SYSTEM" as any,
         title: "New Registration Alert",
-        message: `New ${user.role} "${user.name}" has joined the platform from ${user.city || 'an Unknown sector'}.`,
+        message: user.role === "RIDER" && selectedNgo
+          ? `New RIDER "${user.name}" applied under NGO "${selectedNgo.name}" from ${user.city || "an Unknown sector"}.`
+          : `New ${user.role} "${user.name}" has joined the platform from ${user.city || "an Unknown sector"}.`,
         link: `/admin/users`
       }));
 
