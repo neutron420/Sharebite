@@ -337,7 +337,7 @@ export default function NGOLayout({
 
         <main className={cn(
           "flex-1 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] transition-all duration-500",
-          isImmersiveChat ? "p-0" : "p-4 sm:p-6 pb-[15rem] lg:pb-6 relative z-10"
+          isImmersiveChat ? "p-0" : "p-4 sm:p-6 pb-32 lg:pb-6 relative z-10"
         )}>
           <motion.div key={pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-full">
             {children}
@@ -348,7 +348,7 @@ export default function NGOLayout({
            "lg:hidden fixed bottom-6 left-4 right-4 z-50 transition-all duration-500 transform",
            isImmersiveChat ? "translate-y-32 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
         )}>
-           <nav className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 shadow-2xl flex items-center justify-between">
+           <nav className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-3xl p-2 shadow-2xl flex items-center justify-around">
               {[
                 { icon: LayoutDashboard, href: "/ngo", label: "Hub" },
                 { icon: Package, href: "/ngo/requests", label: "Pickups" },
@@ -358,15 +358,15 @@ export default function NGOLayout({
               ].map((item) => {
                 const active = isActive(item.href);
                 return (
-                  <Link key={item.href} href={item.href} className={cn("flex flex-col items-center gap-1 px-3 py-2 transition-all", active ? "text-orange-500" : "text-slate-400")}>
+                  <Link key={item.href} href={item.href} className={cn("flex flex-col items-center gap-1 px-2 py-1.5 transition-all", active ? "text-orange-500" : "text-slate-400")}>
                     {item.primary ? (
-                      <div className="bg-orange-600 p-4 rounded-full shadow-2xl -mt-10 mb-2 border-4 border-slate-900">
-                        <item.icon className="h-6 w-6 text-white" />
+                      <div className="bg-orange-600 p-3.5 rounded-2xl shadow-xl -mt-8 mb-1 border-4 border-slate-900">
+                        <item.icon className="h-5 w-5 text-white" />
                       </div>
                     ) : (
                       <>
                         <item.icon className="h-5 w-5" />
-                        <span className="text-[8px] font-black uppercase tracking-widest">{item.label}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-tight">{item.label}</span>
                       </>
                     )}
                   </Link>

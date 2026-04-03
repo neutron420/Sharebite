@@ -123,35 +123,35 @@ export default function NgoDashboard() {
   }
 
   return (
-    <div className="w-full space-y-12">
+    <div className="w-full space-y-8 sm:space-y-12">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-8 mb-4">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight mb-2 underline decoration-orange-600/10 underline-offset-8 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-2 underline decoration-orange-600/10 underline-offset-8 leading-tight">
              Welcome, {userName}! 👋
           </h1>
-          <p className="text-xs sm:text-base text-slate-400 font-bold">Deploy your logistics to rescue surplus nearby.</p>
+          <p className="text-sm sm:text-base text-slate-400 font-bold">Deploy your logistics to rescue surplus nearby.</p>
         </motion.div>
-        <Link href="/ngo/find-food" className="group w-full sm:w-fit px-8 py-5 sm:py-4 bg-slate-950 text-white font-black rounded-2xl flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl active:scale-95 text-[10px] sm:text-xs uppercase tracking-widest text-center">
+        <Link href="/ngo/find-food" className="group w-full sm:w-fit px-6 py-4 bg-slate-950 text-white font-black rounded-2xl flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl active:scale-95 text-[11px] sm:text-xs uppercase tracking-widest text-center">
           Source New Supplies <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
         </Link>
       </header>
 
       {/* Logistics Stats */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {statCards.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] bg-white border border-slate-100 hover:border-orange-200 transition-all group relative overflow-hidden shadow-xl shadow-slate-200/20">
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="p-5 sm:p-8 rounded-3xl sm:rounded-[2.5rem] bg-white border border-slate-100 hover:border-orange-200 transition-all group relative overflow-hidden shadow-xl shadow-slate-200/20">
               <div className="flex items-center gap-4 sm:gap-6">
-                <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 rounded-xl sm:rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-orange-600 transition-all duration-500 ${stat.colorClass} shadow-inner shrink-0 group-hover:text-white`}>
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-orange-600 transition-all duration-500 ${stat.colorClass} shadow-inner shrink-0 group-hover:text-white`}>
                   <Icon className="w-6 h-6 sm:w-8 sm:h-8" />
                 </div>
                 <div>
                   <h3 className="text-2xl sm:text-4xl font-black text-slate-950 tracking-tighter leading-none mb-1">{stat.value}</h3>
-                  <p className="text-slate-400 font-black text-[9px] sm:text-[10px] uppercase tracking-[0.2em]">{stat.label}</p>
-                  <div className="mt-2 flex items-center gap-2">
+                  <p className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">{stat.label}</p>
+                  <div className="mt-1 flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase text-green-600 tracking-widest">{stat.trend}</span>
+                    <span className="text-[10px] font-bold uppercase text-green-600 tracking-wide">{stat.trend}</span>
                   </div>
                 </div>
               </div>
@@ -164,32 +164,32 @@ export default function NgoDashboard() {
       {stats && stats.activeRequests && stats.activeRequests.length > 0 && (
         <motion.section initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-6 overflow-hidden">
           <div className="flex items-center justify-between px-2">
-            <h2 className="text-2xl font-black italic tracking-tighter flex items-center gap-3 text-orange-600">
-              <ShieldCheck className="w-8 h-8" /> Active Operations
+            <h2 className="text-xl sm:text-2xl font-black italic tracking-tighter flex items-center gap-3 text-orange-600 uppercase">
+              <ShieldCheck className="w-6 h-6 sm:w-8 sm:h-8" /> Active Operations
             </h2>
-            <Badge className="bg-orange-50 text-orange-600 border-none font-black">{stats.activeRequests.length} Live</Badge>
+            <Badge className="bg-orange-50 text-orange-600 border-none font-black text-[10px] uppercase tracking-wider">{stats.activeRequests.length} Live</Badge>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {stats.activeRequests.map((req: any, i) => (
               <motion.div key={req.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} className="flex flex-col gap-4">
                 <div 
-                  className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[3rem] bg-slate-950 text-white relative overflow-hidden group shadow-2xl border border-white/10 cursor-pointer"
+                  className="p-5 sm:p-8 rounded-3xl sm:rounded-[3rem] bg-slate-950 text-white relative overflow-hidden group shadow-2xl border border-white/10 cursor-pointer"
                   onClick={() => router.push(`/ngo/requests/${req.id}`)}
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/20 blur-3xl" />
-                  <div className="relative z-10 flex flex-col gap-6">
-                    <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-4">
+                  <div className="relative z-10 flex flex-col gap-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 shrink-0">
                           <Package className="w-5 h-5 text-orange-400" />
                         </div>
                         <div className="min-w-0">
                           <h3 className="font-black text-base sm:text-lg tracking-tight truncate">{req.donation.title}</h3>
-                          <p className="text-[10px] uppercase font-black tracking-widest text-slate-400 mt-1 truncate">Donor: {req.donation.donor.name}</p>
+                          <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mt-1 truncate">Donor: {req.donation.donor.name}</p>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between xs:justify-end gap-3">
+                      <div className="flex items-center justify-between sm:justify-end gap-3">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -200,10 +200,10 @@ export default function NgoDashboard() {
                           <MessageSquare className="w-5 h-5 text-white group-hover/msg:scale-110 transition-transform" />
                         </button>
                         <div className="text-right">
-                          <p className="text-[8px] sm:text-[10px] uppercase font-black tracking-widest text-orange-400 mb-1">Status</p>
+                          <p className="text-[10px] uppercase font-bold tracking-wider text-orange-400 mb-0.5">Status</p>
                           <div className="flex items-center gap-2 justify-end">
                             <ShieldCheck className="w-4 h-4 text-green-500" />
-                            <p className="text-base sm:text-xl font-black tracking-tight uppercase whitespace-nowrap">
+                            <p className="text-sm sm:text-xl font-black tracking-tight uppercase whitespace-nowrap">
                               {req.status === "COMPLETED" && (req.step || 0) >= 3.4 && (req.step || 0) < 3.5
                                 ? "PAYMENT TAKE"
                                 : req.status === "COMPLETED" && (req.step || 0) >= 3.5 && (req.step || 0) < 4
@@ -221,12 +221,12 @@ export default function NgoDashboard() {
                           e.stopPropagation();
                           setTrackingId(trackingId === req.id ? null : req.id);
                         }}
-                        className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
+                        className="w-full py-3.5 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95"
                       >
                         {trackingId === req.id ? 'Close Pursuit Grid' : 'Open Pursuit Grid'} <Navigation className="w-4 h-4" />
                       </button>
                     ) : (
-                      <div className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-center text-xs font-black uppercase tracking-widest text-orange-300">
+                      <div className="w-full py-3.5 bg-white/5 border border-white/10 rounded-xl text-center text-[10px] font-bold uppercase tracking-widest text-orange-300">
                         Open Mission To Release Payout
                       </div>
                     )}
@@ -239,7 +239,7 @@ export default function NgoDashboard() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 300 }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-lg bg-slate-50 relative"
+                      className="rounded-3xl sm:rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-lg bg-slate-50 relative"
                     >
                       <LiveRiderMap 
                         riderId={req.riderId}
@@ -260,14 +260,14 @@ export default function NgoDashboard() {
         </motion.section>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10">
+        <div className="lg:col-span-2 space-y-6 sm:space-y-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 border-l-4 border-slate-950">
             <div>
-               <h2 className="text-2xl sm:text-3xl font-black italic tracking-tighter uppercase text-slate-950">Supply Audit Feed</h2>
-               <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Available surplus sources in your sector</p>
+               <h2 className="text-xl sm:text-3xl font-black italic tracking-tighter uppercase text-slate-950">Supply Audit Feed</h2>
+               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Available surplus sources in your sector</p>
             </div>
-            <Link href="/ngo/find-food" className="w-fit px-5 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-all shadow-sm">Global Hub &rarr;</Link>
+            <Link href="/ngo/find-food" className="w-fit px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-orange-600 transition-all shadow-sm">Global Hub &rarr;</Link>
           </div>
           
           <div className="space-y-4">
@@ -278,11 +278,11 @@ export default function NgoDashboard() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="group p-6 rounded-[2.5rem] bg-white border border-slate-100 hover:border-orange-200 flex items-center justify-between transition-all cursor-pointer hover:shadow-xl hover:shadow-orange-50/50 shadow-sm"
+                  className="group p-4 sm:p-6 rounded-3xl sm:rounded-[2.5rem] bg-white border border-slate-100 hover:border-orange-200 flex items-center justify-between transition-all cursor-pointer hover:shadow-xl hover:shadow-orange-50/50 shadow-sm"
                   onClick={() => router.push(`/ngo/donations/${item.id}`)}
                 >
                   <div className="flex items-center gap-4 sm:gap-6">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 group-hover:bg-orange-50 rounded-[1rem] sm:rounded-[1.5rem] flex items-center justify-center text-xl sm:text-2xl grayscale group-hover:grayscale-0 transition-all border border-slate-100 group-hover:border-orange-100 relative overflow-hidden shrink-0">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-50 group-hover:bg-orange-50 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl sm:text-2xl grayscale group-hover:grayscale-0 transition-all border border-slate-100 group-hover:border-orange-100 relative overflow-hidden shrink-0">
                        {item.imageUrl ? (
                           <img src={item.imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="" />
                        ) : (
@@ -290,26 +290,26 @@ export default function NgoDashboard() {
                        )}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="font-black text-base sm:text-lg tracking-tight group-hover:text-orange-600 transition-colors truncate">{item.title}</h4>
-                      <div className="flex items-center gap-2 text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                      <h4 className="font-black text-sm sm:text-lg tracking-tight group-hover:text-orange-600 transition-colors truncate">{item.title}</h4>
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1">
                         <MapPin className="w-3 h-3 shrink-0" /> <span className="truncate">{item.city}</span> <span className="w-1 h-1 bg-slate-200 rounded-full shrink-0" /> <span className="whitespace-nowrap">{formatDistanceToNow(new Date(item.createdAt), { addSuffix: false })}</span>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-3 sm:gap-6">
                     <div className="text-right hidden sm:block">
                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Source</p>
                        <p className="text-xs font-black text-slate-900">{item.donor?.name || "Shared Hub"}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-orange-600 group-hover:bg-orange-50 transition-all border border-transparent group-hover:border-orange-100">
-                       <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-orange-600 group-hover:bg-orange-50 transition-all border border-transparent group-hover:border-orange-100">
+                       <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </motion.div>
               ))
             ) : (
-              <div className="p-10 sm:p-20 rounded-[2.5rem] sm:rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center text-center">
+              <div className="p-10 sm:p-20 rounded-3xl sm:rounded-[3rem] border-2 border-dashed border-slate-100 flex flex-col items-center text-center">
                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
                     <Soup className="w-8 h-8" />
                  </div>
@@ -325,22 +325,22 @@ export default function NgoDashboard() {
 
         {/* NGO Sidebar Cards */}
         <div className="space-y-6">
-          <div className="p-8 rounded-[3rem] border border-slate-100 bg-white relative overflow-hidden shadow-xl shadow-orange-50/30">
+          <div className="p-6 sm:p-8 rounded-3xl sm:rounded-[3rem] border border-slate-100 bg-white relative overflow-hidden shadow-xl shadow-orange-50/30">
              <div className="absolute top-0 right-0 h-32 w-32 bg-orange-100/70 blur-3xl" />
              <div className="relative z-10">
-                <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 border border-orange-100 text-orange-600">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 border border-orange-100 text-orange-600">
                   <Award className="w-6 h-6" />
                 </div>
-                <h3 className="text-2xl font-black italic mb-4 tracking-tighter text-slate-950 leading-tight">Verified <br />Distributor Hub</h3>
-                <p className="text-slate-500 text-[10px] font-bold mb-10 uppercase tracking-[0.2em] leading-relaxed">Your certificate is active. Keep operations fluid to maintain high trust ranking.</p>
-                <button className="w-full inline-flex items-center justify-center gap-3 py-5 bg-slate-950 text-white font-black rounded-2xl hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest">
+                <h3 className="text-xl sm:text-2xl font-black italic mb-4 tracking-tighter text-slate-950 leading-tight">Verified <br />Distributor Hub</h3>
+                <p className="text-slate-500 text-[10px] font-bold mb-8 uppercase tracking-[0.2em] leading-relaxed">Your certificate is active. Keep operations fluid to maintain high trust ranking.</p>
+                <button className="w-full inline-flex items-center justify-center gap-3 py-4 bg-slate-950 text-white font-black rounded-2xl hover:bg-orange-600 transition-all shadow-xl shadow-slate-200 uppercase text-[10px] tracking-widest">
                   View Credentials <ArrowRight className="w-4 h-4" />
                 </button>
              </div>
           </div>
 
-          <div className="p-8 rounded-[3rem] border border-slate-100 bg-white flex flex-col items-center text-center group hover:border-orange-200 transition-all shadow-xl shadow-slate-200/10">
-             <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-4"><TrendingUp className="w-6 h-6 text-slate-400 group-hover:text-orange-600" /></div>
+          <div className="p-6 rounded-3xl border border-slate-100 bg-white flex flex-col items-center text-center group hover:border-orange-200 transition-all shadow-xl shadow-slate-200/10">
+             <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center mb-4"><TrendingUp className="w-5 h-5 text-slate-400 group-hover:text-orange-600" /></div>
              <h4 className="font-black text-sm mb-1 uppercase tracking-tight">Growth Projection</h4>
              <p className="text-xs font-bold text-slate-400">Partner with more donors to increase your operations hub capacity.</p>
           </div>
