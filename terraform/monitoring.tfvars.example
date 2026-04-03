@@ -1,0 +1,10 @@
+# Copy values into terraform.tfvars or export as TF_VAR_... values before apply.
+
+grafana_cloud_prom_remote_write_url = "https://prometheus-prod-xx-prod-ap-south-1.grafana.net/api/prom/push"
+grafana_cloud_prom_username         = "your_prometheus_instance_id"
+grafana_cloud_api_key               = "your_metrics_publish_token"
+
+monitoring_alloy_desired_count = 1
+monitoring_alloy_image         = "grafana/alloy:latest"
+monitoring_alloy_cpu           = "256"
+monitoring_alloy_memory        = "512"
