@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
-
+import path from "path";
 
 
 const withPWA = withPWAInit({
@@ -11,6 +11,9 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
 
   images: {
     remotePatterns: [

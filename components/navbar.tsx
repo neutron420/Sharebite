@@ -31,7 +31,7 @@ export const Header = () => {
                             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-xl sm:rounded-2xl shadow-[0_8px_20px_rgba(234,88,12,0.2)] flex items-center justify-center overflow-hidden border border-orange-100 group-hover:rotate-6 transition-all">
                                 <img src="/sharebite-logo.jpg" alt="ShareBite Logo" className="w-full h-full object-cover" />
                             </div>
-                            <span className="text-lg sm:text-2xl font-medium tracking-tighter text-slate-900 uppercase italic underline decoration-orange-600/10">ShareBite</span>
+                            <span className="text-lg sm:text-2xl font-medium tracking-tighter text-slate-900 uppercase underline decoration-orange-600/10">ShareBite</span>
                         </Link>
                     </div>
 

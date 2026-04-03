@@ -26,8 +26,10 @@ export const LanguageSwitcher = () => {
                 className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-white/50 backdrop-blur-md border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all shadow-sm group pointer-events-auto"
             >
                 <Globe className="size-3.5 sm:size-4 text-orange-600 group-hover:rotate-12 transition-transform" />
-                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em] text-slate-600 whitespace-nowrap">
-                    {current.flag} <span className="hidden sm:inline">{current.name}</span><span className="sm:hidden">{current.code}</span>
+                <span className="hidden sm:flex text-xs font-bold uppercase tracking-[0.15em] text-slate-600 whitespace-nowrap items-center gap-1">
+                    <span>{current.flag}</span>
+                    <span>{current.name}</span>
+                    <span>{current.code}</span>
                 </span>
                 <ChevronDown className={cn("size-3 text-slate-400 transition-transform", isOpen && "rotate-180")} />
             </button>
