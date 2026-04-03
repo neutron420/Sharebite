@@ -62,6 +62,7 @@ export default async function RootLayout({
           strategy="afterInteractive"
           crossOrigin="anonymous"
         />
+        <meta name="google-adsense-account" content="ca-pub-7449708956977518" />
       </head>
       <body
         className={`${roboto.variable} font-sans antialiased bg-white text-slate-900`}
