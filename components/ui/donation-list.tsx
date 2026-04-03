@@ -344,7 +344,7 @@ const DonationList = React.forwardRef<HTMLDivElement, DonationListProps>(({ dona
                                                       }}
                                                       className="group flex items-center gap-2 px-6 py-3 bg-red-50 text-red-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95"
                                                    >
-                                                      <Trash2 className="w-3.5 h-3.5" /> Purge Mission Data
+                                                      <Trash2 className="w-3.5 h-3.5" /> Delete Mission
                                                    </button>
                                                 </div>
                                              </div>
@@ -390,7 +390,7 @@ const DonationList = React.forwardRef<HTMLDivElement, DonationListProps>(({ dona
                                                    {d.status === 'AVAILABLE' && (
                                                       <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-100 rounded-2xl shadow-sm">
                                                          <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
-                                                         <p className="text-[11px] font-bold text-orange-800 leading-tight">Waiting for a verified NGO to intercept this share. Signal is currently broadcasting.</p>
+                                                         <p className="text-[11px] font-bold text-orange-800 leading-tight text-wrap">Waiting for a verified NGO to intercept this share. Signal is currently broadcasting.</p>
                                                       </div>
                                                    )}
                                                 </div>

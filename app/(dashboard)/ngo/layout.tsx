@@ -105,6 +105,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     id: "messages",
     href: "/ngo/messages",
   },
+  {
+    label: "Profile",
+    icon: UserRound,
+    id: "profile",
+    href: "/ngo/profile",
+  },
 ];
 
 export default function NGOLayout({
@@ -525,7 +531,10 @@ export default function NGOLayout({
                       <Typography className="text-xs text-gray-500 mt-0.5">{user.email}</Typography>
                     </Box>
                     <MenuItem
-                      disabled
+                      onClick={() => {
+                        setProfileAnchor(null);
+                        router.push("/ngo/profile");
+                      }}
                       className="py-3 px-4 hover:bg-orange-50 transition-colors whitespace-normal"
                     >
                       <Stack direction="row" spacing={2} alignItems="center">
@@ -533,9 +542,9 @@ export default function NGOLayout({
                           <UserRound className="h-4 w-4" />
                         </Box>
                         <Box>
-                          <Typography className="text-sm font-semibold text-gray-900">Profile</Typography>
+                          <Typography className="text-sm font-semibold text-gray-900">My Profile</Typography>
                           <Typography className="text-xs text-gray-500 mt-0.5">
-                            Manage your NGO certification and details. (Coming Soon)
+                            Manage your NGO certification and organization details.
                           </Typography>
                         </Box>
                       </Stack>
@@ -564,7 +573,7 @@ export default function NGOLayout({
               { icon: LayoutDashboard, href: "/ngo", label: "Hub" },
               { icon: Package, href: "/ngo/requests", label: "Pickups" },
               { icon: Search, href: "/ngo/find-food", label: "Find", primary: true },
-              { icon: MessageSquare, href: "/ngo/messages", label: "Chat" },
+              { icon: UserRound, href: "/ngo/profile", label: "Profile" },
               { icon: Bell, href: "/ngo/notifications", label: "Alerts" },
             ].map((item) => {
               const active = isActive(item.href);
