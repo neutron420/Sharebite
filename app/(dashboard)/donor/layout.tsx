@@ -43,6 +43,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 import { useSocket } from "@/components/providers/socket-provider";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DonorUser {
   id: string;
@@ -282,68 +283,83 @@ export default function DonorLayout({
     );
   };
 
+  const pageVariants = {
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -8 }
+  };
+
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden">
-      {/* Decorative tactical background - Intelligence Grid */}
-      <div className="fixed inset-0 pointer-events-none opacity-[0.03]" 
-           style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <aside
-            className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col"
-            onClick={(event) => event.stopPropagation()}
+    <div className="min-h-screen bg-[#f8fafc] flex relative overflow-hidden font-sans">
+      <AnimatePresence mode="wait">
+        {mobileOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 lg:hidden" 
+            onClick={() => setMobileOpen(false)}
           >
-            <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
-              <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-sm">
-                <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
+                <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-sm">
+                  <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-lg font-bold text-gray-900 tracking-tight">ShareBite</span>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="ml-auto p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <span className="text-lg font-bold text-gray-900">ShareBite</span>
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="ml-auto p-1 rounded-md text-gray-400 hover:text-gray-900"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            {renderSidebar(true)}
-            {user && (
-              <div className="border-t border-gray-200 p-4 shrink-0 space-y-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9 border border-orange-100">
-                    <AvatarImage src={user.imageUrl || undefined} alt={user.name} />
-                    <AvatarFallback className="bg-orange-50 text-xs font-bold text-orange-600">
-                      {userInitials || "SB"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              {renderSidebar(true)}
+              {user && (
+                <div className="border-t border-gray-200 p-4 shrink-0 space-y-4 bg-gray-50/50">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9 border border-orange-100 ring-2 ring-orange-50">
+                      <AvatarImage src={user.imageUrl || undefined} alt={user.name} />
+                      <AvatarFallback className="bg-orange-50 text-xs font-bold text-orange-600">
+                        {userInitials || "SB"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">{user.name}</p>
+                      <p className="text-[10px] text-gray-500 font-medium truncate uppercase tracking-wider">{user.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href="/donor/profile"
+                      onClick={() => setMobileOpen(false)}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-orange-100 bg-white px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-orange-600 shadow-sm hover:bg-orange-50 transition-all active:scale-95"
+                    >
+                      <UserRound className="h-3.5 w-3.5" />
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-100 bg-white px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-600 shadow-sm hover:bg-red-50 transition-all active:scale-95"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Logout
+                    </button>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <Link
-                    href="/donor/profile"
-                    onClick={() => setMobileOpen(false)}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-orange-100 bg-orange-50 px-3 py-2 text-xs font-bold uppercase tracking-wider text-orange-600"
-                  >
-                    <UserRound className="h-3.5 w-3.5" />
-                    Profile
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold uppercase tracking-wider text-red-600"
-                  >
-                    <LogOut className="h-3.5 w-3.5" />
-                    Logout
-                  </button>
-                </div>
-              </div>
-            )}
-          </aside>
-        </div>
-      )}
+              )}
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <aside
         className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 overflow-x-hidden ${
@@ -591,7 +607,18 @@ export default function DonorLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10 transition-all duration-500">
+          <motion.div
+            key={pathname}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
+        </main>
 
         {/* Mobile Bottom Navigation - Floating Premium Design */}
         <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">

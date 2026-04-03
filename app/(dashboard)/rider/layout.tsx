@@ -39,6 +39,7 @@ import { useSocket } from "@/components/providers/socket-provider";
 import { toast } from "sonner";
 import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface RiderUser {
   id: string;
@@ -138,6 +139,12 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       setLoading(false);
     }
   }, [router]);
+
+  const pageVariants = {
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -8 }
+  };
 
   useEffect(() => {
     fetchUser();
@@ -254,36 +261,51 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       <div className="fixed inset-0 pointer-events-none opacity-[0.03]" 
            style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       {/* Mobile sidebar overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <aside className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
-              <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-sm">
-                <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+      <AnimatePresence mode="wait">
+        {mobileOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 lg:hidden" 
+            onClick={() => setMobileOpen(false)}
+          >
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
+                <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-sm">
+                  <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-lg font-bold text-gray-900">ShareBite</span>
+                <button onClick={() => setMobileOpen(false)} className="ml-auto p-1.5 rounded-lg text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <span className="text-lg font-bold text-gray-900">ShareBite</span>
-              <button onClick={() => setMobileOpen(false)} className="ml-auto p-1 rounded-md text-gray-400 hover:text-gray-900">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            {renderSidebar(true)}
-            {user && (
-              <div className="border-t border-gray-200 p-4 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-orange-50 flex items-center justify-center">
-                    <ShieldCheck className="h-4 w-4 text-orange-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              {renderSidebar(true)}
+              {user && (
+                <div className="border-t border-gray-200 p-4 shrink-0 bg-gray-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-orange-100 flex items-center justify-center">
+                      <ShieldCheck className="h-4 w-4 text-orange-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">{user.name}</p>
+                      <p className="text-[10px] text-gray-500 font-medium truncate uppercase tracking-wider">{user.email}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </aside>
-        </div>
-      )}
+              )}
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Desktop sidebar */}
       <aside className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 overflow-x-hidden ${sidebarOpen ? "w-64" : "w-20"}`}>
@@ -430,7 +452,18 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10 transition-all duration-500">
+          <motion.div
+            key={pathname}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
+        </main>
 
         {/* Mobile Bottom Navigation - Rider Tactical Deck */}
         <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">

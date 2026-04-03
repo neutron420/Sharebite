@@ -45,6 +45,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 import { useSocket } from "@/components/providers/socket-provider";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface NGOUser {
   id: string;
@@ -171,6 +172,12 @@ export default function NGOLayout({
     }
   }, []);
 
+  const pageVariants = {
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -8 }
+  };
+
   useEffect(() => {
     fetchUser();
     fetchNotifications();
@@ -267,55 +274,67 @@ export default function NGOLayout({
       <div className="fixed inset-0 pointer-events-none opacity-[0.03]" 
            style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       {/* Mobile Sidebar */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setMobileOpen(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <aside
-            className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col"
-            onClick={(event) => event.stopPropagation()}
+      <AnimatePresence mode="wait">
+        {mobileOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 lg:hidden" 
+            onClick={() => setMobileOpen(false)}
           >
-            <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
-              <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-sm">
-                <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
+                <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-sm">
+                  <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-lg font-black tracking-tighter uppercase whitespace-nowrap text-gray-900">NGO Hub</span>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="ml-auto p-1 rounded-md text-gray-400 hover:text-gray-900"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-              <span className="text-lg font-black tracking-tighter uppercase whitespace-nowrap text-gray-900">NGO Hub</span>
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="ml-auto p-1 rounded-md text-gray-400 hover:text-gray-900"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            {renderSidebar(true)}
-            {user && (
-              <div className="border-t border-gray-200 p-4 shrink-0 space-y-4">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9 border border-orange-100">
-                    <AvatarImage src={user.imageUrl || undefined} alt={user.name} />
-                    <AvatarFallback className="bg-orange-50 text-xs font-bold text-orange-600">
-                      {userInitials || "SB"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              {renderSidebar(true)}
+              {user && (
+                <div className="border-t border-gray-200 p-4 shrink-0 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-9 w-9 border border-orange-100">
+                      <AvatarImage src={user.imageUrl || undefined} alt={user.name} />
+                      <AvatarFallback className="bg-orange-50 text-xs font-bold text-orange-600">
+                        {userInitials || "SB"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={handleLogout}
+                      className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold uppercase tracking-wider text-red-600"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Terminate Link
+                    </button>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={handleLogout}
-                    className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-bold uppercase tracking-wider text-red-600"
-                  >
-                    <LogOut className="h-3.5 w-3.5" />
-                    Terminate Link
-                  </button>
-                </div>
-              </div>
-            )}
-          </aside>
-        </div>
-      )}
+              )}
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Desktop Sidebar */}
       <aside
@@ -564,7 +583,18 @@ export default function NGOLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10 transition-all duration-500">
+          <motion.div
+            key={pathname}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            variants={pageVariants}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+          >
+            {children}
+          </motion.div>
+        </main>
 
         {/* Mobile Bottom Navigation - NGO Operational Interface */}
         <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">

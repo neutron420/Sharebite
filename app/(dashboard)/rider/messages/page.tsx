@@ -117,6 +117,7 @@ function MessagesContent() {
                 : activeConversation.participantA
             }
             donationTitle={activeConversation.donation.title}
+            onBack={() => router.push("/rider/messages")}
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full bg-gray-50 relative group">
