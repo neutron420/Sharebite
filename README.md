@@ -14,6 +14,7 @@ The codebase is organized around four main actors:
 - [Architecture Guide](./architecture.md)
 - [Workflow Guide](./workflow.md)
 - [API Test Notes](./tests/README.md)
+- [Monitoring Guide](./monitoring/README.md)
 
 ## What The Platform Includes
 

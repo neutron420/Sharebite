@@ -1,10 +1,18 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error("[EMAIL_CONFIG_ERROR] RESEND_API_KEY is missing.");
+    return null;
+  }
+
+  return new Resend(apiKey);
+}
 
 interface EmailResponse {
   success: boolean;
-  error?: any;
+  error?: unknown;
 }
 
 interface EmailOptions {
@@ -17,8 +25,13 @@ interface EmailOptions {
 export async function sendEmail(options: EmailOptions): Promise<EmailResponse> {
   const { to, subject, html, from } = options;
   try {
+    const resend = getResendClient();
+    if (!resend) {
+      return { success: false, error: "RESEND_API_KEY is not configured." };
+    }
+
     const fromEmail = from || process.env.RESEND_FROM_EMAIL || "ShareBite Support <support@neutrondev.in>";
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: fromEmail,
       to,
       subject,
@@ -31,7 +44,7 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResponse> {
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[EMAIL_GENERIC_CRITICAL_ERROR]", err);
     return { success: false, error: err };
   }
@@ -54,9 +67,14 @@ export async function sendThankYouEmail(
   ngoAddress?: string
 ): Promise<EmailResponse> {
   try {
+    const resend = getResendClient();
+    if (!resend) {
+      return { success: false, error: "RESEND_API_KEY is not configured." };
+    }
+
     const fromEmail = process.env.RESEND_FROM_EMAIL || "ShareBite Support <support@neutrondev.in>";
     
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: fromEmail,
       to: to,
       subject: `Mission Complete: your ${foodTitle} was delivered! 🚀`,
@@ -262,7 +280,7 @@ export async function sendThankYouEmail(
     }
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[EMAIL_SERVICE_CRITICAL_ERROR]", err);
     return { success: false, error: err };
   }

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   web:
     build:
@@ -71,6 +69,26 @@ services:
       retries: 5
     volumes:
       - redis_data:/data
+    networks:
+      - sharebite-network
+
+  alloy:
+    image: grafana/alloy:latest
+    restart: unless-stopped
+    command: ["run", "/etc/alloy/config.alloy"]
+    environment:
+      - GRAFANA_CLOUD_PROM_REMOTE_WRITE_URL=${GRAFANA_CLOUD_PROM_REMOTE_WRITE_URL}
+      - GRAFANA_CLOUD_PROM_USERNAME=${GRAFANA_CLOUD_PROM_USERNAME}
+      - GRAFANA_CLOUD_API_KEY=${GRAFANA_CLOUD_API_KEY}
+    volumes:
+      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+    depends_on:
+      web:
+        condition: service_started
+      ws:
+        condition: service_started
+    profiles:
+      - monitoring
     networks:
       - sharebite-network
 
