@@ -39,6 +39,7 @@ import CookieConsent from "@/components/ui/cookie-consent";
 import BugReportModal from "@/components/support/BugReportModal";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE_NAMES } from "@/lib/auth";
+import Script from "next/script";
 
 export default async function RootLayout({
   children,
@@ -55,6 +56,12 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7449708956977518"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
       </head>
       <body
         className={`${roboto.variable} font-sans antialiased bg-white text-slate-900`}
