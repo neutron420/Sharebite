@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -99,7 +99,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 export default function RiderLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { addListener, isConnected } = useSocket();
+
+  // WhatsApp-style Immersive Mode Detection
+  const activeChatId = searchParams.get("id");
+  const isImmersiveChat = pathname?.includes("/messages") && activeChatId;
   
   const [user, setUser] = useState<RiderUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -338,7 +343,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
 
       {/* Main content */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? "lg:ml-64" : "lg:ml-20"}`}>
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
+        <header className={cn(
+          "sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm transition-all duration-500",
+          isImmersiveChat && "hidden lg:flex"
+        )}>
           <div className="px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3">
               <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 shrink-0">
@@ -452,7 +460,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10 transition-all duration-500">
+        <main className={cn(
+          "flex-1 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] transition-all duration-500",
+          isImmersiveChat ? "p-0" : "p-4 sm:p-6 pb-[15rem] lg:pb-6 relative z-10"
+        )}>
           <motion.div
             key={pathname}
             initial="initial"
@@ -466,7 +477,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
         </main>
 
         {/* Mobile Bottom Navigation - Rider Tactical Deck */}
-        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">
+        <div className={cn(
+          "lg:hidden fixed bottom-6 left-4 right-4 z-50 transition-all duration-500 transform",
+          isImmersiveChat ? "translate-y-32 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+        )}>
           <nav className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 shadow-2xl shadow-slate-950/40 flex items-center justify-between">
             {[
               { icon: LayoutDashboard, href: "/rider", label: "Grid" },

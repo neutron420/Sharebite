@@ -178,61 +178,84 @@ export function ChatBox({ currentUserId, conversationId, otherUser, donationTitl
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/50 relative overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-white border-b border-slate-100 z-10 shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
+    <div className="flex flex-col h-full bg-[#f8fafc] relative overflow-hidden">
+      {/* Dynamic Background Pattern */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+           style={{ backgroundImage: 'radial-gradient(#ea580c 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
+      
+      {/* Glassmorphism Header */}
+      <div className="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-8 py-5 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shrink-0 shadow-sm">
+        <div className="flex items-center gap-4 min-w-0">
           <button
             onClick={onBack}
-            className="md:hidden p-2 -ml-2 rounded-xl text-slate-400 hover:text-orange-600 hover:bg-orange-50 transition-all active:scale-90 shrink-0"
+            className="md:hidden p-2.5 -ml-2 rounded-2xl text-slate-400 hover:text-orange-600 hover:bg-orange-50 transition-all active:scale-90"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <Avatar className="h-10 w-10 border-2 border-slate-100 ring-2 ring-orange-500/10 shrink-0">
-            <AvatarImage src={otherUser.imageUrl || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-orange-500 to-orange-600 text-white font-black text-xs">
-              {otherUser.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1">
+          
+          <div className="relative">
+            <Avatar className="h-12 w-12 border-2 border-white shadow-md ring-4 ring-orange-500/5">
+              <AvatarImage src={otherUser.imageUrl || undefined} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-orange-700 text-white font-black text-sm">
+                {otherUser.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className={cn(
+               "absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white shadow-sm flex items-center justify-center",
+               isConnected ? "bg-emerald-500" : "bg-slate-300"
+            )}>
+               <div className={cn("w-1.5 h-1.5 rounded-full bg-white", isConnected && "animate-pulse")} />
+            </div>
+          </div>
+
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-bold text-slate-900 truncate">
+              <h2 className="text-base font-black tracking-tight text-slate-900 truncate">
                 {otherUser.name}
               </h2>
-              <span className={cn("text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0", getRoleBadgeColor(otherUser.role))}>
+              <span className={cn("text-[9px] font-black uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-lg border", getRoleBadgeColor(otherUser.role))}>
                 {otherUser.role}
               </span>
             </div>
-            <p className="text-[11px] text-orange-600 font-medium truncate mt-0.5">
-              Re: {donationTitle}
-            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+               <span className="w-1 h-1 rounded-full bg-orange-600" />
+               <p className="text-[10px] font-black uppercase tracking-widest text-orange-600/70 truncate">
+                 MISSION: {donationTitle}
+               </p>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <div className={cn(
-            "flex items-center gap-1.5 px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider",
-            isConnected ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50"
-          )}>
-            <div className={cn("w-1.5 h-1.5 rounded-full", isConnected ? "bg-emerald-500 animate-pulse" : "bg-rose-500")} />
-            {isConnected ? "Live" : "Offline"}
-          </div>
+
+        <div className={cn(
+          "hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-100 bg-white/50 text-[9px] font-black uppercase tracking-[0.2em]",
+          isConnected ? "text-emerald-600" : "text-slate-400"
+        )}>
+          {isConnected ? (
+             <>
+               <Wifi className="w-3 h-3 animate-pulse" />
+               Live Coordination Active
+             </>
+          ) : "Ops Channel Offline"}
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages Feed */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-3"
+        className="flex-1 overflow-y-auto px-4 sm:px-8 py-8 space-y-6 scrollbar-hide"
       >
         {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 text-orange-500 animate-spin" strokeWidth={2.5} />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Loading messages...</p>
-            </div>
+          <div className="flex flex-col items-center justify-center h-full gap-4">
+             <div className="relative w-12 h-12">
+                <Loader2 className="h-12 w-12 text-orange-600 animate-spin absolute inset-0" strokeWidth={3} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                   <div className="w-2 h-2 bg-orange-600 rounded-full" />
+                </div>
+             </div>
+             <p className="font-black text-[9px] uppercase tracking-[0.3em] text-slate-400 animate-pulse">Syncing Mission Log...</p>
           </div>
         ) : messages.length > 0 ? (
-          <div className="space-y-3">
+          <div className="flex flex-col gap-6">
             <AnimatePresence initial={false}>
               {messages.map((m, i) => {
                 const isMine = m.senderId === currentUserId;
@@ -241,51 +264,54 @@ export function ChatBox({ currentUserId, conversationId, otherUser, donationTitl
                 return (
                   <motion.div
                     key={m.id || i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: m._optimistic ? 0.7 : 1, y: 0 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    initial={{ opacity: 0, x: isMine ? 20 : -20, scale: 0.95 }}
+                    animate={{ opacity: m._optimistic ? 0.6 : 1, x: 0, scale: 1 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
                     className={cn(
-                      "flex gap-2 max-w-[85%] sm:max-w-[75%]",
+                      "flex gap-3 max-w-[85%] sm:max-w-[70%]",
                       isMine ? "ml-auto flex-row-reverse" : "mr-auto"
                     )}
                   >
                     {!isMine && (
-                      <div className="w-7 shrink-0 flex items-end">
-                        {showAvatar && (
-                          <Avatar className="h-7 w-7 border border-slate-100">
+                      <div className="w-8 shrink-0 flex items-end mb-1">
+                        {showAvatar ? (
+                          <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
                             <AvatarImage src={otherUser.imageUrl || undefined} />
-                            <AvatarFallback className="bg-slate-100 text-slate-500 text-[9px] font-bold">
+                            <AvatarFallback className="bg-slate-200 text-slate-600 text-[10px] font-black">
                               {otherUser.name.charAt(0)}
                             </AvatarFallback>
                           </Avatar>
-                        )}
+                        ) : <div className="w-8" />}
                       </div>
                     )}
 
-                    <div
-                      className={cn(
-                        "px-4 py-2.5 text-[13px] leading-relaxed relative",
-                        isMine
-                          ? "bg-orange-600 text-white rounded-2xl rounded-tr-md shadow-sm"
-                          : "bg-white text-slate-800 rounded-2xl rounded-tl-md border border-slate-100 shadow-sm"
-                      )}
-                    >
-                      <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                    <div className="flex flex-col gap-1.5">
+                      <div
+                        className={cn(
+                          "px-5 py-3.5 text-[14px] font-medium leading-relaxed shadow-lg shadow-slate-200/10",
+                          isMine
+                            ? "bg-gradient-to-br from-orange-500 to-orange-700 text-white rounded-[1.5rem] rounded-tr-none shadow-orange-500/10"
+                            : "bg-white text-slate-900 rounded-[1.5rem] rounded-tl-none border border-slate-100"
+                        )}
+                      >
+                        <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                      </div>
+                      
                       <div className={cn(
-                        "flex items-center gap-1 mt-1",
+                        "flex items-center gap-2 px-1",
                         isMine ? "justify-end" : "justify-start"
                       )}>
-                        <span className={cn(
-                          "text-[9px] font-medium",
-                          isMine ? "text-white/60" : "text-slate-400"
-                        )}>
-                          {formatDistanceToNow(new Date(m.createdAt), { addSuffix: true })}
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 opacity-60">
+                           {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                        {isMine && !m._optimistic && (
-                          <CheckCheck className="h-3 w-3 text-white/60" />
-                        )}
-                        {m._optimistic && (
-                          <Loader2 className="h-3 w-3 text-white/60 animate-spin" />
+                        {isMine && (
+                           <div className="flex items-center">
+                              {m._optimistic ? (
+                                 <Loader2 className="w-2.5 h-2.5 text-orange-400 animate-spin" />
+                              ) : (
+                                 <CheckCheck className={cn("w-3 h-3", m.isRead ? "text-orange-500" : "text-slate-300")} />
+                              )}
+                           </div>
                         )}
                       </div>
                     </div>
@@ -295,48 +321,61 @@ export function ChatBox({ currentUserId, conversationId, otherUser, donationTitl
             </AnimatePresence>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-            <div className="w-16 h-16 bg-white rounded-2xl border border-slate-100 flex items-center justify-center shadow-sm">
-              <Send className="h-7 w-7 text-slate-200" />
+          <div className="flex flex-col items-center justify-center h-full text-center p-10 space-y-8">
+            <div className="relative">
+               <div className="w-24 h-24 bg-white rounded-[3rem] shadow-2xl flex items-center justify-center border border-slate-50">
+                  <div className="w-16 h-16 bg-orange-600 rounded-[2rem] flex items-center justify-center text-white shadow-xl shadow-orange-100">
+                    <Send className="h-8 w-8" />
+                  </div>
+               </div>
+               <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white text-[8px] font-black px-2 py-1 rounded-full border-2 border-white shadow-sm uppercase tracking-tighter">Secure</div>
             </div>
-            <div>
-              <p className="text-sm font-bold text-slate-600 mb-1">No messages yet</p>
-              <p className="text-xs text-slate-400 max-w-[250px]">
-                Send a message to coordinate the food rescue mission with {otherUser.name}.
+            <div className="space-y-3">
+              <h3 className="text-xl font-black text-slate-950 uppercase tracking-tighter">Strategic Link Established</h3>
+              <p className="text-[10px] font-black text-slate-400 max-w-[250px] uppercase tracking-[0.2em] leading-relaxed mx-auto">
+                Coordination for food rescue is ready. Message {otherUser.name.split(' ')[0]} to begin deployment.
               </p>
             </div>
           </div>
         )}
       </div>
 
-      {/* Input */}
-      <div className="px-4 sm:px-6 py-4 bg-white border-t border-slate-100 z-10 shrink-0">
-        <div className="relative max-w-4xl mx-auto flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Type a message..."
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            disabled={sending}
-            className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-300 focus:bg-white transition-all disabled:opacity-50"
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!inputText.trim() || sending}
-            className="h-11 w-11 bg-orange-600 text-white rounded-2xl flex items-center justify-center hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/20 active:scale-95 disabled:opacity-40 disabled:hover:bg-orange-600 disabled:active:scale-100 shrink-0"
-          >
-            {sending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </button>
+      {/* Input Console */}
+      <div className="px-4 sm:px-10 py-8 bg-gradient-to-t from-white via-white to-transparent shrink-0">
+        <div className="max-w-4xl mx-auto">
+           <div className="relative group">
+             <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-[2.5rem] opacity-20 blur group-focus-within:opacity-40 transition-opacity duration-500" />
+             <div className="relative flex items-center gap-3 bg-white border border-slate-100 p-2 rounded-[2rem] shadow-2xl">
+                <input
+                  type="text"
+                  placeholder="Type your tactical update..."
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={sending}
+                  className="flex-1 px-6 py-4 bg-transparent text-[14px] font-semibold text-slate-900 placeholder:text-slate-300 placeholder:uppercase placeholder:text-[10px] placeholder:tracking-[0.2em] focus:outline-none disabled:opacity-50"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!inputText.trim() || sending}
+                  className="group/btn h-12 w-12 bg-gray-900 text-white rounded-[1.5rem] flex items-center justify-center hover:bg-orange-600 transition-all shadow-xl active:scale-95 disabled:opacity-20 disabled:hover:bg-gray-900"
+                >
+                  {sending ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-5 w-5 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform duration-300" />
+                  )}
+                </button>
+             </div>
+           </div>
+           <div className="flex justify-center mt-4">
+              <p className="text-[8px] font-black text-slate-300 uppercase tracking-[0.4em]">Proprietary Web-Mesh Comms Interface v4.0</p>
+           </div>
         </div>
       </div>
     </div>

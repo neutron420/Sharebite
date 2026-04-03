@@ -87,9 +87,9 @@ function MessagesContent() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center p-20 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center p-20 bg-white italic">
         <Loader2 className="h-12 w-12 text-orange-600 animate-spin" strokeWidth={3} />
-        <p className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 animate-pulse ml-4">Syncing Ops Intelligence...</p>
+        <p className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 animate-pulse ml-4">Syncing Ops Channel...</p>
       </div>
     );
   }
@@ -97,10 +97,11 @@ function MessagesContent() {
   if (!user) return null;
 
   return (
-    <div className="h-[calc(100vh-8.5rem)] bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-slate-100 overflow-hidden flex shadow-2xl shadow-slate-200/50 -mt-2">
+    <div className="fixed inset-0 lg:static h-[100dvh] lg:h-[calc(100vh-4rem)] bg-white lg:border-l lg:border-gray-100 lg:overflow-hidden flex w-full">
+      {/* Sidebar: Hidden on mobile when a chat is active */}
       <div className={cn(
-        "w-full md:w-80 lg:w-96 flex-shrink-0 border-r border-slate-50 transition-all duration-300",
-        selectedId ? "hidden md:flex" : "flex"
+        "w-full lg:w-96 flex-shrink-0 border-r border-gray-100 overflow-y-auto transition-all duration-300",
+        selectedId ? "hidden lg:block" : "block"
       )}>
         <ConversationList
           currentUserId={user.id}
@@ -109,9 +110,10 @@ function MessagesContent() {
         />
       </div>
 
+      {/* Chat Area: Hidden on mobile when no chat is selected */}
       <div className={cn(
-        "flex-1 min-w-0 bg-slate-50",
-        !selectedId ? "hidden md:flex" : "flex"
+        "flex-1 min-w-0 flex flex-col bg-[#f8fafc]",
+        !selectedId ? "hidden lg:flex" : "flex"
       )}>
         {activeConversation ? (
           <ChatBox
@@ -126,7 +128,7 @@ function MessagesContent() {
             onBack={() => router.push("/donor/messages")}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full relative group">
+          <div className="flex flex-col items-center justify-center h-full bg-slate-50 relative group">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,100,50,0.02),transparent_70%)] opacity-70" />
             
             <div className="relative z-10 space-y-8 flex flex-col items-center text-center p-10">
@@ -136,19 +138,19 @@ function MessagesContent() {
                     </div>
                 </div>
                 <div>
-                   <h2 className="text-3xl font-black tracking-tighter text-slate-950 uppercase mb-4">Select a Mission Log</h2>
+                   <h2 className="text-3xl font-black italic tracking-tighter text-slate-950 uppercase mb-4">Command Center</h2>
                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 max-w-[300px] mx-auto leading-relaxed">
-                     Open a thread to coordinate food rescue operations with NGOs and Riders in real-time.
+                     Coordinate missions with local hubs and responders in real-time.
                    </p>
                 </div>
-                <div className="flex items-center gap-6 pt-10 border-t border-slate-200">
+                <div className="flex items-center gap-6 pt-10 border-t border-slate-200 text-slate-400">
                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-orange-600" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Secure Transmissions</span>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Encrypted</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Heart className="w-4 h-4 text-orange-600 fill-current" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Impact Live</span>
+                        <Heart className="w-4 h-4 fill-current text-orange-600" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">Live Flow</span>
                     </div>
                 </div>
             </div>
@@ -161,8 +163,8 @@ function MessagesContent() {
 
 export default function DonorMessagesPage() {
   return (
-    <div className="w-full h-full overflow-hidden">
-      <Suspense fallback={<div>Loading Messenger...</div>}>
+    <div className="w-full h-full">
+      <Suspense fallback={<div>Loading Command Center...</div>}>
          <MessagesContent />
       </Suspense>
     </div>

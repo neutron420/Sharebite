@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Turnstile from "react-turnstile";
 import LocationPicker from "@/components/map/LocationPicker";
 
 // ─── Animated Dot Map (same as login page) ───
@@ -170,6 +171,7 @@ export default function RegisterPage() {
   const [checkingPhone, setCheckingPhone] = useState(false);
   const [phoneAvailable, setPhoneAvailable] = useState<boolean | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyInputRef = useRef<HTMLInputElement>(null);
@@ -299,6 +301,10 @@ export default function RegisterPage() {
   };
 
   const handleSubmit = async () => {
+    if (!turnstileToken) {
+      setError("Please complete the security check.");
+      return;
+    }
     setIsSubmitting(true);
     setError("");
     try {
@@ -310,6 +316,7 @@ export default function RegisterPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          turnstileToken, // Pass token for verification
           ...(formData.phoneNumber && { phoneNumber: formData.phoneNumber }),
           ...(formData.imageUrl && { imageUrl: formData.imageUrl }),
           city: formData.city,
@@ -805,6 +812,18 @@ export default function RegisterPage() {
                       </div>
                     </div>
                     
+                    {/* Security Check */}
+                    <div className="pt-4 pb-2">
+                       <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Human Verification</label>
+                       <div className="flex flex-col items-center justify-center p-4 border border-slate-100 rounded-2xl bg-slate-50/30 min-h-[74px]">
+                          <Turnstile 
+                            sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO"} 
+                            onVerify={(token) => setTurnstileToken(token)}
+                            theme="light"
+                          />
+                       </div>
+                    </div>
+
                     {/* Terms and Conditions Checkbox */}
                     <div className="pt-2">
                       <label className="flex items-start gap-4 cursor-pointer group">

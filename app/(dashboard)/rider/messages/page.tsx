@@ -87,9 +87,9 @@ function MessagesContent() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-8rem)] items-center justify-center p-20 bg-white rounded-3xl border border-gray-100 italic">
-        <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
-        <p className="text-gray-500 text-sm ml-4">Loading messages...</p>
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center p-20 bg-white italic">
+        <Loader2 className="h-12 w-12 text-orange-600 animate-spin" strokeWidth={3} />
+        <p className="font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 animate-pulse ml-4">Syncing Ops Channel...</p>
       </div>
     );
   }
@@ -97,8 +97,12 @@ function MessagesContent() {
   if (!user) return null;
 
   return (
-    <div className="h-[calc(100vh-6rem)] bg-white rounded-[2rem] sm:rounded-3xl border border-gray-100 overflow-hidden flex shadow-sm mt-4 w-full">
-      <div className={cn("w-full md:w-96 flex-shrink-0 border-r border-gray-50 overflow-y-auto duration-300", selectedId ? "hidden md:block" : "block")}>
+    <div className="fixed inset-0 lg:static h-[100dvh] lg:h-[calc(100vh-4rem)] bg-white lg:border-l lg:border-gray-100 lg:overflow-hidden flex w-full">
+      {/* Sidebar: Hidden on mobile when a chat is active */}
+      <div className={cn(
+        "w-full lg:w-96 flex-shrink-0 border-r border-gray-100 overflow-y-auto transition-all duration-300",
+        selectedId ? "hidden lg:block" : "block"
+      )}>
         <ConversationList
           currentUserId={user.id}
           selectedId={selectedId || undefined}
@@ -106,7 +110,11 @@ function MessagesContent() {
         />
       </div>
 
-      <div className={cn("flex-1 min-w-0 flex-col", !selectedId ? "hidden md:flex" : "flex")}>
+      {/* Chat Area: Hidden on mobile when no chat is selected */}
+      <div className={cn(
+        "flex-1 min-w-0 flex flex-col bg-[#f8fafc]",
+        !selectedId ? "hidden lg:flex" : "flex"
+      )}>
         {activeConversation ? (
           <ChatBox
             currentUserId={user.id}
@@ -120,29 +128,29 @@ function MessagesContent() {
             onBack={() => router.push("/rider/messages")}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full bg-gray-50 relative group">
+          <div className="flex flex-col items-center justify-center h-full bg-slate-50 relative group">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,100,50,0.02),transparent_70%)] opacity-70" />
             
-            <div className="relative z-10 space-y-6 flex flex-col items-center text-center p-10">
-                <div className="w-20 h-20 bg-white rounded-3xl shadow-sm border border-gray-100 flex items-center justify-center transition-transform duration-500">
-                    <div className="w-14 h-14 bg-orange-600 rounded-2xl shadow-lg shadow-orange-500/20 flex items-center justify-center text-white">
-                        <MessageSquare className="h-7 w-7" />
+            <div className="relative z-10 space-y-8 flex flex-col items-center text-center p-10">
+                <div className="w-24 h-24 bg-white rounded-[3rem] shadow-2xl border border-slate-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                    <div className="w-16 h-16 bg-orange-600 rounded-[2rem] shadow-xl shadow-orange-100 flex items-center justify-center text-white">
+                        <MessageSquare className="h-8 w-8" />
                     </div>
                 </div>
                 <div>
-                   <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-2">Messenger</h2>
-                   <p className="text-sm font-medium text-gray-500 max-w-[300px] mx-auto leading-relaxed">
-                     Coordinate with donors and NGOs in real-time to ensure successful mission execution.
+                   <h2 className="text-3xl font-black italic tracking-tighter text-slate-950 uppercase mb-4">Rider Ops Comms</h2>
+                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 max-w-[300px] mx-auto leading-relaxed">
+                     Coordinate food collection and redistribution missions with donors and riders in real-time.
                    </p>
                 </div>
-                <div className="flex items-center gap-6 pt-8 border-t border-gray-200">
+                <div className="flex items-center gap-6 pt-10 border-t border-slate-200 text-slate-400">
                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Secure Comms</span>
+                        <ShieldCheck className="w-4 h-4 text-orange-600" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.15em]">Encrypted</span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Heart className="w-4 h-4 text-orange-500 fill-current" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Impact Focus</span>
+                        <Heart className="w-4 h-4 fill-current text-orange-600" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.15em]">Impact Live</span>
                     </div>
                 </div>
             </div>
@@ -155,8 +163,8 @@ function MessagesContent() {
 
 export default function RiderMessagesPage() {
   return (
-    <div className="w-full h-full pb-0">
-      <Suspense fallback={<div className="p-10 text-gray-400">Loading Messenger...</div>}>
+    <div className="w-full h-full">
+      <Suspense fallback={<div>Loading Comms Terminal...</div>}>
          <MessagesContent />
       </Suspense>
     </div>

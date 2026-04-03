@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Zap,
   X,
-  RotateCcw
+  RotateCcw,
+  MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -93,6 +94,24 @@ export default function MissionDetailPage() {
     }
   };
 
+  const handleStartChat = async (donationId: string, participantId: string) => {
+    try {
+      const res = await fetch("/api/chat/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ donationId, participantId }),
+      });
+      if (res.ok) {
+        const conv = await res.json();
+        router.push(`/rider/messages?id=${conv.id}`);
+      } else {
+        toast.error("Failed to sync comms channel.");
+      }
+    } catch {
+      toast.error("Network disruption in comms link.");
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -142,7 +161,6 @@ export default function MissionDetailPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        // If AI rejects the photo, auto-clear so rider can retry
         if (res.status === 400) {
           setProofImage(null);
         }
@@ -157,7 +175,6 @@ export default function MissionDetailPage() {
     }
   };
 
-  // Sync location every 30 seconds
   useEffect(() => {
     if (!request || request.status === "COMPLETED") return;
 
@@ -172,7 +189,6 @@ export default function MissionDetailPage() {
           })
         });
       } catch (e) {
-        // Silent fail for background pings
       }
     };
 
@@ -206,7 +222,6 @@ export default function MissionDetailPage() {
 
   return (
     <div className="space-y-10 text-gray-900">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
           <button onClick={() => router.push('/rider')} className="p-4 bg-white border border-gray-100 rounded-2xl text-gray-400 hover:text-gray-900 hover:border-gray-200 transition-all shadow-sm">
@@ -233,13 +248,8 @@ export default function MissionDetailPage() {
         )}
       </div>
 
-      {/* Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        
-        {/* Left Column: Mission Detail */}
         <div className="lg:col-span-2 space-y-10">
-          
-          {/* Map Area */}
           <div className="h-[400px] md:h-[500px] w-full rounded-[2.5rem] bg-gray-50 border border-gray-200 overflow-hidden relative group shadow-sm">
              <LiveRiderMap 
                 riderId={request.riderId}
@@ -267,9 +277,19 @@ export default function MissionDetailPage() {
                       <p className="text-xl font-bold text-gray-900">{request.donation.donor.name}</p>
                       <p className="text-sm font-medium text-gray-500 mt-1">{request.donation.donor.address}, {request.donation.donor.city}</p>
                    </div>
-                   <button className="flex items-center gap-2 text-xs font-bold text-gray-900 hover:text-orange-600 transition-colors">
-                      <Phone className="w-4 h-4" /> Call Donor
-                   </button>
+                   <div className="flex gap-4">
+                     <button className="flex items-center gap-2 text-xs font-bold text-gray-900 hover:text-orange-600 transition-colors">
+                        <Phone className="w-4 h-4" /> Call Donor
+                     </button>
+                     {isAssigned && (
+                        <button 
+                           onClick={() => handleStartChat(request.donationId, request.donation.donorId)}
+                           className="flex items-center gap-2 text-xs font-bold text-orange-600 hover:text-gray-900 transition-colors"
+                        >
+                           <MessageSquare className="w-4 h-4" /> Message Donor
+                        </button>
+                     )}
+                   </div>
                 </div>
              </div>
 
@@ -285,30 +305,36 @@ export default function MissionDetailPage() {
                       <p className="text-xl font-bold text-gray-900">{request.ngo.name}</p>
                       <p className="text-sm font-medium text-gray-500 mt-1">{request.ngo.address}, {request.ngo.city}</p>
                    </div>
-                   <button className="flex items-center gap-2 text-xs font-bold text-gray-900 hover:text-orange-600 transition-colors">
-                      <Phone className="w-4 h-4" /> Call NGO
-                   </button>
+                   <div className="flex gap-4">
+                     <button className="flex items-center gap-2 text-xs font-bold text-gray-900 hover:text-orange-600 transition-colors">
+                        <Phone className="w-4 h-4" /> Call NGO
+                     </button>
+                     {isOnWay && (
+                        <button 
+                           onClick={() => handleStartChat(request.donationId, request.ngoId)}
+                           className="flex items-center gap-2 text-xs font-bold text-emerald-600 hover:text-gray-900 transition-colors"
+                        >
+                           <MessageSquare className="w-4 h-4" /> Message NGO
+                        </button>
+                     )}
+                   </div>
                 </div>
              </div>
           </div>
         </div>
 
-        {/* Right Column: Tactical Actions */}
         <div className="space-y-6">
            <div className="p-8 md:p-10 rounded-[2.5rem] bg-white border border-gray-100 space-y-8 relative overflow-hidden group shadow-sm">
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-orange-600/5 blur-[100px]" />
-              
               <div className="space-y-1">
                  <h2 className="text-2xl font-bold text-gray-900">Mission Flow</h2>
                  <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Protocol Progress</p>
               </div>
-
               <div className="space-y-4 relative z-10">
                  <StepItem label="Pickup" description="Collect food & verify PIN" active={isAssigned} complete={isOnWay || request.status === 'COMPLETED'} />
                  <StepItem label="Transit" description="Navigate to drop-off" active={isOnWay} complete={request.status === 'COMPLETED'} />
                  <StepItem label="Completion" description="Upload delivery proof" active={isOnWay} complete={request.status === 'COMPLETED'} />
               </div>
-
               {isAssigned && (
                  <motion.button 
                    whileTap={{ scale: 0.95 }}
@@ -318,7 +344,6 @@ export default function MissionDetailPage() {
                    <ShieldCheck className="w-5 h-5" /> Verify Collection
                  </motion.button>
               )}
-
               {isOnWay && (
                  <div className="space-y-6">
                     <div className="relative h-44 w-full rounded-[2rem] bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden group/upload transition-colors hover:border-orange-200 hover:bg-orange-50/10">
@@ -331,25 +356,12 @@ export default function MissionDetailPage() {
                              >
                                 <X className="w-5 h-5" />
                              </button>
-                             <div className="absolute bottom-3 left-3 right-3 z-10">
-                                <button 
-                                   onClick={() => setProofImage(null)}
-                                   className="w-full py-2.5 bg-white/90 backdrop-blur-sm text-gray-700 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-all shadow-sm border border-gray-200"
-                                >
-                                   <RotateCcw className="w-3.5 h-3.5" /> Retake Photo
-                                </button>
-                             </div>
                           </>
                        ) : (
                           <>
                              <Upload className="w-8 h-8 text-gray-300 mb-2 group-hover/upload:text-orange-500 transition-colors" />
                              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 text-center px-4">Upload Delivery Proof</p>
-                             <input 
-                                type="file" 
-                                className="absolute inset-0 opacity-0 cursor-pointer" 
-                                onChange={handleImageUpload}
-                                accept="image/*"
-                             />
+                             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageUpload} accept="image/*" />
                           </>
                        )}
                        {uploading && (
@@ -369,7 +381,6 @@ export default function MissionDetailPage() {
                  </div>
               )}
            </div>
-
            <div className="p-8 rounded-[2rem] bg-gray-50 border border-gray-100">
               <div className="flex items-center gap-3 mb-4">
                  <AlertCircle className="w-4 h-4 text-orange-500" />
@@ -384,7 +395,6 @@ export default function MissionDetailPage() {
         </div>
       </div>
 
-      {/* Handover Modal */}
       <AnimatePresence>
          {verifying && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/80 backdrop-blur-md">
@@ -396,7 +406,6 @@ export default function MissionDetailPage() {
                      <h2 className="text-2xl font-bold text-gray-900">Verify Collection</h2>
                      <p className="text-gray-500 text-xs px-4">Enter the 4-digit code provided by the donor to verify pickup.</p>
                   </div>
-
                   <div className="space-y-8">
                      <input 
                         type="text" 
@@ -407,14 +416,9 @@ export default function MissionDetailPage() {
                         value={pin}
                         onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                      />
-                     
                      <div className="flex gap-3">
                         <button onClick={() => setVerifying(false)} className="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm">Cancel</button>
-                        <button 
-                           onClick={handleHandover}
-                           disabled={updating || pin.length < 4}
-                           className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2"
-                        >
+                        <button onClick={handleHandover} disabled={updating || pin.length < 4} className="flex-[2] py-4 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-all shadow-lg shadow-orange-500/10 disabled:opacity-50 text-sm flex items-center justify-center gap-2">
                            {updating ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
                            Verify PIN
                         </button>

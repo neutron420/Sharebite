@@ -7,9 +7,26 @@ import { withSecurity } from "@/lib/api-handler";
 async function registerHandler(request: Request) {
   try {
     const body = await request.json();
+    const { turnstileToken, ...registerData } = body;
+
+    // 1. Mandatory Turnstile Check
+    const TURNSTILE_SECRET_KEY = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY || "0x4AAAAAACtsY-pmCM5GL9xHM5ivTIxV9jQ";
+    const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: TURNSTILE_SECRET_KEY,
+        response: turnstileToken,
+      }),
+    });
+
+    const verifyData = await verifyRes.json();
+    if (!verifyData.success) {
+      return NextResponse.json({ error: "Security verification failed. Please refresh." }, { status: 403 });
+    }
     
-    // Validate input
-    const validatedData = registerSchema.parse(body);
+    // 2. Validate input
+    const validatedData = registerSchema.parse(registerData);
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({

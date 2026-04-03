@@ -129,6 +129,24 @@ export default function RiderMissionsPage() {
     }
   };
 
+  const handleStartChat = async (donationId: string, participantId: string) => {
+    try {
+      const res = await fetch("/api/chat/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ donationId, participantId }),
+      });
+      if (res.ok) {
+        const conv = await res.json();
+        router.push(`/rider/messages?id=${conv.id}`);
+      } else {
+        toast.error("Failed to sync comms channel.");
+      }
+    } catch {
+      toast.error("Network disruption in comms link.");
+    }
+  };
+
   const isPayoutPendingMission = (task: Task) =>
     task.status === "COMPLETED" &&
     (task.step || 0) >= 3.4 &&
@@ -241,19 +259,40 @@ export default function RiderMissionsPage() {
                              NGO PIN verified. Waiting for payout release.
                           </div>
                        ) : (
-                          <button 
-                             onClick={() => {
+                          <div className="flex gap-3">
+                            <button 
+                              onClick={() => {
                                 if (task.status === 'ASSIGNED') {
-                                   setIsDeliveryVerify(false);
-                                   setVerifyingId(task.id);
+                                  setIsDeliveryVerify(false);
+                                  setVerifyingId(task.id);
                                 } else {
-                                   router.push(`/rider/mission/${task.id}`);
+                                  router.push(`/rider/mission/${task.id}`);
                                 }
-                             }}
-                             className={`flex-1 py-4 font-bold rounded-2xl text-sm transition-all active:scale-95 flex items-center justify-center gap-3 ${task.status === 'ASSIGNED' ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20' : 'bg-gray-900 text-white shadow-lg shadow-gray-900/10'}`}
-                          >
-                             {task.status === 'ASSIGNED' ? 'Verify Handover' : 'Briefing Details'} <ArrowRight className="w-4 h-4" />
-                          </button>
+                              }}
+                              className={`flex-1 py-4 font-bold rounded-2xl text-sm transition-all active:scale-95 flex items-center justify-center gap-3 ${task.status === 'ASSIGNED' ? 'bg-orange-600 text-white shadow-lg shadow-orange-500/20' : 'bg-gray-900 text-white shadow-lg shadow-gray-900/10'}`}
+                            >
+                              {task.status === 'ASSIGNED' ? 'Verify Handover' : 'Briefing Details'} <ArrowRight className="w-4 h-4" />
+                            </button>
+                            
+                            {/* Phase-Aware Message Logic */}
+                            {task.status === 'ASSIGNED' ? (
+                               <button 
+                                 onClick={() => handleStartChat(task.donationId, task.donation.donorId)}
+                                 className="w-14 h-14 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-orange-600 hover:border-orange-100 hover:bg-orange-50 transition-all shadow-sm active:scale-95 group/msg"
+                                 title="Message Donor (Pickup Coordination)"
+                               >
+                                 <MessageSquare className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                               </button>
+                            ) : task.status === 'ON_THE_WAY' && (
+                               <button 
+                                 onClick={() => handleStartChat(task.donationId, task.ngoId)}
+                                 className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition-all shadow-sm active:scale-95 group/msg"
+                                 title="Message NGO (Delivery Coordination)"
+                               >
+                                 <MessageSquare className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                               </button>
+                            )}
+                          </div>
                        )}
                     </div>
                  </div>

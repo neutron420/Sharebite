@@ -396,10 +396,14 @@ export default function ShareBiteLogin({
               </div>
 
               {/* Cloudflare Turnstile */}
-              <div className="flex justify-center border border-slate-100 rounded-xl p-3 bg-slate-50/50 scale-90 sm:scale-100 origin-center">
+              <div className="flex flex-col items-center justify-center border border-slate-100 rounded-xl p-4 bg-slate-50/50 min-h-[74px] origin-center shadow-inner">
+                {!turnstileToken && (
+                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 animate-pulse">Initializing Security Grid...</p>
+                )}
                 <Turnstile 
                   sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO"} 
                   onVerify={(token) => setTurnstileToken(token)}
+                  theme="light"
                 />
               </div>
 

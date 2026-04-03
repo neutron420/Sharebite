@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   AlertTriangle,
@@ -125,7 +125,12 @@ export default function DonorLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { addListener, isConnected } = useSocket();
+
+  // WhatsApp-style Immersive Mode Detection
+  const activeChatId = searchParams.get("id");
+  const isImmersiveChat = pathname?.includes("/messages") && activeChatId;
 
   const [user, setUser] = useState<DonorUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -404,7 +409,10 @@ export default function DonorLayout({
       </aside>
 
       <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? "lg:ml-64" : "lg:ml-20"}`}>
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm">
+        <header className={cn(
+          "sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm transition-all duration-500",
+          isImmersiveChat && "hidden lg:flex"
+        )}>
           <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
@@ -607,7 +615,10 @@ export default function DonorLayout({
           </div>
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] pb-[15rem] lg:pb-6 relative z-10 transition-all duration-500">
+        <main className={cn(
+          "flex-1 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] transition-all duration-500",
+          isImmersiveChat ? "p-0" : "p-4 sm:p-6 pb-[15rem] lg:pb-6 relative z-10"
+        )}>
           <motion.div
             key={pathname}
             initial="initial"
@@ -621,7 +632,10 @@ export default function DonorLayout({
         </main>
 
         {/* Mobile Bottom Navigation - Floating Premium Design */}
-        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-50">
+        <div className={cn(
+          "lg:hidden fixed bottom-6 left-4 right-4 z-50 transition-all duration-500 transform",
+          isImmersiveChat ? "translate-y-32 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+        )}>
           <nav className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 shadow-2xl shadow-slate-950/40 flex items-center justify-between">
             {[
               { icon: LayoutDashboard, href: "/donor", label: "Hub" },
