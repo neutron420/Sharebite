@@ -62,6 +62,7 @@ import { ImpactGallery } from "@/components/ui/impact-gallery";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { Translate } from "@/components/ui/translate";
 import { Header } from "@/components/navbar";
+import { MobileAppShowcase } from "@/components/ui/mobile-app-showcase";
 
 /**
  * ShareBite - The Luxury Edition
@@ -286,6 +287,9 @@ export default function Home() {
         {/* FAQs */}
         <FaqsSection />
       </main>
+
+      {/* Mobile App Showcase - Above Footer */}
+      <MobileAppShowcase />
 
       <Footer />
     </div>

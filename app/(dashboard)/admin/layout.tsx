@@ -294,7 +294,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <aside className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
-              <div className="h-9 w-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden">
+              <div className="h-9 w-9 rounded-xl overflow-hidden shrink-0 shadow-sm">
                 <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
               </div>
               <span className="text-lg font-bold text-gray-900">ShareBite</span>
@@ -323,7 +323,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Desktop sidebar */}
       <aside className={`hidden lg:flex flex-col fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-40 transition-all duration-300 overflow-x-hidden ${sidebarOpen ? "w-64" : "w-20"}`}>
         <div className={`h-16 flex items-center border-b border-gray-200 shrink-0 transition-all duration-300 ${sidebarOpen ? "px-5 gap-3" : "px-3 justify-between"}`}>
-          <div className={`rounded-lg bg-white border border-gray-200 flex items-center justify-center overflow-hidden shrink-0 transition-all duration-300 ${sidebarOpen ? "h-9 w-9" : "h-10 w-10 mx-auto"}`}>
+          <div className={`rounded-xl overflow-hidden shrink-0 transition-all duration-300 shadow-sm ${sidebarOpen ? "h-9 w-9" : "h-10 w-10 mx-auto"}`}>
             <img src="/sharebite-logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div className={`flex items-center overflow-hidden transition-all duration-300 whitespace-nowrap ${sidebarOpen ? "w-[120px] opacity-100" : "w-0 opacity-0"}`}>
