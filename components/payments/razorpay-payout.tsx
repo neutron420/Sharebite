@@ -72,7 +72,8 @@ export default function RazorpayPayment({
               toast.success("Payment successful. Rider payout released.");
               onSuccess();
             } else {
-              toast.error("Payment verification failed.");
+              const verifyError = await verifyRes.json().catch(() => ({}));
+              toast.error(verifyError.error || "Payment verification failed.");
             }
           } catch (err) {
             toast.error("Critical error verifying payment.");

@@ -139,12 +139,19 @@ async function getRequestsHandler(request: Request) {
           },
           payment: {
             select: { status: true, razorpayOrderId: true }
+          },
+          otps: {
+            orderBy: { createdAt: "desc" },
+            take: 1
           }
         }
       });
       requests = requests.map((pickupRequest: any) => ({
         ...pickupRequest,
         handoverPin: undefined,
+        deliveryPin: (pickupRequest.step >= 3.4 && pickupRequest.step < 3.5 && pickupRequest.otps?.[0]) 
+          ? pickupRequest.otps[0].otp 
+          : undefined
       }));
     } else if (session.role === "DONOR") {
       // Donor views requests for their items

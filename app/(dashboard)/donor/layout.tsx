@@ -311,7 +311,7 @@ export default function DonorLayout({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="relative w-72 h-full bg-white border-r border-gray-200 flex flex-col"
+              className="relative w-[min(85vw,18rem)] h-full bg-white border-r border-gray-200 flex flex-col"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="h-16 flex items-center gap-3 px-5 border-b border-gray-200 shrink-0">
@@ -413,7 +413,13 @@ export default function DonorLayout({
           "sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-200 shadow-sm transition-all duration-500",
           isImmersiveChat && "hidden lg:flex"
         )}>
-          <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+          <div
+            className="px-4 sm:px-6 h-16 flex items-center justify-between gap-3 sm:gap-4 w-full overflow-x-hidden"
+            style={{
+              paddingLeft: "max(1rem, env(safe-area-inset-left))",
+              paddingRight: "max(1rem, env(safe-area-inset-right))",
+            }}
+          >
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setMobileOpen(true)}
@@ -421,7 +427,7 @@ export default function DonorLayout({
               >
                 <Menu className="h-5 w-5" />
               </button>
-              <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 w-64 border border-gray-200 focus-within:ring-2 focus-within:ring-orange-500 transition-all">
+              <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 w-56 lg:w-64 border border-gray-200 focus-within:ring-2 focus-within:ring-orange-500 transition-all">
                 <Search className="h-4 w-4 text-gray-400" />
                 <input
                   type="text"
@@ -433,7 +439,7 @@ export default function DonorLayout({
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 shrink-0">
               <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full border transition-all duration-500 ${isConnected ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-rose-50 border-rose-100 text-rose-600'}`}>
                 <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                 <span className="text-[10px] font-black uppercase tracking-tighter">
@@ -460,7 +466,7 @@ export default function DonorLayout({
                 TransitionComponent={Fade}
                 PaperProps={{
                   sx: {
-                    width: 320,
+                    width: { xs: "calc(100vw - 16px)", sm: 320 },
                     maxHeight: 400,
                     borderRadius: "16px",
                     mt: 1.5,
@@ -511,7 +517,7 @@ export default function DonorLayout({
                             )}
                           </Box>
                           <Box>
-                            <Typography className="text-sm font-semibold text-gray-900 truncate max-w-[200px]">
+                            <Typography className="text-sm font-semibold text-gray-900 truncate max-w-[150px] sm:max-w-[200px]">
                               {notification.title}
                             </Typography>
                             <Typography className="text-xs text-gray-500 mt-0.5 line-clamp-2">
@@ -569,7 +575,7 @@ export default function DonorLayout({
                     TransitionComponent={Fade}
                     PaperProps={{
                       sx: {
-                        width: 300,
+                        width: { xs: "calc(100vw - 16px)", sm: 300 },
                         borderRadius: "16px",
                         mt: 1.5,
                         boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
@@ -617,7 +623,7 @@ export default function DonorLayout({
 
         <main className={cn(
           "flex-1 overflow-y-auto bg-white shadow-[inset_0_2px_10px_rgba(0,0,0,0.02)] transition-all duration-500",
-          isImmersiveChat ? "p-0" : "p-4 sm:p-6 pb-[15rem] lg:pb-6 relative z-10"
+          isImmersiveChat ? "p-0" : "p-4 sm:p-6 pb-[calc(15rem+env(safe-area-inset-bottom))] lg:pb-[calc(1.5rem+env(safe-area-inset-bottom))] relative z-10"
         )}>
           <motion.div
             key={pathname}
@@ -632,10 +638,17 @@ export default function DonorLayout({
         </main>
 
         {/* Mobile Bottom Navigation - Floating Premium Design */}
-        <div className={cn(
-          "lg:hidden fixed bottom-6 left-4 right-4 z-50 transition-all duration-500 transform",
-          isImmersiveChat ? "translate-y-32 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
-        )}>
+        <div
+          className={cn(
+            "lg:hidden fixed z-50 transition-all duration-500 transform",
+            isImmersiveChat ? "translate-y-32 opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+          )}
+          style={{
+            left: "max(0.5rem, env(safe-area-inset-left))",
+            right: "max(0.5rem, env(safe-area-inset-right))",
+            bottom: "max(1rem, env(safe-area-inset-bottom))",
+          }}
+        >
           <nav className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-3 shadow-2xl shadow-slate-950/40 flex items-center justify-between">
             {[
               { icon: LayoutDashboard, href: "/donor", label: "Hub" },

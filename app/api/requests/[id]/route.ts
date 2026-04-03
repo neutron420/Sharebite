@@ -68,9 +68,22 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const responseData = !isDonor && !isAdmin
-      ? { ...pickupRequest, handoverPin: undefined }
-      : pickupRequest;
+    let responseData: any = { ...pickupRequest };
+
+    // Share the latest OTP with the NGO so they can tell the rider
+    if (isNGO && (pickupRequest.step || 0) >= 3.4 && (pickupRequest.step || 0) < 3.5) {
+      const otpEntry = await prisma.oTPVerification.findFirst({
+        where: { orderId: id },
+        orderBy: { createdAt: "desc" }
+      });
+      if (otpEntry) {
+        responseData.deliveryPin = otpEntry.otp;
+      }
+    }
+
+    if (!isDonor && !isAdmin) {
+      responseData.handoverPin = undefined;
+    }
 
     return NextResponse.json(responseData);
   } catch (error) {

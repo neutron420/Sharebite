@@ -96,7 +96,7 @@ export default function BugReportModal() {
         whileHover={{ scale: 1.1, rotate: 10 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-[14rem] right-6 z-50 h-10 w-10 sm:h-12 sm:w-12 sm:bottom-[88px] rounded-full bg-slate-950 text-white shadow-xl flex items-center justify-center border-2 border-white transition-all hover:bg-red-500 group"
+        className="fixed bottom-[11.5rem] right-6 z-50 h-10 w-10 sm:h-12 sm:w-12 sm:bottom-[78px] rounded-full bg-slate-950 text-white shadow-xl flex items-center justify-center border-2 border-white transition-all hover:bg-red-500 group"
       >
         <Bug className="h-5 w-5 group-hover:animate-bounce" />
         <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-1 bg-white border border-slate-100 rounded-lg shadow-sm text-[10px] font-black uppercase tracking-widest text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">

@@ -6,12 +6,14 @@ interface SocketContextType {
   socket: WebSocket | null;
   isConnected: boolean;
   addListener: (type: string, callback: (payload: any) => void) => () => void;
+  reconnect: () => void;
 }
 
 const SocketContext = createContext<SocketContextType>({
   socket: null,
   isConnected: false,
   addListener: () => () => {},
+  reconnect: () => {},
 });
 
 export const useSocket = () => useContext(SocketContext);
@@ -34,23 +36,18 @@ export function SocketProvider({ children, initialToken }: { children: React.Rea
         if (!res.ok) return;
         const data = await res.json();
         token = data.token;
-      } else {
-        console.log("⚡ Tactical Pre-Seeded Token Found");
       }
       
       if (!token) return;
 
       let wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8080";
       if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
-        // Remove 'www.' if present to avoid 'ws.www.domain.com'
         const baseHost = window.location.hostname.replace(/^www\./, "");
         wsBaseUrl = `wss://ws.${baseHost}`;
       }
       const wsUrl = `${wsBaseUrl}?token=${token}`;
-      console.log(`🔌 Attempting Tactical Connection: ${wsUrl}`);
       const ws = new WebSocket(wsUrl);
 
-      // 💓 Heartbeat to keep connection alive on mobile/flaky networks
       const heartbeatInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: "HEARTBEAT" }));
@@ -58,8 +55,6 @@ export function SocketProvider({ children, initialToken }: { children: React.Rea
       }, 30000);
 
       ws.onopen = () => {
-        const duration = performance.now() - startTime;
-        console.log(`✅ WebSocket Tactical Link Established in ${duration.toFixed(0)}ms`);
         setIsConnected(true);
         if (reconnectTimeout.current) clearTimeout(reconnectTimeout.current);
       };
@@ -67,7 +62,7 @@ export function SocketProvider({ children, initialToken }: { children: React.Rea
       ws.onmessage = (event) => {
         try {
           const { type, payload } = JSON.parse(event.data);
-          if (type === "HEARTBEAT_ACK") return; // Ignore heartbeat responses
+          if (type === "HEARTBEAT_ACK") return;
           const typeListeners = listeners.current.get(type);
           if (typeListeners) {
             typeListeners.forEach((callback) => callback(payload));
@@ -79,25 +74,29 @@ export function SocketProvider({ children, initialToken }: { children: React.Rea
 
       ws.onclose = () => {
         clearInterval(heartbeatInterval);
-        setIsConnected(true); // Temporarily set so we don't show "disconnected" immediately if it's transient
         setIsConnected(false);
         setSocket(null);
-        console.log("WebSocket Disconnected. Reconnecting in 1.5s...");
         reconnectTimeout.current = setTimeout(connect, 1500);
       };
 
       ws.onerror = (err) => {
         clearInterval(heartbeatInterval);
-        console.error("WebSocket Error:", err);
         ws.close();
       };
 
       setSocket(ws);
     } catch (err) {
-      console.error("WebSocket Connection Error:", err);
       reconnectTimeout.current = setTimeout(connect, 5000);
     }
   }, []);
+
+  const reconnect = useCallback(() => {
+    if (socket) {
+      socket.close();
+    } else {
+      connect();
+    }
+  }, [socket, connect]);
 
   const addListener = useCallback((type: string, callback: (payload: any) => void) => {
     if (!listeners.current.has(type)) {
@@ -123,7 +122,7 @@ export function SocketProvider({ children, initialToken }: { children: React.Rea
   }, [connect]);
 
   return (
-    <SocketContext.Provider value={{ socket, isConnected, addListener }}>
+    <SocketContext.Provider value={{ socket, isConnected, addListener, reconnect }}>
       {children}
     </SocketContext.Provider>
   );

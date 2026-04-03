@@ -341,7 +341,14 @@ export function ChatBox({ currentUserId, conversationId, otherUser, donationTitl
       </div>
 
       {/* Input Console */}
-      <div className="px-4 sm:px-10 py-8 bg-gradient-to-t from-white via-white to-transparent shrink-0">
+      <div
+        className="px-4 sm:px-10 pt-8 bg-gradient-to-t from-white via-white to-transparent shrink-0"
+        style={{
+          paddingLeft: "max(1rem, env(safe-area-inset-left))",
+          paddingRight: "max(1rem, env(safe-area-inset-right))",
+          paddingBottom: "max(2rem, env(safe-area-inset-bottom))",
+        }}
+      >
         <div className="max-w-4xl mx-auto">
            <div className="relative group">
              <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-orange-600 rounded-[2.5rem] opacity-20 blur group-focus-within:opacity-40 transition-opacity duration-500" />

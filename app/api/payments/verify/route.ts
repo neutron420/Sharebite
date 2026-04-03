@@ -46,6 +46,9 @@ export async function POST(request: Request) {
       isPayout = true;
     }
 
+    // Link the successful payment to the request
+    statusUpdate.paymentId = payment.id;
+
     const updatedRequest = await prisma.pickupRequest.update({
       where: { id: requestId },
       data: statusUpdate

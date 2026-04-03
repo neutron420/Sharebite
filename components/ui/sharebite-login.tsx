@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Eye, EyeOff, ArrowRight, Utensils, AlertCircle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -396,12 +396,9 @@ export default function ShareBiteLogin({
               </div>
 
               {/* Cloudflare Turnstile */}
-              <div className="flex flex-col items-center justify-center border border-slate-100 rounded-xl p-4 bg-slate-50/50 min-h-[74px] origin-center shadow-inner">
-                {!turnstileToken && (
-                  <p className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2 animate-pulse">Initializing Security Grid...</p>
-                )}
-                <Turnstile 
-                  sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO"} 
+              <div className="flex items-center justify-center py-1">
+                <Turnstile
+                  sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO"}
                   onVerify={(token) => setTurnstileToken(token)}
                   theme="light"
                 />

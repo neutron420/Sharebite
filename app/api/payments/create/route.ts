@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   let amount: number | string | undefined;
 
   try {
-    const session = await getSession();
+    const session = await getSession({ preferredRole: "NGO", request });
     if (!session || session.role !== "NGO") {
       return NextResponse.json({ error: "Only NGOs can pay for delivery" }, { status: 401 });
     }
@@ -31,8 +31,13 @@ export async function POST(request: Request) {
     requestId = body.requestId;
     amount = body.amount;
 
-    if (!requestId || !amount) {
+    if (!requestId || amount === undefined || amount === null) {
       return NextResponse.json({ error: "Request ID and amount are required" }, { status: 400 });
+    }
+
+    const numericAmount = Number(amount);
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
     }
 
     const pickupRequest = await prisma.pickupRequest.findUnique({
@@ -62,7 +67,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const numericAmount = Number(amount);
     const order = await createOrder(numericAmount, `pickup_${requestId}`);
 
     const payment = await prisma.payment.create({
