@@ -174,6 +174,38 @@ async function getRequestsHandler(request: Request) {
         }
       });
     } else if (session.role === "RIDER") {
+      const riderProfile = await prisma.user.findUnique({
+        where: { id: session.userId as string },
+        select: {
+          isVerified: true,
+          riderVerifications: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { status: true },
+          },
+        },
+      });
+
+      if (!riderProfile?.isVerified) {
+        const verificationStatus = riderProfile?.riderVerifications?.[0]?.status;
+        const statusMessageByStage: Record<string, string> = {
+          PENDING_NGO_REVIEW: "Your rider profile is waiting for NGO verification.",
+          NGO_APPROVED: "Your rider profile is NGO-approved and now waiting for final admin verification.",
+          NGO_REJECTED: "Your rider onboarding request was rejected by the selected NGO.",
+          ADMIN_REJECTED: "Your rider verification was rejected by admin.",
+        };
+
+        return NextResponse.json(
+          {
+            error:
+              (verificationStatus && statusMessageByStage[verificationStatus]) ||
+              "Your rider profile is not verified yet.",
+            verificationStatus: verificationStatus || null,
+          },
+          { status: 403 }
+        );
+      }
+
       // Rider views their assigned requests OR unassigned requests that need a rider
       requests = await prisma.pickupRequest.findMany({
         where: {

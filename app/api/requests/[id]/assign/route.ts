@@ -18,6 +18,35 @@ async function assignRiderHandler(
 
     const userId = session.userId as string;
     const { id } = await params;
+
+    if (session.role === "RIDER") {
+      const riderProfile = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          isVerified: true,
+          riderVerifications: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { status: true },
+          },
+        },
+      });
+
+      if (!riderProfile?.isVerified) {
+        const verificationStatus = riderProfile?.riderVerifications?.[0]?.status;
+        return NextResponse.json(
+          {
+            error:
+              verificationStatus === "NGO_APPROVED"
+                ? "Final admin verification is pending. You cannot claim missions yet."
+                : "Your rider profile is not verified yet.",
+            verificationStatus: verificationStatus || null,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const body = await request.json();
     const targetRiderId = session.role === "RIDER" ? userId : body.riderId;
 

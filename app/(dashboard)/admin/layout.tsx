@@ -94,6 +94,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     ],
   },
   { label: "NGO Verification", icon: UserCheck, id: "verification", href: "/admin/verification" },
+  { label: "Rider Verification", icon: Users, id: "rider-verification", href: "/admin/riders-verification", badge: "New" },
   { label: "Pickup Requests", icon: ClipboardList, id: "requests", href: "/admin/requests", badge: "New" },
   { label: "NGO Partners", icon: Building2, id: "ngo-partners", href: "/admin/ngo" },
   { label: "Complaints", icon: AlertTriangle, id: "reports", href: "/admin/reports" },

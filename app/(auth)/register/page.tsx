@@ -23,8 +23,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   Select, 
   SelectContent, 
@@ -36,6 +34,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Turnstile from "react-turnstile";
 import LocationPicker from "@/components/map/LocationPicker";
 
@@ -145,6 +144,13 @@ const DotMap = () => {
 // ─── Steps config ───
 type Role = "DONOR" | "NGO" | "RIDER" | null;
 
+interface NgoOption {
+  id: string;
+  name: string;
+  city: string | null;
+  state: string | null;
+}
+
 const steps = [
   { id: "role", title: "Role" },
   { id: "personal", title: "Details" },
@@ -172,6 +178,8 @@ export default function RegisterPage() {
   const [phoneAvailable, setPhoneAvailable] = useState<boolean | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [ngoOptions, setNgoOptions] = useState<NgoOption[]>([]);
+  const [loadingNgos, setLoadingNgos] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const verifyInputRef = useRef<HTMLInputElement>(null);
@@ -192,6 +200,7 @@ export default function RegisterPage() {
     longitude: 0,
     imageUrl: "",
     verificationDoc: "",
+    riderNgoId: "",
     donorType: "",
     hasAgreedToTerms: false,
   });
@@ -222,7 +231,12 @@ export default function RegisterPage() {
   // Save to localStorage
   useEffect(() => {
     if (isHydrated) {
-      const { password, confirmPassword, hasAgreedToTerms, ...safeData } = formData;
+      const {
+        password: _password,
+        confirmPassword: _confirmPassword,
+        hasAgreedToTerms: _hasAgreedToTerms,
+        ...safeData
+      } = formData;
       localStorage.setItem("sharebite_register_form", JSON.stringify(safeData));
       localStorage.setItem("sharebite_register_step", currentStep.toString());
     }
@@ -243,7 +257,7 @@ export default function RegisterPage() {
         const res = await fetch(`/api/auth/check-availability?email=${formData.email}`);
         const data = await res.json();
         setEmailAvailable(data.available);
-      } catch (e) {
+      } catch {
         setEmailAvailable(null);
       } finally {
         setCheckingEmail(false);
@@ -264,7 +278,7 @@ export default function RegisterPage() {
         const res = await fetch(`/api/auth/check-availability?phoneNumber=${formData.phoneNumber}`);
         const data = await res.json();
         setPhoneAvailable(data.available);
-      } catch (e) {
+      } catch {
         setPhoneAvailable(null);
       } finally {
         setCheckingPhone(false);
@@ -272,6 +286,39 @@ export default function RegisterPage() {
     }, 600);
     return () => clearTimeout(timer);
   }, [formData.phoneNumber]);
+
+  useEffect(() => {
+    if (formData.role !== "RIDER") return;
+
+    let mounted = true;
+
+    const fetchNgos = async () => {
+      try {
+        setLoadingNgos(true);
+        const res = await fetch("/api/public/ngos?limit=50");
+        if (!res.ok) throw new Error("Unable to load NGOs");
+
+        const data = await res.json();
+        if (mounted) {
+          setNgoOptions(Array.isArray(data.ngos) ? data.ngos : []);
+        }
+      } catch {
+        if (mounted) {
+          setNgoOptions([]);
+        }
+      } finally {
+        if (mounted) {
+          setLoadingNgos(false);
+        }
+      }
+    };
+
+    fetchNgos();
+
+    return () => {
+      mounted = false;
+    };
+  }, [formData.role]);
 
   const nextStep = () => { if (currentStep < steps.length - 1) setCurrentStep((p) => p + 1); };
   const prevStep = () => { if (currentStep > 0) setCurrentStep((p) => p - 1); };
@@ -293,8 +340,8 @@ export default function RegisterPage() {
       if (!uploadRes.ok) throw new Error("Failed to upload image");
       setFormData((prev) => ({ ...prev, [fieldName]: publicUrl }));
       toast.success("File uploaded successfully!");
-    } catch (err: any) {
-      setError(err.message || "Upload failed.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
       setUploadingImage(false);
     }
@@ -327,12 +374,19 @@ export default function RegisterPage() {
           latitude: formData.latitude,
           longitude: formData.longitude,
           ...((formData.role === "NGO" || formData.role === "RIDER") && formData.verificationDoc && { verificationDoc: formData.verificationDoc }),
+          ...(formData.role === "RIDER" && formData.riderNgoId && { riderNgoId: formData.riderNgoId }),
           ...(formData.role === "DONOR" && formData.donorType && { donorType: formData.donorType }),
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.details) throw new Error(data.details.map((d: any) => d.message).join(", "));
+        if (Array.isArray(data.details)) {
+          const message = data.details
+            .map((item: { message?: string }) => item.message)
+            .filter(Boolean)
+            .join(", ");
+          throw new Error(message || "Registration failed.");
+        }
         throw new Error(data.error || "Registration failed.");
       }
       setSuccess("Mission Ready! Your account has been authenticated and initialized.");
@@ -343,8 +397,8 @@ export default function RegisterPage() {
       setTimeout(() => {
         router.push("/login?registered=true");
       }, 3000);
-    } catch (err: any) {
-      setError(err.message || "Something went sideways during registration.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went sideways during registration.");
       setIsSubmitting(false);
     }
   };
@@ -363,7 +417,9 @@ export default function RegisterPage() {
         return basicInfo;
       case 2:
         if (formData.role === "NGO" || formData.role === "RIDER") {
-          return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.verificationDoc.trim() !== "" && formData.hasAgreedToTerms;
+          const roleSpecificValidations =
+            formData.role === "RIDER" ? formData.riderNgoId.trim() !== "" : true;
+          return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.verificationDoc.trim() !== "" && roleSpecificValidations && formData.hasAgreedToTerms;
         }
         return formData.city.trim() !== "" && formData.address.trim() !== "" && formData.pincode.trim() !== "" && formData.hasAgreedToTerms;
       default: return true;
@@ -770,6 +826,42 @@ export default function RegisterPage() {
                       />
                     </div>
 
+                    {formData.role === "RIDER" && (
+                      <div>
+                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 ml-1">
+                          Select NGO Hub <span className="text-orange-500">*</span>
+                        </label>
+                        <Select
+                          onValueChange={(value) => updateFormData("riderNgoId", value)}
+                          value={formData.riderNgoId}
+                        >
+                          <SelectTrigger className="h-11 bg-slate-50 border-slate-100 rounded-xl text-xs focus:border-orange-500 focus:ring-orange-500">
+                            <SelectValue placeholder={loadingNgos ? "Loading NGO list..." : "Choose NGO for rider onboarding"} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white border-slate-100">
+                            {loadingNgos && (
+                              <SelectItem value="__loading" disabled className="text-xs">
+                                Loading verified NGOs...
+                              </SelectItem>
+                            )}
+                            {!loadingNgos && ngoOptions.length === 0 && (
+                              <SelectItem value="__none" disabled className="text-xs">
+                                No verified NGOs available right now
+                              </SelectItem>
+                            )}
+                            {ngoOptions.map((ngo) => (
+                              <SelectItem key={ngo.id} value={ngo.id} className="text-xs">
+                                {ngo.name} {ngo.city ? `- ${ngo.city}` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                          NGO first verifies your profile, then admin gives final approval.
+                        </p>
+                      </div>
+                    )}
+
                     {/* File Upload / Documentation */}
                     <div>
                       <label className="block text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 ml-1">
@@ -795,7 +887,13 @@ export default function RegisterPage() {
                           </div>
                         ) : (formData.imageUrl || formData.verificationDoc) ? (
                           <>
-                            <img src={formData.role === "DONOR" ? formData.imageUrl : formData.verificationDoc} className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale" alt="Uploaded" />
+                            <Image
+                              src={formData.role === "DONOR" ? formData.imageUrl : formData.verificationDoc}
+                              fill
+                              sizes="(max-width: 1024px) 100vw, 50vw"
+                              className="absolute inset-0 h-full w-full object-cover opacity-40 grayscale"
+                              alt="Uploaded"
+                            />
                             <div className="relative z-10 flex flex-col items-center gap-1">
                               <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-xl">
                                 <CheckCircle2 className="w-4 h-4" strokeWidth={3} />

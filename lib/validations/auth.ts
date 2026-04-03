@@ -15,6 +15,7 @@ export const registerSchema = z.object({
   longitude: z.number().optional(),
   imageUrl: z.string().optional(),
   verificationDoc: z.string().optional(),
+  riderNgoId: z.string().optional(),
   donorType: z.string().optional(),
 });
 

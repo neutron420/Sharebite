@@ -61,6 +61,8 @@ model User {
   communityComments    CommunityComment[]
   communityReports     CommunityReport[]
   hiveViolations       HiveViolation[] @relation("UserHiveViolations")
+  riderVerifications   RiderVerificationRequest[] @relation("RiderVerificationRequestRider")
+  ngoRiderVerifications RiderVerificationRequest[] @relation("RiderVerificationRequestNgo")
 
   @@index([email])
   @@index([role])
@@ -345,6 +347,14 @@ enum RequestStatus {
   ON_THE_WAY
 }
 
+enum RiderVerificationStatus {
+  PENDING_NGO_REVIEW
+  NGO_APPROVED
+  NGO_REJECTED
+  ADMIN_APPROVED
+  ADMIN_REJECTED
+}
+
 enum FoodCategory {
   VEG
   NON_VEG
@@ -405,6 +415,24 @@ model OTPVerification {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+}
+
+model RiderVerificationRequest {
+  id              String                  @id @default(uuid())
+  riderId         String                  @unique
+  ngoId           String
+  status          RiderVerificationStatus @default(PENDING_NGO_REVIEW)
+  ngoReviewedAt   DateTime?
+  ngoReviewNote   String?
+  adminReviewedAt DateTime?
+  adminReviewNote String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  rider           User                    @relation("RiderVerificationRequestRider", fields: [riderId], references: [id], onDelete: Cascade)
+  ngo             User                    @relation("RiderVerificationRequestNgo", fields: [ngoId], references: [id], onDelete: Cascade)
+
+  @@index([ngoId, status])
+  @@index([status])
 }
 
 enum PaymentStatus {

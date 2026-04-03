@@ -14,6 +14,12 @@ export async function GET(request: Request) {
     const rider = await prisma.user.findUnique({
       where: { id: userId },
       select: {
+        isVerified: true,
+        riderVerifications: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { status: true },
+        },
         rewardPoints: true,
         wallet: {
           select: {
@@ -33,6 +39,17 @@ export async function GET(request: Request) {
 
     if (!rider) {
       return NextResponse.json({ error: "Rider not found" }, { status: 404 });
+    }
+
+    if (!rider.isVerified) {
+      const verificationStatus = rider.riderVerifications?.[0]?.status || null;
+      return NextResponse.json(
+        {
+          error: "Rider verification is pending.",
+          verificationStatus,
+        },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json({

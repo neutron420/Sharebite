@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Plus,
   Search,
+  UserCheck,
   UserRound,
   Utensils,
   X,
@@ -73,6 +74,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: Package,
     id: "requests",
     href: "/ngo/requests",
+  },
+  {
+    label: "Rider Verification",
+    icon: UserCheck,
+    id: "riders",
+    href: "/ngo/riders",
   },
   {
     label: "Find Food",
