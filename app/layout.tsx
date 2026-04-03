@@ -11,6 +11,17 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "ShareBite",
   description: "The world's most sophisticated food-sharing engine.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/apple-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ShareBite",
+  },
 };
 
 export const viewport: Viewport = {

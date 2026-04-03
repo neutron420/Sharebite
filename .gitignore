@@ -48,3 +48,9 @@ next-env.d.ts
 *.tfvars
 !*.tfvars.example
 .terraform/
+
+# PWA (auto-generated on build)
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
