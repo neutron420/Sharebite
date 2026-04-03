@@ -131,9 +131,14 @@ export default function NgoDashboard() {
  </h1>
  <p className="text-sm sm:text-base text-slate-400 font-bold">Deploy your logistics to rescue surplus nearby.</p>
  </motion.div>
+ <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
+ <Link href="/ngo/riders" className="group w-full sm:w-fit px-6 py-4 bg-white border border-slate-200 text-slate-900 font-black rounded-2xl flex items-center justify-center gap-3 hover:border-orange-300 hover:text-orange-600 transition-all shadow-sm active:scale-95 text-[11px] sm:text-xs uppercase tracking-widest text-center">
+ Review Riders <ShieldCheck className="w-5 h-5 group-hover:scale-110 transition-transform" />
+ </Link>
  <Link href="/ngo/find-food" className="group w-full sm:w-fit px-6 py-4 bg-slate-950 text-white font-black rounded-2xl flex items-center justify-center gap-3 hover:bg-orange-600 transition-all shadow-xl active:scale-95 text-[11px] sm:text-xs uppercase tracking-widest text-center">
  Source New Supplies <Search className="w-5 h-5 group-hover:scale-110 transition-transform" />
  </Link>
+ </div>
  </header>
 
  {/* Logistics Stats */}

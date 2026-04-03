@@ -56,8 +56,8 @@ export default function VerificationPage() {
       const data = await res.json();
       // API returns { users: [...], pagination: {...} }
       const allUsers = Array.isArray(data) ? data : (data.users || []);
-      // Filter NGOs and RIDERS for verification
-      setUsers(allUsers.filter((u: User) => u.role === "NGO" || u.role === "RIDER"));
+      // Keep this page focused on NGO verification.
+      setUsers(allUsers.filter((u: User) => u.role === "NGO"));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -139,7 +139,7 @@ export default function VerificationPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">NGO Verification</h1>
-          <p className="text-gray-500 text-sm mt-1">Review and verify NGO and Rider accounts</p>
+          <p className="text-gray-500 text-sm mt-1">Review and verify NGO accounts</p>
         </div>
         <button onClick={fetchUsers} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50">
           <RefreshCw className="h-4 w-4" /> Refresh
