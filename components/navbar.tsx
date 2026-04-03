@@ -8,11 +8,10 @@ import { Translate } from './ui/translate'
 import { LanguageSwitcher } from './ui/language-switcher'
 
 const menuItems = [
-    { name: <Translate>Tech Stack</Translate>, href: '#features' },
-    { name: <Translate>Impact Log</Translate>, href: '#impact' },
-    { name: <Translate>Coalition</Translate>, href: '#roles' },
+    { name: <Translate>About Us</Translate>, href: '#features' },
+    { name: <Translate>How it Works</Translate>, href: '#roles' },
     { name: <Translate>Community</Translate>, href: '/community' },
-    { name: <Translate>Portal</Translate>, href: '/login' },
+    { name: <Translate>Login Dashboard</Translate>, href: '/login' },
 ]
 
 export const Header = () => {
