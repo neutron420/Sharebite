@@ -4,13 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { Loader2, MapPin, Package, Clock, ArrowLeft, Search, X, Navigation, List, Map as MapIcon, Filter } from "lucide-react";
+import { Loader2, MapPin, Package, Clock, Search, Navigation, List, Map as MapIcon, Filter } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 import { toast } from "sonner";
 import DashboardRefreshButton from "@/components/ui/dashboard-refresh-button";
 import { cn } from "@/lib/utils";
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+const sanitizeSecret = (value?: string) =>
+  value?.replace(/[\u200B-\u200D\uFEFF]/g, "").trim() || "";
+
+mapboxgl.accessToken = sanitizeSecret(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
 
 type Donation = {
   id: string;
@@ -55,7 +58,7 @@ export default function DonationsMapView({ initialSelectedId }: { initialSelecte
   const [category, setCategory] = useState<(typeof FOOD_CATEGORIES)[number]>("ALL");
   const [city, setCity] = useState("ALL");
   const [useNearby, setUseNearby] = useState(false);
-  const [radiusKm, setRadiusKm] = useState(15);
+  const [radiusKm] = useState(15);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [requestingId, setRequestingId] = useState<string | null>(null);
@@ -70,10 +73,6 @@ export default function DonationsMapView({ initialSelectedId }: { initialSelecte
   const cityOptions = useMemo(() => {
     return Array.from(new Set(donations.map((item) => item.city).filter(Boolean))).sort();
   }, [donations]);
-
-  const cityCount = useMemo(() => {
-    return new Set(donationsWithCoords.map((item) => item.city).filter(Boolean)).size;
-  }, [donationsWithCoords]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -166,8 +165,8 @@ export default function DonationsMapView({ initialSelectedId }: { initialSelecte
       if (!res.ok) throw new Error(data.error || "Request failed");
 
       toast.success("Pickup request sent.");
-    } catch (error: any) {
-      toast.error(error?.message || "Unable to send pickup request.");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Unable to send pickup request.");
     } finally {
       setRequestingId(null);
     }

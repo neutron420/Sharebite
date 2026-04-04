@@ -21,7 +21,20 @@ interface LocationPickerProps {
   externalSearchTrigger?: string; // Change to triggerEffect
 }
 
-const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const sanitizeSecret = (value?: string) =>
+  value?.replace(/[\u200B-\u200D\uFEFF]/g, "").trim() || "";
+
+const mapboxToken = sanitizeSecret(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
+
+const hasValidCoords = (coords?: { lat: number; lng: number }) => {
+  if (!coords) return false;
+  return (
+    Number.isFinite(coords.lat) &&
+    Number.isFinite(coords.lng) &&
+    Math.abs(coords.lat) <= 90 &&
+    Math.abs(coords.lng) <= 180
+  );
+};
 
 /**
  * LocationPicker Component
@@ -36,17 +49,42 @@ export default function LocationPicker({ onLocationSelect, initialCoords, initia
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery || '');
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const initialCenter: [number, number] = hasValidCoords(initialCoords) && initialCoords
+    ? [initialCoords.lng, initialCoords.lat]
+    : [77.2090, 28.6139];
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
 
+    setMapReady(false);
+    setMapError(null);
+
     mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: initialCoords ? [initialCoords.lng, initialCoords.lat] : [77.2090, 28.6139], // Default Delhi
-      zoom: 12,
+
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: initialCenter,
+        zoom: 12,
+      });
+    } catch (err) {
+      console.error('Map initialization error:', err);
+      setMapError('Map initialization failed. Check Mapbox token settings.');
+      return;
+    }
+
+    map.current.on('load', () => {
+      setMapReady(true);
+      setMapError(null);
+    });
+
+    map.current.on('error', (e: any) => {
+      const msg = e?.error?.message || 'Map tiles failed to load.';
+      console.error('Mapbox runtime error:', msg);
+      setMapError('Map tiles failed to load. Check token/domain restrictions.');
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
@@ -76,7 +114,7 @@ export default function LocationPicker({ onLocationSelect, initialCoords, initia
       resizeObserver.disconnect();
       map.current?.remove();
     };
-  }, []);
+  }, [initialCenter[0], initialCenter[1]]);
 
   const updateMarker = (lng: number, lat: number) => {
     if (!map.current) return;
@@ -174,6 +212,14 @@ export default function LocationPicker({ onLocationSelect, initialCoords, initia
   };
 
   return (
+    !mapboxToken ? (
+      <div className="location-picker-container w-full h-full relative rounded-xl overflow-hidden shadow-2xl border border-white/20 min-h-[400px] bg-slate-100 flex items-center justify-center p-6 text-center">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Mapbox token missing</p>
+          <p className="mt-2 text-[11px] font-bold text-slate-400">Set NEXT_PUBLIC_MAPBOX_TOKEN and refresh.</p>
+        </div>
+      </div>
+    ) : (
     <div className="location-picker-container w-full h-full relative rounded-xl overflow-hidden shadow-2xl border border-white/20 min-h-[400px]">
       {/* Search Bar Overlay - Fixed Top Left with High Presence */}
       <div className="absolute top-8 left-8 z-30 flex flex-col gap-2 w-full max-w-[420px]">
@@ -236,6 +282,22 @@ export default function LocationPicker({ onLocationSelect, initialCoords, initia
       </div>
 
       <div ref={mapContainer} className="w-full h-full" />
+
+      {!mapReady && !mapError && (
+        <div className="absolute inset-0 z-20 bg-white/70 backdrop-blur-sm flex items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto h-6 w-6 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+            <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-500">Loading map grid...</p>
+          </div>
+        </div>
+      )}
+
+      {mapError && (
+        <div className="absolute inset-x-4 bottom-4 z-30 rounded-2xl border border-amber-200 bg-amber-50/95 backdrop-blur p-4 shadow-lg">
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Map warning</p>
+          <p className="mt-1 text-[11px] font-bold text-amber-800">{mapError}</p>
+        </div>
+      )}
       
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-2xl px-6 py-3 rounded-full shadow-[0_15px_40px_-5px_rgba(0,0,0,0.1)] border border-white/50 z-20 animate-bounce duration-[2000ms]">
         <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-3">
@@ -244,5 +306,6 @@ export default function LocationPicker({ onLocationSelect, initialCoords, initia
         </div>
       </div>
     </div>
+    )
   );
 }

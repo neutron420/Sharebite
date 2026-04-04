@@ -8,7 +8,10 @@ import { ArrowLeft, Building2, Clock, Loader2, MapPin, Search, X } from "lucide-
 import { formatDistanceToNowStrict } from "date-fns";
 import { motion } from "framer-motion";
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+const sanitizeSecret = (value?: string) =>
+ value?.replace(/[\u200B-\u200D\uFEFF]/g, "").trim() || "";
+
+mapboxgl.accessToken = sanitizeSecret(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
 
 type NgoMapItem = {
  id: string;

@@ -6,7 +6,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Loader2, Navigation, MapPin, Truck, Clock } from "lucide-react";
 import { useSocket } from "@/components/providers/socket-provider";
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+const sanitizeSecret = (value?: string) =>
+  value?.replace(/[\u200B-\u200D\uFEFF]/g, "").trim() || "";
+
+const MAPBOX_TOKEN = sanitizeSecret(process.env.NEXT_PUBLIC_MAPBOX_TOKEN);
+mapboxgl.accessToken = MAPBOX_TOKEN;
 
 interface LiveRiderMapProps {
   riderId: string;
@@ -27,6 +31,12 @@ interface DirectionsResponse {
 }
 
 const DEFAULT_CENTER: [number, number] = [77.209, 28.613];
+
+const isValidLngLat = (coords?: [number, number]) => {
+  if (!coords) return false;
+  const [lng, lat] = coords;
+  return Number.isFinite(lng) && Number.isFinite(lat) && Math.abs(lng) <= 180 && Math.abs(lat) <= 90;
+};
 
 // Helper to calculate bearing between two points
 const getBearing = (start: [number, number], end: [number, number]) => {
@@ -50,17 +60,27 @@ export default function LiveRiderMap({
   ngoCoords,
   status = "ASSIGNED"
 }: LiveRiderMapProps) {
+  const donorPosition = isValidLngLat(donorCoords) ? donorCoords : undefined;
+  const ngoPosition = isValidLngLat(ngoCoords) ? ngoCoords : undefined;
+  const initialCenter: [number, number] = donorPosition || ngoPosition || DEFAULT_CENTER;
+  const donorLng = donorPosition?.[0];
+  const donorLat = donorPosition?.[1];
+  const ngoLng = ngoPosition?.[0];
+  const ngoLat = ngoPosition?.[1];
+  const centerLng = initialCenter[0];
+  const centerLat = initialCenter[1];
+
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const riderMarker = useRef<mapboxgl.Marker | null>(null);
-  const riderLocation = useRef<[number, number]>(donorCoords || DEFAULT_CENTER);
+  const riderLocation = useRef<[number, number]>(initialCenter);
   
   const [loading, setLoading] = useState(true);
   const [routeStats, setRouteStats] = useState<{ distance: string, duration: string } | null>(null);
   const { addListener } = useSocket();
 
   const fetchRoute = useCallback(async (m: mapboxgl.Map, start: [number, number], end: [number, number]) => {
-    if (!mapboxgl.accessToken) return;
+    if (!MAPBOX_TOKEN || !isValidLngLat(start) || !isValidLngLat(end)) return;
     
     try {
       const query = await fetch(
@@ -149,14 +169,18 @@ export default function LiveRiderMap({
     });
 
     // Update dynamic route based on status
-    const target = status === "ASSIGNED" ? donorCoords : ngoCoords;
+    const target = status === "ASSIGNED" ? donorPosition : ngoPosition;
     if (target) {
       void fetchRoute(map.current, newPos, target);
     }
-  }, [donorCoords, ngoCoords, status, fetchRoute]);
+  }, [donorPosition, ngoPosition, status, fetchRoute]);
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxgl.accessToken) {
+    riderLocation.current = initialCenter;
+  }, [centerLng, centerLat]);
+
+  useEffect(() => {
+    if (!mapContainer.current || !MAPBOX_TOKEN) {
       setLoading(false);
       return;
     }
@@ -165,7 +189,7 @@ export default function LiveRiderMap({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11", // Cleaner, modern light theme
       zoom: 14,
-      center: donorCoords || DEFAULT_CENTER,
+      center: initialCenter,
       attributionControl: false,
       pitch: 45 // 3D Perspective
     });
@@ -175,21 +199,22 @@ export default function LiveRiderMap({
     nextMap.on('load', () => {
       setLoading(false);
       const m = nextMap;
+      riderLocation.current = initialCenter;
 
       // Add Donor Marker
-      if (donorCoords) {
+      if (donorPosition) {
         const el = document.createElement('div');
         el.className = 'marker-donor';
         el.innerHTML = '<div class="p-2.5 bg-orange-600 rounded-2xl border-2 border-white shadow-xl scale-110"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>';
-        new mapboxgl.Marker(el).setLngLat(donorCoords).addTo(m);
+        new mapboxgl.Marker(el).setLngLat(donorPosition).addTo(m);
       }
 
       // Add NGO Marker
-      if (ngoCoords) {
+      if (ngoPosition) {
         const el = document.createElement('div');
         el.className = 'marker-ngo';
         el.innerHTML = '<div class="p-2.5 bg-indigo-600 rounded-2xl border-2 border-white shadow-xl scale-110"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"/><path d="m3 9 2.45-4.91A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.79 1.09L21 9"/></svg></div>';
-        new mapboxgl.Marker(el).setLngLat(ngoCoords).addTo(m);
+        new mapboxgl.Marker(el).setLngLat(ngoPosition).addTo(m);
       }
 
       // Initial Rider Marker
@@ -207,13 +232,13 @@ export default function LiveRiderMap({
         </div>
       `;
       riderMarker.current = new mapboxgl.Marker(riderEl)
-        .setLngLat(donorCoords ?? DEFAULT_CENTER)
+        .setLngLat(initialCenter)
         .addTo(m);
 
       // Initial Route
-      const target = status === "ASSIGNED" ? donorCoords : ngoCoords;
+      const target = status === "ASSIGNED" ? donorPosition : ngoPosition;
       if (target) {
-        void fetchRoute(m, donorCoords || DEFAULT_CENTER, target);
+        void fetchRoute(m, initialCenter, target);
       }
     });
 
@@ -222,7 +247,7 @@ export default function LiveRiderMap({
       nextMap.remove();
       map.current = null;
     };
-  }, [donorCoords, fetchRoute, ngoCoords, riderName, status]);
+  }, [centerLng, centerLat, donorLng, donorLat, ngoLng, ngoLat, fetchRoute, riderName, status]);
 
   // Real-time Update Listener
   useEffect(() => {
@@ -238,6 +263,14 @@ export default function LiveRiderMap({
   }, [riderId, status, addListener, animateMarker]);
 
   return (
+    !MAPBOX_TOKEN ? (
+      <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center p-6 text-center">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Mapbox token missing</p>
+          <p className="mt-2 text-[11px] font-bold text-slate-400">Set NEXT_PUBLIC_MAPBOX_TOKEN and refresh.</p>
+        </div>
+      </div>
+    ) : (
     <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden bg-gray-100 group shadow-inner border border-gray-100">
       {loading && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/60 backdrop-blur-xl">
@@ -287,5 +320,6 @@ export default function LiveRiderMap({
          </div>
       </div>
     </div>
+    )
   );
 }

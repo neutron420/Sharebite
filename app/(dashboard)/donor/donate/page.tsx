@@ -135,6 +135,27 @@ export default function DonatePage() {
  setFormData(prev => ({ ...prev, [field]: value }));
  };
 
+ const handleLocationSelect = useCallback((data: {
+  address: string;
+  city: string;
+  state: string;
+  district: string;
+  pincode: string;
+  latitude: number;
+  longitude: number;
+ }) => {
+  setFormData(prev => ({
+   ...prev,
+   pickupLocation: prev.pickupLocation && prev.pickupLocation.trim().length > 0 ? prev.pickupLocation : data.address,
+   city: data.city,
+   state: data.state,
+   district: data.district,
+   pincode: data.pincode,
+   latitude: data.latitude,
+   longitude: data.longitude
+  }));
+ }, []);
+
  const expiryPriorities = [
  {
  id: "urgent",
@@ -382,6 +403,26 @@ export default function DonatePage() {
  {i < steps.length - 1 && <div className="w-4 h-px bg-slate-100 mx-1" />}
  </div>
  ))}
+ </div>
+
+ {/* Mobile map preview always visible to avoid confusion about missing map */}
+ <div className="lg:hidden mb-8">
+ <div className="h-64 rounded-[2.25rem] overflow-hidden border-4 border-white shadow-2xl relative bg-slate-100 ring-1 ring-slate-100">
+ <div className={cn("h-full", currentStep !== 2 && "pointer-events-none")}> 
+ <LocationPicker 
+ externalSearchTrigger={mapTrigger}
+ onLocationSelect={handleLocationSelect}
+ />
+ </div>
+ {currentStep !== 2 && (
+ <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px] flex items-center justify-center p-6 text-center">
+ <div>
+ <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/90">Map Preview</p>
+ <p className="mt-2 text-[11px] font-bold text-white/80">Complete Basics and Timing, then open Location Check to pin your exact pickup spot.</p>
+ </div>
+ </div>
+ )}
+ </div>
  </div>
  
  <AnimatePresence mode="wait">
@@ -835,29 +876,6 @@ export default function DonatePage() {
  <p className="text-[10px] font-bold text-slate-400 ">Try searching or use the &quot;Guide&quot; for structured selection.</p>
  </div>
 
- {/* Mobile Map Integrated - Precise Ops Targeting */}
- <div className="lg:hidden pt-4">
- <Label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-3 block">Tactical Pin Pointing</Label>
- <div className="h-72 rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl relative bg-slate-100 ring-1 ring-slate-100">
- <LocationPicker 
- externalSearchTrigger={mapTrigger}
- onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
- setFormData(prev => ({
- ...prev,
- pickupLocation: prev.pickupLocation && prev.pickupLocation.trim().length > 0 ? prev.pickupLocation : data.address,
- city: data.city,
- state: data.state,
- district: data.district,
- pincode: data.pincode,
- latitude: data.latitude,
- longitude: data.longitude
- }));
- toast.success(`Position Locked: ${data.city}`);
- }}
- />
- </div>
- </div>
-
  <div className="p-6 bg-orange-50/50 rounded-3xl border border-orange-100/50 mt-10">
  <div className="flex gap-4">
  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-orange-600 shadow-sm border border-orange-100">
@@ -922,19 +940,7 @@ export default function DonatePage() {
  <div className="absolute inset-0 z-0">
  <LocationPicker 
  externalSearchTrigger={mapTrigger}
- onLocationSelect={(data: { address: any; city: any; state: any; district: any; pincode: any; latitude: any; longitude: any; }) => {
- setFormData(prev => ({
- ...prev,
- pickupLocation: prev.pickupLocation && prev.pickupLocation.trim().length > 0 ? prev.pickupLocation : data.address,
- city: data.city,
- state: data.state,
- district: data.district,
- pincode: data.pincode,
- latitude: data.latitude,
- longitude: data.longitude
- }));
- toast.success(`Success! Pin set at ${data.city}`);
- }}
+ onLocationSelect={handleLocationSelect}
  />
  </div>
 
@@ -953,7 +959,12 @@ export default function DonatePage() {
 
  {/* Overlay if not in Step 2 */}
  {currentStep !== 2 && (
- <div className="absolute inset-0 bg-white/20 backdrop-blur-[2px] transition-all pointer-events-none" />
+ <div className="absolute inset-0 bg-slate-950/18 transition-all pointer-events-none flex items-center justify-center p-8">
+ <div className="rounded-2xl border border-white/40 bg-white/88 backdrop-blur px-5 py-4 text-center max-w-sm shadow-xl">
+ <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-700">Map Preview Locked</p>
+ <p className="mt-2 text-[11px] font-bold text-slate-500">Continue to Location step to interact with the map and pin exact coordinates.</p>
+ </div>
+ </div>
  )}
  </div>
 

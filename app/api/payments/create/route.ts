@@ -3,6 +3,9 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { createOrder } from "@/lib/razorpay";
 
+const sanitizeSecret = (value?: string) =>
+  value?.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+
 export async function POST(request: Request) {
   let requestId: string | undefined;
   let amount: number | string | undefined;
@@ -13,15 +16,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Only NGOs can pay for delivery" }, { status: 401 });
     }
 
-    const serverKeyId = process.env.RAZORPAY_KEY_ID;
-    const serverKeySecret = process.env.RAZORPAY_KEY_SECRET;
-    const publicKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || serverKeyId;
+    const serverKeyId = sanitizeSecret(process.env.RAZORPAY_KEY_ID);
+    const serverKeySecret = sanitizeSecret(process.env.RAZORPAY_KEY_SECRET);
 
     if (!serverKeyId || !serverKeySecret) {
        console.error("RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET is missing!", {
          hasServerKeyId: !!serverKeyId,
          hasServerKeySecret: !!serverKeySecret,
-         hasPublicKeyId: !!publicKeyId,
          nodeEnv: process.env.NODE_ENV,
        });
        return NextResponse.json({ error: "Server Configuration Error: Razorpay keys are missing." }, { status: 500 });
@@ -88,7 +89,7 @@ export async function POST(request: Request) {
       amount: order.amount,
       currency: order.currency,
       paymentId: payment.id,
-      keyId: publicKeyId,
+      keyId: serverKeyId,
     });
   } catch (error: unknown) {
     let message = "Unknown error";

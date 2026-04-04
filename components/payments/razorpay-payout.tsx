@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Script from "next/script";
 import { CreditCard, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,6 +11,38 @@ interface PaymentButtonProps {
   className?: string;
   label?: string;
 }
+
+const sanitizeSecret = (value?: string) =>
+  value?.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+
+const loadRazorpayCheckout = async () => {
+  if (typeof window === "undefined") {
+    throw new Error("Payment can only be opened in browser mode.");
+  }
+
+  if ((window as any).Razorpay) {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const existing = document.getElementById("razorpay-checkout-js") as HTMLScriptElement | null;
+    if (existing) {
+      const onLoad = () => resolve();
+      const onError = () => reject(new Error("Could not load Razorpay checkout."));
+      existing.addEventListener("load", onLoad, { once: true });
+      existing.addEventListener("error", onError, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = "razorpay-checkout-js";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Could not load Razorpay checkout."));
+    document.body.appendChild(script);
+  });
+};
 
 export default function RazorpayPayment({
   requestId,
@@ -39,13 +70,18 @@ export default function RazorpayPayment({
       }
 
       const orderData = await res.json();
+      if (!orderData?.orderId || !orderData?.amount || !orderData?.currency) {
+        throw new Error("Invalid payment order response from server.");
+      }
 
       // 2. Configure Razorpay Options
-      const razorpayKey = orderData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      const razorpayKey = sanitizeSecret(String(orderData.keyId || ""));
       if (!razorpayKey) {
         toast.error("Razorpay public key is missing from production config.");
         return;
       }
+
+      await loadRazorpayCheckout();
 
       const options = {
         key: razorpayKey, 
@@ -70,7 +106,7 @@ export default function RazorpayPayment({
 
             if (verifyRes.ok) {
               toast.success("Payment successful. Rider payout released.");
-              onSuccess();
+              await onSuccess();
             } else {
               const verifyError = await verifyRes.json().catch(() => ({}));
               toast.error(verifyError.error || "Payment verification failed.");
@@ -114,11 +150,6 @@ export default function RazorpayPayment({
 
   return (
     <>
-      <Script
-        id="razorpay-checkout-js"
-        src="https://checkout.razorpay.com/v1/checkout.js"
-      />
-      
       <button
         onClick={handlePayment}
         disabled={loading}

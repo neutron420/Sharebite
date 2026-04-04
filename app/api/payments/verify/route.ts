@@ -3,6 +3,38 @@ import prisma from "@/lib/prisma";
 import { verifySignature } from "@/lib/razorpay";
 import { createNotification } from "@/lib/notifications";
 
+function getInternalNotifyUrl() {
+  const raw = (process.env.INTERNAL_WS_URL || "http://localhost:8080")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim()
+    .replace(/\/+$/, "");
+
+  return `${raw.replace(":8081", ":8080")}/notify`;
+}
+
+async function relayMissionUpdate(userId: string, requestId: string, status: "ASSIGNED" | "COMPLETED") {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 1200);
+
+  try {
+    await fetch(getInternalNotifyUrl(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "mission_update",
+        userId,
+        payload: { requestId, status, ngoId: userId },
+      }),
+      signal: controller.signal,
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Unknown socket relay error";
+    console.error("Socket mission relay skipped:", message);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, requestId } = await request.json();
@@ -33,7 +65,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-    let statusUpdate: any = { status: "ASSIGNED" };
+    let statusUpdate: {
+      status: "ASSIGNED" | "COMPLETED";
+      step?: number;
+      completedAt?: Date;
+      paymentId?: string;
+    } = { status: "ASSIGNED" };
     let isPayout = false;
 
     // Handle post-delivery payout flow
@@ -49,7 +86,7 @@ export async function POST(request: Request) {
     // Link the successful payment to the request
     statusUpdate.paymentId = payment.id;
 
-    const updatedRequest = await prisma.pickupRequest.update({
+    await prisma.pickupRequest.update({
       where: { id: requestId },
       data: statusUpdate
     });
@@ -81,21 +118,8 @@ export async function POST(request: Request) {
       link: `/ngo/requests/${requestId}`
     });
 
-    // 6. Signal the Frontend via Socket (Inter-service sync)
-    try {
-      if (process.env.INTERNAL_WS_URL) {
-        await fetch(`${process.env.INTERNAL_WS_URL}/broadcast`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            event: "mission_update",
-            data: { requestId, status: "COMPLETED", ngoId: payment.userId }
-          })
-        });
-      }
-    } catch (e) {
-      console.error("Socket broadcast failed:", e);
-    }
+    // 6. Signal the Frontend via Socket (best-effort, non-blocking)
+    void relayMissionUpdate(payment.userId, requestId, isPayout ? "COMPLETED" : "ASSIGNED");
 
     return NextResponse.json({
       message: "Payment verified successfully!",

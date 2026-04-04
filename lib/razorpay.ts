@@ -3,10 +3,13 @@ import crypto from "crypto";
 
 let _razorpay: Razorpay | null = null;
 
+const sanitizeSecret = (value?: string) =>
+  value?.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+
 function getRazorpay() {
   if (!_razorpay) {
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const keyId = sanitizeSecret(process.env.RAZORPAY_KEY_ID);
+    const keySecret = sanitizeSecret(process.env.RAZORPAY_KEY_SECRET);
 
     if (!keyId || !keySecret) {
       console.error("Critical: Razorpay keys are missing in environment variables.", {
@@ -50,7 +53,7 @@ export function verifySignature(
   razorpayPaymentId: string,
   signature: string
 ) {
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keySecret = sanitizeSecret(process.env.RAZORPAY_KEY_SECRET);
   if (!keySecret) {
     console.error("RAZORPAY_KEY_SECRET is missing during signature verification.");
     return false;

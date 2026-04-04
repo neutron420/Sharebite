@@ -39,7 +39,9 @@ import {
 
 
 // Mapbox token from environment variable
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+const MAPBOX_TOKEN = (process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "")
+  .replace(/[\u200B-\u200D\uFEFF]/g, "")
+  .trim();
 
 interface Donation {
   id: string;

@@ -146,9 +146,9 @@ function handleBroadcast(channel: string, message: string) {
         if (c.role === targetRole && c.ws.readyState === WebSocket.OPEN) c.ws.send(JSON.stringify({ type, payload }));
       });
     } else if (userId) {
-      deliverToUser(userId, "NOTIFICATION", payload);
+      deliverToUser(userId, type || "NOTIFICATION", payload);
     } else if (userIds && Array.isArray(userIds)) {
-      userIds.forEach((id: string) => deliverToUser(id, "NOTIFICATION", payload));
+      userIds.forEach((id: string) => deliverToUser(id, type || "NOTIFICATION", payload));
     }
   } catch (err) {
     wsErrorsTotal.inc({ stage: "broadcast" });
