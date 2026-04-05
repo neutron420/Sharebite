@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - configmap.yaml
+  - external-secret.yaml
+  - deployment-web.yaml
+  - deployment-ws.yaml
+  - service-web.yaml
+  - service-ws.yaml
+  - ingress.yaml
+  - hpa-web.yaml
+  - hpa-ws.yaml
+  - pdb-web.yaml
+  - pdb-ws.yaml
+  - presync-migrate-job.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: sharebite
+      app.kubernetes.io/managed-by: argocd

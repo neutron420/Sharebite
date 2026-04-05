@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sharebite-ingress
+spec:
+  tls:
+    - hosts:
+        - app-dev.example.com
+      secretName: sharebite-dev-app-tls
+    - hosts:
+        - ws-dev.example.com
+      secretName: sharebite-dev-ws-tls
+  rules:
+    - host: app-dev.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sharebite-web
+                port:
+                  number: 3000
+    - host: ws-dev.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sharebite-ws
+                port:
+                  number: 8080

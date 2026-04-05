@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sharebite-prod
+
+resources:
+  - namespace.yaml
+  - ../../base
+
+patches:
+  - path: configmap-patch.yaml
+  - path: external-secret-patch.yaml
+  - path: ingress-patch.yaml
+  - path: deployment-web-patch.yaml
+  - path: deployment-ws-patch.yaml
+  - path: hpa-web-patch.yaml
+  - path: hpa-ws-patch.yaml
+
+images:
+  - name: ghcr.io/neutron420/sharebite
+    newTag: prod-2026-04-06

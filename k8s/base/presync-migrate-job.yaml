@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sharebite-prisma-migrate
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: ghcr.io/neutron420/sharebite:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - bunx prisma migrate deploy --schema prisma/schema.prisma
+          envFrom:
+            - configMapRef:
+                name: sharebite-config
+            - secretRef:
+                name: sharebite-secrets
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

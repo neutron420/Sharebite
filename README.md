@@ -9,6 +9,17 @@ The codebase is organized around four main actors:
 - `RIDER` users handle optional last-mile pickup and delivery.
 - `ADMIN` users verify organizations, review activity, moderate issues, and monitor platform health.
 
+## What ShareBite Does
+
+ShareBite solves the food-rescue workflow end to end:
+
+- Donors publish surplus food with quantity, expiry, and pickup location in minutes.
+- NGOs discover nearby, available donations and request pickups quickly.
+- Riders can be assigned for assisted pickup and handover when direct collection is difficult.
+- Admins verify organizations, moderate abuse, monitor activity, and maintain platform trust.
+
+The result is a practical, real-world coordination system that reduces food waste and improves delivery speed to communities that need support.
+
 ## Documentation
 
 - [Architecture Guide](./architecture.md)
@@ -29,14 +40,14 @@ The codebase is organized around four main actors:
 - Admin tools for users, requests, reviews, reports, logs, bugs, verification, and operational stats
 - Karma, badges, and leaderboard mechanics for donor and rider engagement
 
-## Stack
+## Tech Stack
 
-| Layer | Technology |
+| Category | Technology |
 | --- | --- |
 | Frontend | Next.js 16 App Router, React 19, TypeScript |
-| Styling | Tailwind CSS, Radix UI, custom UI components, Framer Motion |
+| UI and styling | Tailwind CSS, Radix UI, custom UI components, Framer Motion |
 | Backend | Next.js route handlers, standalone websocket server with `ws` |
-| Database | PostgreSQL via Prisma 7 and `@prisma/adapter-pg` |
+| Data | PostgreSQL via Prisma 7 and `@prisma/adapter-pg` |
 | Realtime and cache | Redis with `ioredis` |
 | File storage | Cloudflare R2 via S3-compatible APIs |
 | Maps | Mapbox GL |
@@ -44,8 +55,26 @@ The codebase is organized around four main actors:
 | Email | Resend |
 | Bot protection | Cloudflare Turnstile |
 | Testing | Vitest |
-| Packaging and runtime | Bun, Docker, Docker Compose |
-| Infra as code | Terraform for AWS ECS/Fargate, ALB, networking, and domain wiring |
+| Runtime and packaging | Bun, Docker, Docker Compose |
+| Infrastructure and deployment | Kubernetes, Argo CD, Terraform, AWS ECS/Fargate, ALB, networking, and domain wiring |
+
+### Tech Stack Logos
+
+#### Frontend and UI
+
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/) [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-0F172A?style=for-the-badge&logo=tailwind-css&logoColor=38BDF8)](https://tailwindcss.com/) [![Framer Motion](https://img.shields.io/badge/Framer_Motion-0B0B0B?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/)
+
+#### Backend, Data, and Realtime
+
+[![Bun](https://img.shields.io/badge/Bun-0A0A0A?style=for-the-badge&logo=bun&logoColor=white)](https://bun.sh/) [![Prisma](https://img.shields.io/badge/Prisma-0C344B?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/) [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-1B2B5B?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/) [![Redis](https://img.shields.io/badge/Redis-8C1C13?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/) [![WebSocket](https://img.shields.io/badge/WebSocket-111111?style=for-the-badge&logo=socketdotio&logoColor=white)](https://developer.mozilla.org/docs/Web/API/WebSockets_API)
+
+#### Deployment and Infrastructure
+
+[![Docker](https://img.shields.io/badge/Docker-062036?style=for-the-badge&logo=docker&logoColor=2496ED)](https://www.docker.com/) [![Kubernetes](https://img.shields.io/badge/Kubernetes-0B132B?style=for-the-badge&logo=kubernetes&logoColor=326CE5)](https://kubernetes.io/) [![Argo CD](https://img.shields.io/badge/Argo_CD-1F2937?style=for-the-badge&logo=argo&logoColor=EF7B4D)](https://argo-cd.readthedocs.io/) [![Terraform](https://img.shields.io/badge/Terraform-1A1A2E?style=for-the-badge&logo=terraform&logoColor=844FBA)](https://www.terraform.io/) [![AWS](https://img.shields.io/badge/AWS-111111?style=for-the-badge&logo=amazonaws&logoColor=FF9900)](https://aws.amazon.com/)
+
+#### Integrations and Platform Services
+
+[![Cloudflare R2](https://img.shields.io/badge/Cloudflare_R2-1A1A1A?style=for-the-badge&logo=cloudflare&logoColor=F38020)](https://www.cloudflare.com/developer-platform/r2/) [![Mapbox](https://img.shields.io/badge/Mapbox-1B1B1B?style=for-the-badge&logo=mapbox&logoColor=white)](https://www.mapbox.com/) [![Resend](https://img.shields.io/badge/Resend-0A0A0A?style=for-the-badge&logo=maildotru&logoColor=white)](https://resend.com/) [![Groq](https://img.shields.io/badge/Groq-1E1E1E?style=for-the-badge&logo=databricks&logoColor=white)](https://groq.com/)
 
 ## Repository Layout
 
@@ -148,7 +177,7 @@ In the current code, most operational progress is tracked on `PickupRequest.stat
 
 ## Environment Variables
 
-The project does not currently ship with a committed `.env.example`, so this table is the practical setup reference derived from the codebase.
+The project includes a committed `.env.example`. The table below is the practical reference for required and optional runtime configuration.
 
 | Variable | Required | Used for |
 | --- | --- | --- |
@@ -316,6 +345,93 @@ The `terraform/` directory defines an AWS-oriented deployment shape with:
 - environment variable injection for the app runtime
 
 The ECS definition is set up to expose both the web port and websocket port through the load balancer.
+
+### Kubernetes And Argo CD (External DB And Redis)
+
+This repository now includes Kubernetes and Argo CD manifests for deploying only application workloads:
+
+- `web` (Next.js) on port `3000`
+- `ws` (websocket server) on port `8080`
+
+No PostgreSQL or Redis manifests are included. The deployment expects external managed services through environment variables (`DATABASE_URL`, `REDIS_URL`).
+
+#### Deployment Status
+
+- Application architecture is complete.
+- API, websocket, and operational workflows are complete.
+- Kubernetes base and overlays are complete.
+- Argo CD Applications are complete.
+- External Secrets integration is complete.
+- Manual CI workflow is configured and available when needed.
+
+Only final deployment execution steps are left at cluster/runtime level (secret backend setup, TLS readiness, image tag updates, and Argo CD sync).
+
+#### Manifest layout
+
+- `k8s/base/`: shared manifests (deployments, services, ingress, HPAs, PDBs, config, ExternalSecret, pre-sync migration job)
+- `k8s/overlays/dev/`: dev hostnames and scaling overrides
+- `k8s/overlays/prod/`: production hostnames and scaling overrides
+- `argocd/`: Argo CD `Application` resources for dev and prod
+
+#### Production-safe process split
+
+The Kubernetes deployments override container commands so one process runs per pod:
+
+- Web deployment command: `node server.js`
+- WS deployment command: `bun run server/ws.ts`
+
+This avoids the multi-process `start.sh` behavior inside orchestrated production workloads.
+
+#### Migration strategy
+
+The file `k8s/base/presync-migrate-job.yaml` is an Argo CD PreSync hook that runs:
+
+```bash
+bunx prisma migrate deploy --schema prisma/schema.prisma
+```
+
+This ensures schema migrations are applied before workloads are updated.
+
+#### Deploy with Argo CD
+
+1. Confirm `repoURL` in these files points to your Git repository:
+  - `argocd/sharebite-dev-application.yaml`
+  - `argocd/sharebite-prod-application.yaml`
+2. Install External Secrets Operator in your cluster and create a `ClusterSecretStore` named `sharebite-cluster-secrets`.
+3. Populate your external secret backend with environment-specific keys used by overlays:
+  - `sharebite/dev`
+  - `sharebite/prod`
+4. Update immutable image tags before each deployment:
+  - `k8s/overlays/dev/kustomization.yaml`
+  - `k8s/overlays/prod/kustomization.yaml`
+5. Apply Argo CD applications:
+
+```bash
+kubectl apply -f argocd/sharebite-dev-application.yaml
+kubectl apply -f argocd/sharebite-prod-application.yaml
+```
+
+The app workloads read runtime secrets from the Kubernetes secret `sharebite-secrets`, which is created automatically by the External Secrets resources.
+
+#### Sync policy
+
+- Dev application uses automated sync (`prune` + `selfHeal`).
+- Prod application is set to manual sync for safer releases.
+
+#### Rollback
+
+Use Argo CD rollback to a previous healthy revision:
+
+```bash
+argocd app rollback sharebite-prod <history-id>
+```
+
+If required, you can also roll back individual deployments:
+
+```bash
+kubectl -n sharebite-prod rollout undo deployment/sharebite-web
+kubectl -n sharebite-prod rollout undo deployment/sharebite-ws
+```
 
 ## Notable Implementation Notes
 

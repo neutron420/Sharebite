@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sharebite-ingress
+spec:
+  tls:
+    - hosts:
+        - app.neutrondev.in
+      secretName: sharebite-prod-app-tls
+    - hosts:
+        - ws.neutrondev.in
+      secretName: sharebite-prod-ws-tls
+  rules:
+    - host: app.neutrondev.in
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sharebite-web
+                port:
+                  number: 3000
+    - host: ws.neutrondev.in
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sharebite-ws
+                port:
+                  number: 8080

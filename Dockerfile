@@ -74,6 +74,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+RUN apk add --no-cache openssl
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -89,6 +91,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/lib ./lib
 COPY --from=builder /app/app/generated/prisma ./app/generated/prisma
+COPY --from=builder /app/prisma ./prisma
 
 # Ensure we have node_modules for the WS server
 COPY --from=deps /app/node_modules ./node_modules
