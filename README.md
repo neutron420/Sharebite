@@ -2,6 +2,16 @@
 
 ShareBite is a full-stack food rescue platform built to move surplus food from donors to NGOs as quickly and transparently as possible. The application combines a polished public site, role-based dashboards, operational APIs, real-time notifications, map-driven discovery, and optional rider logistics into one system.
 
+## Ready-To-Use Project Description
+
+Short description (for GitHub About):
+
+ShareBite is a full-stack food rescue platform that connects donors, NGOs, riders, and admins to reduce food waste with real-time coordination, map-based pickups, and transparent fulfillment workflows.
+
+Detailed description (for documentation, pitch decks, or submissions):
+
+ShareBite helps organizations rescue and redistribute surplus food efficiently. Donors publish available food, NGOs request and track pickups, riders support last-mile movement, and admins manage verification, moderation, and operational visibility. The platform combines role-based dashboards, map-driven logistics, real-time notifications, secure APIs, and production-ready deployment workflows to make food redistribution faster, safer, and more accountable.
+
 The codebase is organized around four main actors:
 
 - `DONOR` users publish and manage food donations.
@@ -451,4 +461,4 @@ kubectl -n sharebite-prod rollout undo deployment/sharebite-ws
 
 ## License
 
-No license file is currently committed in this repository. If you plan to open-source the project, add a top-level license file and update this section.
+This project is licensed under the MIT License. See [LICENSE](./LICENSE) for details.
