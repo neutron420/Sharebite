@@ -120,6 +120,16 @@ async function registerHandler(request: Request) {
 
     });
 
+    if (user.role === "NGO") {
+      await prisma.ngoVerification.create({
+        data: {
+          ngoId: user.id,
+          registrationCertUrl: user.verificationDoc || undefined,
+          status: "PENDING",
+        },
+      });
+    }
+
     if (user.role === "RIDER" && selectedNgo) {
       await prisma.riderVerificationRequest.create({
         data: {

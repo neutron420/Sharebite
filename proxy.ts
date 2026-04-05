@@ -37,12 +37,22 @@ export default async function proxy(request: NextRequest) {
 
   if (isProtected) {
     let prioritizedCookie = "";
-    if (pathname.startsWith("/api/admin")) prioritizedCookie = "admin_session";
+    if (pathname.startsWith("/api/admin")) {
+      let isGroundAdminContext = false;
+      try {
+        const referer = request.headers.get("referer") || "";
+        const refererPath = referer ? new URL(referer).pathname.toLowerCase() : "";
+        isGroundAdminContext = refererPath.includes("/admin/ground-verification");
+      } catch {
+        isGroundAdminContext = false;
+      }
+      prioritizedCookie = isGroundAdminContext ? "ground_admin_session" : "admin_session";
+    }
     else if (pathname.startsWith("/api/donor")) prioritizedCookie = "donor_session";
     else if (pathname.startsWith("/api/ngo")) prioritizedCookie = "ngo_session";
     else if (pathname.startsWith("/api/rider")) prioritizedCookie = "rider_session";
 
-    const allCookieNames = ["admin_session", "donor_session", "ngo_session", "rider_session", "session"];
+    const allCookieNames = ["admin_session", "ground_admin_session", "donor_session", "ngo_session", "rider_session", "session"];
     const tokensToCheck: string[] = [];
 
     // Prioritize the cookie matching the route

@@ -55,13 +55,65 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <head>
+        {process.env.NODE_ENV === "development" ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                (function () {
+                  try {
+                    var key = "__sharebite_sw_boot_cleanup_done__";
+                    if (sessionStorage.getItem(key)) return;
+                    sessionStorage.setItem(key, "1");
+
+                    var swPromise = Promise.resolve();
+                    if ("serviceWorker" in navigator) {
+                      swPromise = navigator.serviceWorker.getRegistrations().then(function (registrations) {
+                        return Promise.all(
+                          registrations.map(function (registration) {
+                            return registration.unregister();
+                          })
+                        );
+                      });
+                    }
+
+                    var cachePromise = Promise.resolve();
+                    if ("caches" in window) {
+                      cachePromise = caches.keys().then(function (names) {
+                        return Promise.all(
+                          names
+                            .filter(function (name) {
+                              return (
+                                name.indexOf("workbox") >= 0 ||
+                                name.indexOf("next") >= 0 ||
+                                name.indexOf("start-url") >= 0 ||
+                                name.indexOf("runtime") >= 0
+                              );
+                            })
+                            .map(function (name) {
+                              return caches.delete(name);
+                            })
+                        );
+                      });
+                    }
+
+                    Promise.allSettled([swPromise, cachePromise]).then(function () {
+                      window.location.reload();
+                    });
+                  } catch (_) {}
+                })();
+              `,
+            }}
+          />
+        ) : null}
         <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7449708956977518"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-        />
+        {process.env.NODE_ENV === "production" ? (
+          <Script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7449708956977518"
+            strategy="afterInteractive"
+            crossOrigin="anonymous"
+          />
+        ) : null}
         <meta name="google-adsense-account" content="ca-pub-7449708956977518" />
       </head>
       <body

@@ -4,6 +4,7 @@ import prisma from "./prisma";
 type RelayBody = {
   userId?: string;
   userIds?: string[];
+  targetRole?: string;
   type: string;
   payload: unknown;
 };
@@ -88,4 +89,14 @@ async function relayNotification(body: RelayBody) {
       console.error("WS Relay failed:", message);
     });
   }
+}
+
+export async function relayRealtimeEvent(body: RelayBody) {
+  if (typeof window !== "undefined") return;
+
+  const notifyUrl = getInternalNotifyUrl();
+  return postWithTimeout(notifyUrl, body).catch((err: unknown) => {
+    const message = err instanceof Error ? err.message : "Unknown realtime relay error";
+    console.error("Realtime WS relay failed:", message);
+  });
 }

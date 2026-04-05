@@ -54,7 +54,7 @@ vi.mock('@/lib/auth', () => ({
   verifyToken: vi.fn(),
   signToken: vi.fn(),
   getCookieName: vi.fn(),
-  SESSION_COOKIE_NAMES: ['session', 'admin_session', 'donor_session', 'ngo_session', 'rider_session'],
+  SESSION_COOKIE_NAMES: ['session', 'admin_session', 'ground_admin_session', 'donor_session', 'ngo_session', 'rider_session'],
 }));
 
 // ─── Mock: Redis (named export ensureRedisConnection + default) ───

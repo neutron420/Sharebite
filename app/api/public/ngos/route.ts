@@ -9,7 +9,7 @@ async function getPublicNgosHandler(request: Request) {
     const limit = Number.isNaN(rawLimit) ? 30 : Math.min(Math.max(rawLimit, 1), 100);
     const query = (searchParams.get("q") || "").trim();
 
-    const ngos = await prisma.user.findMany({
+    const ngosRaw = await prisma.user.findMany({
       where: {
         role: "NGO",
         isVerified: true,
@@ -32,11 +32,41 @@ async function getPublicNgosHandler(request: Request) {
         name: true,
         city: true,
         state: true,
+        ngoVerification: {
+          select: {
+            status: true,
+            onlineVerifiedAt: true,
+            fieldVerifiedAt: true,
+            lastVerifiedAt: true,
+          },
+        },
       },
       orderBy: {
         name: "asc",
       },
       take: limit,
+    });
+
+    const ngos = ngosRaw.map((ngo) => {
+      const status = ngo.ngoVerification?.status || "FULLY_VERIFIED";
+      const onlineVerified =
+        status === "ONLINE_VERIFIED" ||
+        status === "FIELD_VISIT_SCHEDULED" ||
+        status === "FIELD_VERIFIED" ||
+        status === "FULLY_VERIFIED";
+      const groundVerified = status === "FIELD_VERIFIED" || status === "FULLY_VERIFIED";
+
+      return {
+        id: ngo.id,
+        name: ngo.name,
+        city: ngo.city,
+        state: ngo.state,
+        verificationBadge: {
+          onlineVerified,
+          groundVerified,
+          lastVerifiedOn: ngo.ngoVerification?.lastVerifiedAt || null,
+        },
+      };
     });
 
     return NextResponse.json({ ngos });

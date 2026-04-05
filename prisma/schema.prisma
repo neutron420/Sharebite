@@ -63,10 +63,58 @@ model User {
   hiveViolations       HiveViolation[] @relation("UserHiveViolations")
   riderVerifications   RiderVerificationRequest[] @relation("RiderVerificationRequestRider")
   ngoRiderVerifications RiderVerificationRequest[] @relation("RiderVerificationRequestNgo")
+  ngoVerification      NgoVerification? @relation("NgoVerificationNgo")
 
   @@index([email])
   @@index([role])
   @@index([isVerified])
+}
+
+model NgoVerification {
+  id                     String                @id @default(uuid())
+  ngoId                  String                @unique
+  status                 NgoVerificationStatus @default(PENDING)
+  registrationCertUrl    String?
+  panTanUrl              String?
+  bankProofUrl           String?
+  addressProofUrl        String?
+  contactPersonIdUrl     String?
+  onlineReviewNote       String?
+  onlineVerifiedAt       DateTime?
+  onlineVerifiedById     String?
+  fieldVisitCity         String?
+  fieldOfficerId         String?
+  fieldOfficerName       String?
+  fieldVisitScheduledAt  DateTime?
+  fieldChecklist         Json?
+  officeExists           Boolean?
+  keyPersonConfirmed     Boolean?
+  fieldEvidencePhotoUrls Json?
+  fieldNotes             String?
+  fieldCheckInAt         DateTime?
+  fieldCheckOutAt        DateTime?
+  fieldCheckInLatitude   Float?
+  fieldCheckInLongitude  Float?
+  fieldCheckOutLatitude  Float?
+  fieldCheckOutLongitude Float?
+  fieldVerifiedAt        DateTime?
+  fieldVerifiedById      String?
+  finalReviewNote        String?
+  finalReviewedAt        DateTime?
+  finalReviewedById      String?
+  rejectionReason        String?
+  rejectedAt             DateTime?
+  rejectedById           String?
+  lastVerifiedAt         DateTime?
+  nextReverificationAt   DateTime?
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  ngo                    User                  @relation("NgoVerificationNgo", fields: [ngoId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([fieldOfficerId])
+  @@index([fieldVisitCity])
+  @@index([nextReverificationAt])
 }
 
 model BugReport {
@@ -353,6 +401,15 @@ enum RiderVerificationStatus {
   NGO_REJECTED
   ADMIN_APPROVED
   ADMIN_REJECTED
+}
+
+enum NgoVerificationStatus {
+  PENDING
+  ONLINE_VERIFIED
+  FIELD_VISIT_SCHEDULED
+  FIELD_VERIFIED
+  FULLY_VERIFIED
+  REJECTED
 }
 
 enum FoodCategory {

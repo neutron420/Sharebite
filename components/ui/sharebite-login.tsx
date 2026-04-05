@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { Eye, EyeOff, ArrowRight, Utensils, AlertCircle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -17,6 +17,8 @@ type RoutePoint = {
   y: number;
   delay: number;
 };
+
+type LoginRole = "DONOR" | "NGO" | "RIDER" | "ADMIN" | "GROUND_ADMIN" | "COMMUNITY";
 
 const DotMap = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -147,7 +149,9 @@ interface ShareBiteLoginProps {
   /** If true, shows the role selector tabs (Donor / NGO / Rider). If false (admin login), hides them. */
   showRoleSelector?: boolean;
   /** Default role to pre-select */
-  defaultRole?: "DONOR" | "NGO" | "RIDER" | "ADMIN" | "COMMUNITY";
+  defaultRole?: LoginRole;
+  /** Optional custom list of roles to render in selector mode */
+  roleOptions?: LoginRole[];
   /** Custom forgot password link (e.g. for admin) */
   forgotPasswordUrl?: string;
   /** Custom register link when role selector is hidden */
@@ -157,6 +161,7 @@ interface ShareBiteLoginProps {
 export default function ShareBiteLogin({ 
   showRoleSelector = true, 
   defaultRole = "DONOR",
+  roleOptions,
   forgotPasswordUrl = "/forgot-password",
   registerUrl
 }: ShareBiteLoginProps) {
@@ -168,7 +173,11 @@ export default function ShareBiteLogin({
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
-  const [loginRole, setLoginRole] = useState<"DONOR" | "NGO" | "RIDER" | "ADMIN" | "COMMUNITY">(defaultRole);
+  const [loginRole, setLoginRole] = useState<LoginRole>(defaultRole);
+  const selectableRoles: LoginRole[] = useMemo(
+    () => roleOptions || ["DONOR", "NGO", "RIDER"],
+    [roleOptions]
+  );
   const [isHydrated, setIsHydrated] = useState(false);
   const turnstileSiteKey = (process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
@@ -186,15 +195,19 @@ export default function ShareBiteLogin({
     // Core logic: If we have a role selector (Home Login), restore from memory.
     // If not (Admin Portal), FORCE the default role to ensure access.
     if (showRoleSelector) {
-      if (savedRole && (savedRole === "DONOR" || savedRole === "NGO" || savedRole === "RIDER" || savedRole === "COMMUNITY")) {
-        setLoginRole(savedRole as "DONOR" | "NGO" | "RIDER" | "COMMUNITY");
+      if (savedRole && selectableRoles.includes(savedRole as LoginRole)) {
+        setLoginRole(savedRole as LoginRole);
+      } else if (selectableRoles.includes(defaultRole)) {
+        setLoginRole(defaultRole);
+      } else if (selectableRoles.length > 0) {
+        setLoginRole(selectableRoles[0]);
       }
     } else {
       setLoginRole(defaultRole);
     }
     
     setIsHydrated(true);
-  }, [showRoleSelector, defaultRole]);
+  }, [showRoleSelector, defaultRole, selectableRoles]);
 
   useEffect(() => {
     if (isHydrated) {
@@ -227,7 +240,8 @@ export default function ShareBiteLogin({
       }
 
       const role = data.user?.role;
-      if (role === "ADMIN") router.push("/admin");
+      if (loginRole === "GROUND_ADMIN") router.push("/admin/ground-verification");
+      else if (role === "ADMIN") router.push("/admin");
       else if (role === "DONOR") router.push("/donor");
       else if (role === "NGO") router.push("/ngo");
       else if (role === "RIDER") router.push("/rider");
@@ -245,8 +259,21 @@ export default function ShareBiteLogin({
     NGO: { title: "Ops Command Center", subtitle: "Manage your logistics and rescue surplus food nearby." },
     RIDER: { title: "Rider Dispatch", subtitle: "Accept missions and deliver hope across your city." },
     ADMIN: { title: "ShareBite Admin Hub", subtitle: "Total platform oversight and cognitive engine monitoring." },
+    GROUND_ADMIN: { title: "Ground Ops Verification", subtitle: "Complete city-wise field verification and submit officer reports." },
     COMMUNITY: { title: "Community Hive", subtitle: "Connect with the movement and share wholesome moments." },
   };
+
+  const roleLabelMap: Record<LoginRole, string> = {
+    DONOR: "Donor",
+    NGO: "NGO Hub",
+    RIDER: "Rider",
+    ADMIN: "Admin",
+    GROUND_ADMIN: "Ground Admin",
+    COMMUNITY: "Community",
+  };
+
+  const resolvedRegisterUrl = registerUrl || (showRoleSelector ? "/register" : "/admin/register");
+  const termsRoleSlug = loginRole === "GROUND_ADMIN" ? "admin" : loginRole.toLowerCase();
 
   if (!isHydrated) return <div className="min-h-screen w-full flex items-center justify-center bg-orange-50/50">
     <div className="flex flex-col items-center gap-3">
@@ -312,20 +339,20 @@ export default function ShareBiteLogin({
 
             {/* Role Selector Tabs */}
             {showRoleSelector && (
-              <div className="flex bg-orange-50 p-1 rounded-xl mb-6">
-                {(["DONOR", "NGO", "RIDER"] as const).map((role) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 bg-orange-50 p-1 rounded-xl mb-6">
+                {selectableRoles.map((role) => (
                   <button
                     key={role}
                     type="button"
                     onClick={() => setLoginRole(role)}
                     className={cn(
-                      "flex-1 py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all duration-200",
+                      "py-2 sm:py-2.5 px-2 sm:px-3 rounded-lg text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all duration-200",
                       loginRole === role
                         ? "bg-white text-orange-600 shadow-sm"
                         : "text-gray-400 hover:text-gray-600"
                     )}
                   >
-                    {role === "NGO" ? "NGO Hub" : role === "RIDER" ? "Rider" : "Donor"}
+                    {roleLabelMap[role]}
                   </button>
                 ))}
               </div>
@@ -430,12 +457,12 @@ export default function ShareBiteLogin({
               </motion.div>
 
               <div className="text-center mt-6 space-y-3">
-                <Link href={showRoleSelector ? "/register" : (registerUrl || "/admin/register")} className="text-orange-600 hover:text-orange-700 text-xs font-bold transition-colors block uppercase tracking-widest">
+                <Link href={resolvedRegisterUrl} className="text-orange-600 hover:text-orange-700 text-xs font-bold transition-colors block uppercase tracking-widest">
                   Don&apos;t have an account? Create one
                 </Link>
                 <div className="pt-2">
                   <Link 
-                    href={`/terms/${loginRole.toLowerCase()}`} 
+                    href={`/terms/${termsRoleSlug}`} 
                     className="text-[9px] text-gray-300 hover:text-orange-500 font-black uppercase tracking-[0.2em] transition-colors"
                   >
                     Terms & Protocol

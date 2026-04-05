@@ -15,6 +15,7 @@ const sessionRoles = ["ADMIN", "DONOR", "NGO", "RIDER", "COMMUNITY"] as const;
 export const SESSION_COOKIE_NAMES = [
   "session",
   "admin_session",
+  "ground_admin_session",
   "donor_session",
   "ngo_session",
   "rider_session",
@@ -36,6 +37,7 @@ interface GetSessionOptions {
 
 export function getCookieName(role: string): string {
   if (role === "ADMIN") return "admin_session";
+  if (role === "GROUND_ADMIN") return "ground_admin_session";
   if (role === "DONOR") return "donor_session";
   if (role === "NGO") return "ngo_session";
   if (role === "RIDER") return "rider_session";
@@ -128,6 +130,7 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
 
   // 2. Get all session tokens
   const adminToken = cookieStore.get("admin_session")?.value;
+  const groundAdminToken = cookieStore.get("ground_admin_session")?.value;
   const donorToken = cookieStore.get("donor_session")?.value;
   const ngoToken = cookieStore.get("ngo_session")?.value;
   const riderToken = cookieStore.get("rider_session")?.value;
@@ -144,8 +147,21 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
   };
   const tokenChecks: Array<string | undefined> = [];
   const preferredRole = options?.preferredRole ?? inferPreferredRole(currentPath);
+  const isGroundAdminContext = currentPath.includes("/ground-verification");
 
-  if (preferredRole) {
+  if (preferredRole === "ADMIN") {
+    if (isGroundAdminContext) {
+      tokenChecks.push(groundAdminToken, adminToken, generalToken);
+    } else {
+      tokenChecks.push(adminToken, groundAdminToken, generalToken);
+    }
+
+    for (const role of sessionRoles) {
+      if (role !== preferredRole) {
+        tokenChecks.push(tokenByRole[role]);
+      }
+    }
+  } else if (preferredRole) {
     tokenChecks.push(tokenByRole[preferredRole], generalToken);
 
     for (const role of sessionRoles) {
@@ -153,9 +169,11 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
         tokenChecks.push(tokenByRole[role]);
       }
     }
+
+    tokenChecks.push(adminToken, groundAdminToken);
   } else {
     // Default order: check all tokens
-    tokenChecks.push(generalToken, adminToken, donorToken, ngoToken, riderToken, communityToken);
+    tokenChecks.push(generalToken, adminToken, groundAdminToken, donorToken, ngoToken, riderToken, communityToken);
   }
 
   // 4. Verify tokens in priority order

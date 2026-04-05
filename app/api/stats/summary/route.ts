@@ -7,7 +7,26 @@ async function getSummaryHandler() {
   try {
 
     const totalDonors = await prisma.user.count({ where: { role: "DONOR" } });
-    const totalNGOs = await prisma.user.count({ where: { role: "NGO", isVerified: true } });
+    const totalNGOs = await prisma.user.count({
+      where: {
+        role: "NGO",
+        isVerified: true,
+        OR: [
+          {
+            ngoVerification: {
+              is: {
+                status: "FULLY_VERIFIED",
+              },
+            },
+          },
+          {
+            ngoVerification: {
+              is: null,
+            },
+          },
+        ],
+      },
+    });
     
     const aggregatedStats = await prisma.foodDonation.aggregate({
       where: { status: "COLLECTED" },

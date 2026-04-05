@@ -77,7 +77,13 @@ async function getAdminStatsHandler(request: Request) {
         include: { admin: { select: { name: true } } },
       }),
       prisma.report.count({ where: { status: "PENDING" } }),
-      prisma.user.count({ where: { role: "NGO", isVerified: false } }),
+      prisma.ngoVerification.count({
+        where: {
+          status: {
+            in: ["PENDING", "ONLINE_VERIFIED", "FIELD_VISIT_SCHEDULED", "FIELD_VERIFIED"],
+          },
+        },
+      }),
       prisma.user.count({ where: { role: "RIDER" } }),
       prisma.user.count({ where: { role: "RIDER", isAvailable: true } }),
       prisma.pickupRequest.count({ where: { status: "ASSIGNED" } }),

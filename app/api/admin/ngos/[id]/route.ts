@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { createNotification } from "@/lib/notifications";
+import { createNotification, relayRealtimeEvent } from "@/lib/notifications";
 import { createAuditLog } from "@/lib/audit";
 import { withSecurity } from "@/lib/api-handler";
 import { getSession } from "@/lib/auth";
@@ -79,18 +79,68 @@ async function updateNgoHandler(
 
     // Handle normal verification toggle
     if (action === undefined && typeof isVerified === "boolean") {
-      const updatedUser = await prisma.user.update({
-        where: { id, role: "NGO" },
-        data: { isVerified },
-        select: NGO_SELECT
+      const ngo = await prisma.user.findUnique({
+        where: { id },
+        select: { id: true, email: true, role: true, verificationDoc: true },
       });
+
+      if (!ngo || ngo.role !== "NGO") {
+        return NextResponse.json({ error: "NGO not found" }, { status: 404 });
+      }
+
+      const verification = await prisma.ngoVerification.upsert({
+        where: { ngoId: id },
+        update: {},
+        create: {
+          ngoId: id,
+          registrationCertUrl: ngo.verificationDoc || undefined,
+        },
+      });
+
+      if (isVerified && verification.status !== "FIELD_VERIFIED" && verification.status !== "FULLY_VERIFIED") {
+        return NextResponse.json(
+          {
+            error:
+              "NGO can only be fully verified after online + field verification is completed.",
+          },
+          { status: 400 }
+        );
+      }
+
+      const nextReverificationAt = new Date();
+      nextReverificationAt.setMonth(nextReverificationAt.getMonth() + 6);
+
+      const [updatedUser] = await prisma.$transaction([
+        prisma.user.update({
+          where: { id, role: "NGO" },
+          data: { isVerified },
+          select: NGO_SELECT,
+        }),
+        prisma.ngoVerification.update({
+          where: { ngoId: id },
+          data: isVerified
+            ? {
+                status: "FULLY_VERIFIED",
+                finalReviewedAt: new Date(),
+                finalReviewedById: adminId,
+                lastVerifiedAt: new Date(),
+                nextReverificationAt,
+              }
+            : {
+                status: "REJECTED",
+                rejectedAt: new Date(),
+                rejectedById: adminId,
+                rejectionReason: "Verification revoked by admin.",
+              },
+        }),
+      ]);
 
       await createNotification({
         userId: id,
         type: "SYSTEM",
-        title: isVerified ? "Account Verified!" : "Verification Update",
+        title: isVerified ? "NGO Fully Verified" : "Verification Update",
         message: isVerified 
-          ? "Congratulations! Your NGO account has been verified." 
+          ? "Congratulations! Your NGO has passed online and on-ground checks and is now fully verified." 
           : "Your verification status has been updated. Please contact support.",
         link: "/dashboard"
       });
@@ -99,6 +149,24 @@ async function updateNgoHandler(
         adminId,
         action: isVerified ? "VERIFY_NGO" : "UNVERIFY_NGO",
         details: `${isVerified ? 'Verified' : 'Unverified'} NGO: ${id}`
+      });
+
+      const adminUsers = await prisma.user.findMany({
+        where: { role: "ADMIN" },
+        select: { id: true },
+        take: 100,
+      });
+
+      await relayRealtimeEvent({
+        userIds: adminUsers.map((admin) => admin.id),
+        type: "NGO_VERIFICATION_UPDATED",
+        payload: {
+          ngoId: id,
+          status: isVerified ? "FULLY_VERIFIED" : "REJECTED",
+          action: isVerified ? "LEGACY_NGO_FINAL_APPROVE" : "LEGACY_NGO_REVOKE",
+          byUserId: adminId,
+          updatedAt: new Date().toISOString(),
+        },
       });
 
       return NextResponse.json({ message: "Verification status updated", user: updatedUser });
@@ -117,7 +185,12 @@ async function updateNgoHandler(
       }
 
       const strikeLevel = level ? Number(level) : ngo.strikeCount + 1;
-      const updateData: any = { strikeCount: strikeLevel };
+      const updateData: {
+        strikeCount: number;
+        suspensionExpiresAt?: Date;
+        isLicenseSuspended?: boolean;
+        isVerified?: boolean;
+      } = { strikeCount: strikeLevel };
       let notificationTitle = "";
       let notificationMessage = "";
 

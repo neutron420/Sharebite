@@ -18,7 +18,12 @@ async function postRequestHandler(request: Request) {
       select: { 
         isVerified: true, 
         isLicenseSuspended: true, 
-        suspensionExpiresAt: true 
+        suspensionExpiresAt: true,
+        ngoVerification: {
+          select: {
+            status: true,
+          },
+        },
       }
     });
 
@@ -37,9 +42,25 @@ async function postRequestHandler(request: Request) {
       );
     }
 
-    if (!user?.isVerified) {
+    const verificationStatus = user?.ngoVerification?.status;
+    const canOperateAfterOnlineReview =
+      verificationStatus === "ONLINE_VERIFIED" ||
+      verificationStatus === "FIELD_VISIT_SCHEDULED" ||
+      verificationStatus === "FIELD_VERIFIED" ||
+      verificationStatus === "FULLY_VERIFIED";
+
+    if (!user?.isVerified && !canOperateAfterOnlineReview) {
+      const messageByStatus: Record<string, string> = {
+        PENDING: "Access Denied. Your NGO documents are pending online admin verification.",
+        REJECTED: "Access Denied. Your NGO verification was rejected. Please re-upload valid documents.",
+      };
+
       return NextResponse.json(
-        { error: "Access Denied. Your NGO account must be verified by an admin before you can request food." },
+        {
+          error:
+            (verificationStatus && messageByStatus[verificationStatus]) ||
+            "Access Denied. Your NGO account must complete online verification before requesting food.",
+        },
         { status: 403 }
       );
     }

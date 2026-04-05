@@ -143,7 +143,9 @@ function handleBroadcast(channel: string, message: string) {
       deliverToUser(userId, "NEW_MESSAGE", payload);
     } else if (targetRole) {
       localClients.forEach(c => {
-        if (c.role === targetRole && c.ws.readyState === WebSocket.OPEN) c.ws.send(JSON.stringify({ type, payload }));
+        if (c.role === targetRole && c.ws.readyState === WebSocket.OPEN) {
+          sendWsMessage(c.ws, type || "NOTIFICATION", payload);
+        }
       });
     } else if (userId) {
       deliverToUser(userId, type || "NOTIFICATION", payload);

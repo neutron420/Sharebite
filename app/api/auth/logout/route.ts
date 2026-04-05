@@ -6,24 +6,20 @@ export async function POST(request: Request) {
   const cookieStore = await cookies();
   const session = await getSession({ request });
 
-  if (session) {
-    // Clear only the specific role cookie requesting the logout
-    const cookieName = getCookieName(session.role);
+  // Clear all known auth cookies to avoid stale parallel sessions.
+  for (const cookieName of SESSION_COOKIE_NAMES) {
     cookieStore.set(cookieName, "", {
       maxAge: 0,
       path: "/",
     });
-    
-    // Also clear the lingering legacy shared session if it exists to be safe
-    cookieStore.set("session", "", { maxAge: 0, path: "/" });
-  } else {
-    // Fallback: If session can't be resolved, clear them all
-    for (const cookieName of SESSION_COOKIE_NAMES) {
-      cookieStore.set(cookieName, "", {
-        maxAge: 0,
-        path: "/",
-      });
-    }
+  }
+
+  if (session) {
+    const roleCookie = getCookieName(session.role);
+    cookieStore.set(roleCookie, "", {
+      maxAge: 0,
+      path: "/",
+    });
   }
 
   return NextResponse.json({ message: "Logged out successfully" });
