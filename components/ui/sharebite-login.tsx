@@ -183,6 +183,7 @@ export default function ShareBiteLogin({
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
     .trim();
   const searchParams = useSearchParams();
+  const roleFromQuery = (searchParams.get("role") || "").trim().toUpperCase();
   const success = searchParams.get("registered") === "true" ? "Registration Successful! Log in to deploy your first mission." : "";
 
   // Persistence logic
@@ -195,7 +196,9 @@ export default function ShareBiteLogin({
     // Core logic: If we have a role selector (Home Login), restore from memory.
     // If not (Admin Portal), FORCE the default role to ensure access.
     if (showRoleSelector) {
-      if (savedRole && selectableRoles.includes(savedRole as LoginRole)) {
+      if (roleFromQuery && selectableRoles.includes(roleFromQuery as LoginRole)) {
+        setLoginRole(roleFromQuery as LoginRole);
+      } else if (savedRole && selectableRoles.includes(savedRole as LoginRole)) {
         setLoginRole(savedRole as LoginRole);
       } else if (selectableRoles.includes(defaultRole)) {
         setLoginRole(defaultRole);
@@ -207,7 +210,7 @@ export default function ShareBiteLogin({
     }
     
     setIsHydrated(true);
-  }, [showRoleSelector, defaultRole, selectableRoles]);
+  }, [showRoleSelector, defaultRole, selectableRoles, roleFromQuery]);
 
   useEffect(() => {
     if (isHydrated) {
@@ -240,7 +243,7 @@ export default function ShareBiteLogin({
       }
 
       const role = data.user?.role;
-      if (loginRole === "GROUND_ADMIN") router.push("/admin/ground-verification");
+      if (loginRole === "GROUND_ADMIN") router.push("/ground-admin");
       else if (role === "ADMIN") router.push("/admin");
       else if (role === "DONOR") router.push("/donor");
       else if (role === "NGO") router.push("/ngo");
@@ -272,7 +275,19 @@ export default function ShareBiteLogin({
     COMMUNITY: "Community",
   };
 
-  const resolvedRegisterUrl = registerUrl || (showRoleSelector ? "/register" : "/admin/register");
+  const resolvedRegisterUrl = registerUrl || (() => {
+    if (showRoleSelector) {
+      if (loginRole === "ADMIN") return "/admin/register";
+      if (loginRole === "GROUND_ADMIN") return "/ground-admin/register";
+      if (loginRole === "COMMUNITY") return "/community/signup";
+      return "/register";
+    }
+
+    if (defaultRole === "ADMIN") return "/admin/register";
+    if (defaultRole === "GROUND_ADMIN") return "/ground-admin/register";
+    if (defaultRole === "COMMUNITY") return "/community/signup";
+    return "/register";
+  })();
   const termsRoleSlug = loginRole === "GROUND_ADMIN" ? "admin" : loginRole.toLowerCase();
 
   if (!isHydrated) return <div className="min-h-screen w-full flex items-center justify-center bg-orange-50/50">

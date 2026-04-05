@@ -6,11 +6,6 @@ import { signToken, getCookieName } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { withSecurity } from "@/lib/api-handler";
 import { ZodError } from "zod";
-import { createAuditLog } from "@/lib/audit";
-
-const ADMIN_ROLE_LOCK_ACTION = "ADMIN_ROLE_LOCK";
-const GROUND_ADMIN_ROLE_LOCK_ACTION = "GROUND_ADMIN_ROLE_LOCK";
-const GROUND_ADMIN_LOGIN_ACTION = "GROUND_ADMIN_LOGIN";
 
 async function loginHandler(request: Request) {
   console.log(">>> LOGIN ATTEMPT REACHED HANDLER");
@@ -46,7 +41,6 @@ async function loginHandler(request: Request) {
     // 2. Validate input
     const validatedData = loginSchema.parse(loginData);
     const requestedRole = validatedData.role;
-    const normalizedRequestedRole = requestedRole === "GROUND_ADMIN" ? "ADMIN" : requestedRole;
 
     // 3. Find user
     const user = await prisma.user.findUnique({
@@ -71,78 +65,18 @@ async function loginHandler(request: Request) {
     }
     
     // Explicit Role Enforcement (Optional but recommended for designated login pages)
-    if (normalizedRequestedRole && user.role !== normalizedRequestedRole) {
+    if (requestedRole && user.role !== requestedRole) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       );
     }
 
-    if (user.role === "ADMIN") {
-      if (requestedRole !== "ADMIN" && requestedRole !== "GROUND_ADMIN") {
-        return NextResponse.json(
-          { error: "Select either Admin or Ground Admin to continue." },
-          { status: 400 }
-        );
-      }
-
-      const laneEvents = await prisma.auditLog.findMany({
-        where: {
-          adminId: user.id,
-          action: {
-            in: [ADMIN_ROLE_LOCK_ACTION, GROUND_ADMIN_ROLE_LOCK_ACTION, GROUND_ADMIN_LOGIN_ACTION],
-          },
-        },
-        select: {
-          action: true,
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: 50,
-      });
-
-      const latestLaneAction = laneEvents.find((event) =>
-        event.action === ADMIN_ROLE_LOCK_ACTION ||
-        event.action === GROUND_ADMIN_ROLE_LOCK_ACTION ||
-        event.action === GROUND_ADMIN_LOGIN_ACTION
+    if ((user.role === "ADMIN" || user.role === "GROUND_ADMIN") && !requestedRole) {
+      return NextResponse.json(
+        { error: "Please use the dedicated Admin or Ground Admin login portal." },
+        { status: 400 }
       );
-
-      const lockedLane =
-        latestLaneAction?.action === ADMIN_ROLE_LOCK_ACTION
-          ? "ADMIN"
-          : latestLaneAction
-            ? "GROUND_ADMIN"
-            : null;
-
-      if (lockedLane && requestedRole !== lockedLane) {
-        const message =
-          lockedLane === "GROUND_ADMIN"
-            ? "This account is a Ground Admin account and cannot log in as normal Admin."
-            : "This account is a normal Admin account and cannot log in as Ground Admin.";
-
-        return NextResponse.json({ error: message }, { status: 403 });
-      }
-
-      if (!lockedLane) {
-        try {
-          await createAuditLog({
-            adminId: user.id,
-            action: requestedRole === "GROUND_ADMIN" ? GROUND_ADMIN_ROLE_LOCK_ACTION : ADMIN_ROLE_LOCK_ACTION,
-            details:
-              requestedRole === "GROUND_ADMIN"
-                ? `Ground admin login lane locked for ${user.email}`
-                : `Admin login lane locked for ${user.email}`,
-          });
-        } catch (auditError) {
-          console.error("Admin lane lock audit log failed:", auditError);
-          return NextResponse.json(
-            { error: "Unable to establish account login lane. Please try again." },
-            { status: 500 }
-          );
-        }
-      }
     }
 
     // Block Suspended/Terminated Users (Apply to all roles except ADMIN for safety)
@@ -186,18 +120,6 @@ async function loginHandler(request: Request) {
     } as const;
 
     cookieStore.set(cookieName, token, cookieOptions);
-
-    if (requestedRole === "GROUND_ADMIN" && user.role === "ADMIN") {
-      try {
-        await createAuditLog({
-          adminId: user.id,
-          action: GROUND_ADMIN_LOGIN_ACTION,
-          details: `Ground admin session started for ${user.email}`,
-        });
-      } catch (auditError) {
-        console.error("GROUND_ADMIN_LOGIN audit log failed:", auditError);
-      }
-    }
 
     // Remove password from response
     const { password, ...userWithoutPassword } = user;

@@ -121,7 +121,14 @@ export default function VerificationPage() {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error("Failed to load NGO verification queue");
+      if (!res.ok) {
+        const errorPayload = await res.json().catch(() => null);
+        const message =
+          errorPayload?.error ||
+          errorPayload?.message ||
+          `Failed to load NGO verification queue (${res.status})`;
+        throw new Error(message);
+      }
 
       const data = (await res.json()) as ApiResponse;
       setItems(data.items || []);
@@ -260,12 +267,12 @@ export default function VerificationPage() {
             }}
             className="px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white"
           >
-            <option value="all">All Status</option>
+            <option value="all">Active Pipeline</option>
             <option value="PENDING">Pending</option>
             <option value="ONLINE_VERIFIED">Online Verified</option>
             <option value="FIELD_VISIT_SCHEDULED">Field Visit Scheduled</option>
             <option value="FIELD_VERIFIED">Field Verified</option>
-            <option value="FULLY_VERIFIED">Fully Verified</option>
+            <option value="FULLY_VERIFIED">Completed (Fully Verified)</option>
             <option value="REJECTED">Rejected</option>
           </select>
         </div>

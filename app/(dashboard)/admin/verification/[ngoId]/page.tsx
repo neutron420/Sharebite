@@ -194,8 +194,52 @@ export default function NgoVerificationDetailPage() {
 
   const canScheduleFieldVisit = useMemo(() => {
     if (!item) return false;
-    return item.status === "ONLINE_VERIFIED" || item.status === "FIELD_VERIFIED";
+    return item.status === "ONLINE_VERIFIED";
   }, [item]);
+
+  const isWorkflowLockedForGroundStep = useMemo(() => {
+    if (!item) return true;
+    return (
+      item.status === "FIELD_VISIT_SCHEDULED" ||
+      item.status === "FIELD_VERIFIED" ||
+      item.status === "FULLY_VERIFIED"
+    );
+  }, [item]);
+
+  const isOnlineStepLocked = useMemo(() => {
+    if (!item) return true;
+    return isWorkflowLockedForGroundStep;
+  }, [item, isWorkflowLockedForGroundStep]);
+
+  const scheduleDisableReason = useMemo(() => {
+    if (!item) return "NGO details are still loading.";
+    if (isWorkflowLockedForGroundStep) {
+      if (item.status === "FIELD_VISIT_SCHEDULED") {
+        return "Field assignment is locked. Ground Admin verification is pending.";
+      }
+      if (item.status === "FIELD_VERIFIED") {
+        return "Ground verification completed. Proceed to final approval.";
+      }
+      if (item.status === "FULLY_VERIFIED") {
+        return "This NGO is already fully verified and locked.";
+      }
+    }
+
+    if (!canScheduleFieldVisit) {
+      if (item.status === "PENDING") {
+        return "Complete Online Verification first, then assign Ground Admin.";
+      }
+      if (item.status === "REJECTED") {
+        return "Rejected NGOs cannot be scheduled for field verification.";
+      }
+      return "Field scheduling is not allowed in the current status.";
+    }
+
+    if (fieldOfficers.length === 0) {
+      return "No Ground Admin accounts are available yet.";
+    }
+    return "";
+  }, [item, canScheduleFieldVisit, fieldOfficers.length, isWorkflowLockedForGroundStep]);
 
   const runAction = async (action: string, payload: Record<string, unknown>) => {
     if (!item) return;
@@ -334,6 +378,7 @@ export default function NgoVerificationDetailPage() {
                     }))
                   }
                   placeholder="https://..."
+                  disabled={isOnlineStepLocked || actionLoading}
                   className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg"
                 />
                 {!!docForm[key as keyof typeof docForm] && (
@@ -356,12 +401,19 @@ export default function NgoVerificationDetailPage() {
           <textarea
             value={docForm.onlineReviewNote}
             onChange={(e) => setDocForm((prev) => ({ ...prev, onlineReviewNote: e.target.value }))}
+            disabled={isOnlineStepLocked || actionLoading}
             className="mt-1 w-full min-h-[72px] px-3 py-2 text-xs border border-gray-200 rounded-lg"
           />
         </label>
 
+        {isOnlineStepLocked ? (
+          <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+            Online verification inputs are locked after field assignment. Continue with Ground Admin field verification.
+          </p>
+        ) : null}
+
         <button
-          disabled={actionLoading}
+          disabled={actionLoading || isOnlineStepLocked}
           onClick={() =>
             runAction("ONLINE_VERIFY", {
               registrationCertUrl: docForm.registrationCertUrl,
@@ -383,7 +435,7 @@ export default function NgoVerificationDetailPage() {
 
         {fieldOfficers.length === 0 ? (
           <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-            No Ground Admin available yet. Ask the officer to sign in once using the Ground Admin option on admin login.
+            No Ground Admin available yet. Ask the field officer to register/login from the dedicated Ground Admin portal.
           </p>
         ) : null}
 
@@ -393,6 +445,7 @@ export default function NgoVerificationDetailPage() {
             <select
               value={scheduleForm.fieldOfficerId}
               onChange={(e) => setScheduleForm((prev) => ({ ...prev, fieldOfficerId: e.target.value }))}
+              disabled={!!scheduleDisableReason || actionLoading}
               className="mt-1 w-full px-3 py-2 text-xs border border-gray-200 rounded-lg bg-white"
             >
               <option value="">Select Ground Admin</option>
@@ -408,6 +461,7 @@ export default function NgoVerificationDetailPage() {
             <input
               value={scheduleForm.fieldVisitCity}
               onChange={(e) => setScheduleForm((prev) => ({ ...prev, fieldVisitCity: e.target.value }))}
+              disabled={!!scheduleDisableReason || actionLoading}
               className="mt-1 w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
             />
           </label>
@@ -417,26 +471,45 @@ export default function NgoVerificationDetailPage() {
               type="datetime-local"
               value={scheduleForm.fieldVisitScheduledAt}
               onChange={(e) => setScheduleForm((prev) => ({ ...prev, fieldVisitScheduledAt: e.target.value }))}
+              disabled={!!scheduleDisableReason || actionLoading}
               className="mt-1 w-full px-3 py-2 text-xs border border-gray-200 rounded-lg"
             />
           </label>
         </div>
 
         <button
-          disabled={actionLoading || !canScheduleFieldVisit}
-          onClick={() =>
+          disabled={actionLoading || !!scheduleDisableReason}
+          onClick={() => {
+            if (!scheduleForm.fieldOfficerId) {
+              alert("Please select a Ground Admin before assigning.");
+              return;
+            }
+
+            if (!scheduleForm.fieldVisitCity.trim()) {
+              alert("Please provide the field visit city.");
+              return;
+            }
+
             runAction("SCHEDULE_FIELD_VISIT", {
               fieldOfficerId: scheduleForm.fieldOfficerId,
               fieldVisitCity: scheduleForm.fieldVisitCity,
               fieldVisitScheduledAt: scheduleForm.fieldVisitScheduledAt
                 ? new Date(scheduleForm.fieldVisitScheduledAt).toISOString()
                 : null,
-            })
-          }
+            });
+          }}
+          title={scheduleDisableReason || "Assign Ground Admin"}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50"
         >
-          <UserRound className="h-3.5 w-3.5" /> Assign Ground Admin
+          <UserRound className="h-3.5 w-3.5" />
+          Assign Ground Admin
         </button>
+
+        {scheduleDisableReason ? (
+          <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+            {scheduleDisableReason}
+          </p>
+        ) : null}
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">

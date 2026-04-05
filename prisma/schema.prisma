@@ -374,6 +374,7 @@ enum UserRole {
   DONOR
   NGO
   ADMIN
+  GROUND_ADMIN
   RIDER
   COMMUNITY
 }

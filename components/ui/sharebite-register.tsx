@@ -6,8 +6,13 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LocationPicker from "@/components/map/LocationPicker";
+import Turnstile from "react-turnstile";
 
 type RoutePoint = { x: number; y: number; delay: number };
+
+interface ShareBiteRegisterProps {
+  role?: "ADMIN" | "GROUND_ADMIN";
+}
 
 const DotMap = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -108,13 +113,30 @@ const DotMap = () => {
   );
 };
 
-export default function ShareBiteRegister() {
+export default function ShareBiteRegister({ role = "ADMIN" }: ShareBiteRegisterProps) {
   const router = useRouter();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+
+  const turnstileSiteKey = (process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAACtsY9vA7n-6RWgO")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .trim();
+
+  const isGroundAdmin = role === "GROUND_ADMIN";
+  const storageKey = isGroundAdmin ? "sharebite_ground_admin_register" : "sharebite_admin_register";
+  const loginHref = isGroundAdmin ? "/admin/login?role=GROUND_ADMIN" : "/admin/login?role=ADMIN";
+  const registerHeading = isGroundAdmin ? "Create Ground Admin Account" : "Create Admin Account";
+  const registerSubtitle = isGroundAdmin
+    ? "Set up field officer credentials to manage on-ground NGO verification"
+    : "Set up your administrator credentials to manage ShareBite";
+  const portalTitle = isGroundAdmin ? "Ground Admin Portal" : "ShareBite Admin";
+  const portalDescription = isGroundAdmin
+    ? "Field officer dashboard for city-wise on-ground NGO verification and report submission"
+    : "Command center for managing donations, users, NGOs, and keeping the platform running at full speed";
 
   const [form, setForm] = useState({
     name: "",
@@ -137,7 +159,7 @@ export default function ShareBiteRegister() {
 
   // Persistence logic
   useEffect(() => {
-    const saved = localStorage.getItem("sharebite_admin_register");
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       const parsed = JSON.parse(saved);
       setForm(prev => ({ 
@@ -148,18 +170,24 @@ export default function ShareBiteRegister() {
       }));
     }
     setIsHydrated(true);
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (isHydrated) {
       const { password, confirmPassword, hasAgreedToTerms, ...safe } = form;
-      localStorage.setItem("sharebite_admin_register", JSON.stringify(safe));
+      localStorage.setItem(storageKey, JSON.stringify(safe));
     }
-  }, [form, isHydrated]);
+  }, [form, isHydrated, storageKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!turnstileToken) {
+      setError("Please complete the security verification.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -168,7 +196,7 @@ export default function ShareBiteRegister() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          role: "ADMIN",
+          role,
           phoneNumber: form.phoneNumber || undefined,
           address: form.address || undefined,
           city: form.city || undefined,
@@ -177,6 +205,7 @@ export default function ShareBiteRegister() {
           pincode: form.pincode || undefined,
           latitude: form.latitude || undefined,
           longitude: form.longitude || undefined,
+          turnstileToken,
         }),
       });
 
@@ -187,8 +216,8 @@ export default function ShareBiteRegister() {
         return;
       }
 
-      localStorage.removeItem("sharebite_admin_register");
-      router.push("/admin/login");
+      localStorage.removeItem(storageKey);
+      router.push(loginHref);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -237,7 +266,7 @@ export default function ShareBiteRegister() {
               transition={{ delay: 0.6 }}
               className="text-3xl font-black mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600 tracking-tight"
             >
-              ShareBite Admin
+              {portalTitle}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: -20 }}
@@ -245,7 +274,7 @@ export default function ShareBiteRegister() {
               transition={{ delay: 0.7 }}
               className="text-sm text-center text-gray-500 max-w-xs leading-relaxed"
             >
-              Command center for managing donations, users, NGOs, and keeping the platform running at full speed
+              {portalDescription}
             </motion.p>
 
             <motion.div
@@ -255,7 +284,9 @@ export default function ShareBiteRegister() {
               className="mt-8 flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-orange-100"
             >
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Admin Access Portal</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                {isGroundAdmin ? "Ground Admin Access Portal" : "Admin Access Portal"}
+              </span>
             </motion.div>
           </div>
         </div>
@@ -271,9 +302,9 @@ export default function ShareBiteRegister() {
               <div className="lg:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center">
                 <ShieldCheck className="text-white h-5 w-5" />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Create Admin Account</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">{registerHeading}</h1>
             </div>
-            <p className="text-gray-500 mb-7 text-sm">Set up your administrator credentials to manage ShareBite</p>
+            <p className="text-gray-500 mb-7 text-sm">{registerSubtitle}</p>
 
             {error && (
               <motion.div
@@ -444,6 +475,18 @@ export default function ShareBiteRegister() {
                 </label>
               </div>
 
+              <div className="flex items-center justify-center pt-1">
+                <Turnstile
+                  sitekey={turnstileSiteKey}
+                  onVerify={(token) => {
+                    setTurnstileToken(token);
+                    setError((prev) => (prev === "Please complete the security verification." ? "" : prev));
+                  }}
+                  onExpire={() => setTurnstileToken("")}
+                  theme="light"
+                />
+              </div>
+
               {/* Submit Button */}
               <motion.div
                 whileHover={{ scale: 1.01 }}
@@ -461,7 +504,10 @@ export default function ShareBiteRegister() {
                     {isLoading ? (
                       <><Loader2 className="h-4 w-4 animate-spin" /> Creating account...</>
                     ) : (
-                      <><UserPlus className="h-4 w-4" /> Create Admin Account</>
+                      <>
+                        <UserPlus className="h-4 w-4" />
+                        {isGroundAdmin ? "Create Ground Admin Account" : "Create Admin Account"}
+                      </>
                     )}
                   </span>
                   {isHovered && (
@@ -479,12 +525,14 @@ export default function ShareBiteRegister() {
               {/* Security Badge */}
               <div className="flex items-center gap-2 justify-center pt-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                <span className="text-[10px] uppercase font-bold tracking-widest text-gray-300">Secured admin registration</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-gray-300">
+                  {isGroundAdmin ? "Secured ground admin registration" : "Secured admin registration"}
+                </span>
               </div>
 
               {/* Login Link */}
               <div className="text-center pt-2">
-                <a href="/admin/login" className="text-orange-600 hover:text-orange-700 text-sm font-medium transition-colors">
+                <a href={loginHref} className="text-orange-600 hover:text-orange-700 text-sm font-medium transition-colors">
                   Already have an account? Sign in
                 </a>
               </div>

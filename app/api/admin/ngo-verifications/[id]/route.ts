@@ -13,7 +13,12 @@ const ACTIONS = {
   REJECT: "REJECT",
 } as const;
 
-const GROUND_ADMIN_ACTIONS = ["GROUND_ADMIN_ROLE_LOCK", "GROUND_ADMIN_LOGIN"] as const;
+const ADMIN_ONLY_ACTIONS = new Set<string>([
+  ACTIONS.ONLINE_VERIFY,
+  ACTIONS.SCHEDULE_FIELD_VISIT,
+  ACTIONS.FINAL_APPROVE,
+  ACTIONS.REJECT,
+]);
 
 type VerificationAction = (typeof ACTIONS)[keyof typeof ACTIONS];
 
@@ -35,39 +40,19 @@ function computeNextReverificationDate(months: number) {
   return now;
 }
 
-async function getGroundAdminIds() {
-  const events = await prisma.auditLog.findMany({
-    where: {
-      action: {
-        in: [...GROUND_ADMIN_ACTIONS],
-      },
-    },
-    select: {
-      adminId: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 2000,
-  });
-
-  return Array.from(new Set(events.map((event) => event.adminId)));
-}
-
 async function getNgoVerificationHandler(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession({ preferredRole: "ADMIN", request });
+    const session = await getSession({ request });
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id: ngoId } = await params;
-    const groundAdminIds = await getGroundAdminIds();
 
-    const [actor, ngo, fieldOfficers] = await Promise.all([
+    const [actor, ngo] = await Promise.all([
       prisma.user.findUnique({
         where: { id: session.userId as string },
         select: { id: true, name: true, email: true, city: true },
@@ -126,24 +111,31 @@ async function getNgoVerificationHandler(
           },
         },
       }),
-      groundAdminIds.length > 0
-        ? prisma.user.findMany({
-            where: {
-              role: "ADMIN",
-              id: {
-                in: groundAdminIds,
-              },
-            },
-            orderBy: [{ city: "asc" }, { name: "asc" }],
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              city: true,
-            },
-          })
-        : Promise.resolve([]),
     ]);
+
+    let fieldOfficers: Array<{
+      id: string;
+      name: string;
+      email: string;
+      city: string | null;
+    }> = [];
+
+    try {
+      fieldOfficers = await prisma.user.findMany({
+        where: {
+          role: "GROUND_ADMIN",
+        },
+        orderBy: [{ city: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          city: true,
+        },
+      });
+    } catch (fieldOfficerError) {
+      console.error("Ground admin lookup failed while loading NGO verification detail:", fieldOfficerError);
+    }
 
     if (!ngo || ngo.role !== "NGO") {
       return NextResponse.json({ error: "NGO not found" }, { status: 404 });
@@ -229,8 +221,8 @@ async function patchNgoVerificationHandler(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getSession({ preferredRole: "ADMIN", request });
-    if (!session || session.role !== "ADMIN") {
+    const session = await getSession({ request });
+    if (!session || (session.role !== "ADMIN" && session.role !== "GROUND_ADMIN")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -240,6 +232,20 @@ async function patchNgoVerificationHandler(
 
     if (!Object.values(ACTIONS).includes(action)) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    }
+
+    if (ADMIN_ONLY_ACTIONS.has(action) && session.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Only Admin can perform this verification step." },
+        { status: 403 }
+      );
+    }
+
+    if (action === ACTIONS.SUBMIT_FIELD_REPORT && session.role !== "GROUND_ADMIN") {
+      return NextResponse.json(
+        { error: "Only Ground Admin can submit field verification reports." },
+        { status: 403 }
+      );
     }
 
     const [actor, ngo] = await Promise.all([
@@ -269,9 +275,6 @@ async function patchNgoVerificationHandler(
     if (!ngo || ngo.role !== "NGO") {
       return NextResponse.json({ error: "NGO not found" }, { status: 404 });
     }
-
-    const groundAdminIds = await getGroundAdminIds();
-    const actorIsGroundAdmin = groundAdminIds.includes(actor.id);
 
     const verification = await prisma.ngoVerification.upsert({
       where: { ngoId },
@@ -317,6 +320,20 @@ async function patchNgoVerificationHandler(
     };
 
     if (action === ACTIONS.ONLINE_VERIFY) {
+      if (
+        verification.status === "FIELD_VISIT_SCHEDULED" ||
+        verification.status === "FIELD_VERIFIED" ||
+        verification.status === "FULLY_VERIFIED"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Online verification is locked after field assignment. Wait for Ground Admin verification and final review.",
+          },
+          { status: 400 }
+        );
+      }
+
       const registrationCertUrl = body?.registrationCertUrl || verification.registrationCertUrl;
       const panTanUrl = body?.panTanUrl || verification.panTanUrl;
       const bankProofUrl = body?.bankProofUrl || verification.bankProofUrl;
@@ -394,6 +411,20 @@ async function patchNgoVerificationHandler(
       const scheduledAt = toDateOrNull(body?.fieldVisitScheduledAt);
       const explicitCity = typeof body?.fieldVisitCity === "string" ? body.fieldVisitCity.trim() : "";
 
+      if (
+        verification.status === "FIELD_VISIT_SCHEDULED" ||
+        verification.status === "FIELD_VERIFIED" ||
+        verification.status === "FULLY_VERIFIED"
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Field assignment is locked. Ground Admin verification is in progress or already completed.",
+          },
+          { status: 400 }
+        );
+      }
+
       if (!fieldOfficerId) {
         return NextResponse.json({ error: "fieldOfficerId is required" }, { status: 400 });
       }
@@ -403,13 +434,9 @@ async function patchNgoVerificationHandler(
         select: { id: true, role: true, name: true, city: true, email: true },
       });
 
-      if (!officer || officer.role !== "ADMIN") {
-        return NextResponse.json({ error: "Assigned field officer must be an ADMIN user" }, { status: 400 });
-      }
-
-      if (!groundAdminIds.includes(officer.id)) {
+      if (!officer || officer.role !== "GROUND_ADMIN") {
         return NextResponse.json(
-          { error: "Assigned field officer must be a Ground Admin." },
+          { error: "Assigned field officer must be a Ground Admin user." },
           { status: 400 }
         );
       }
@@ -419,7 +446,7 @@ async function patchNgoVerificationHandler(
         return NextResponse.json({ error: "A city is required to schedule field verification" }, { status: 400 });
       }
 
-      if (verification.status !== "ONLINE_VERIFIED" && verification.status !== "FIELD_VERIFIED") {
+      if (verification.status !== "ONLINE_VERIFIED") {
         return NextResponse.json(
           { error: "NGO must be online verified before scheduling a field visit" },
           { status: 400 }
@@ -450,7 +477,7 @@ async function patchNgoVerificationHandler(
           type: "SYSTEM",
           title: "New NGO Field Verification Assignment",
           message: `${ngo.name} was assigned to you for on-ground verification in ${fieldVisitCity}.`,
-          link: "/admin/ground-verification",
+          link: "/ground-admin",
         }),
       ]);
 
@@ -471,13 +498,6 @@ async function patchNgoVerificationHandler(
     }
 
     if (action === ACTIONS.SUBMIT_FIELD_REPORT) {
-      if (!actorIsGroundAdmin) {
-        return NextResponse.json(
-          { error: "Only Ground Admin users can submit on-ground field reports." },
-          { status: 403 }
-        );
-      }
-
       if (verification.status !== "FIELD_VISIT_SCHEDULED") {
         return NextResponse.json({ error: "Field visit must be scheduled first" }, { status: 400 });
       }
@@ -535,6 +555,16 @@ async function patchNgoVerificationHandler(
         message: "On-ground verification has been completed. Final admin review is pending.",
         link: "/ngo/dashboard",
       });
+
+      if (adminIds.length > 0) {
+        await createNotification({
+          userIds: adminIds,
+          type: "SYSTEM",
+          title: "Ground Report Submitted",
+          message: `${ngo.name} field verification report was submitted by ${actor.name}. Final approval is pending.`,
+          link: `/admin/verification/${ngoId}`,
+        });
+      }
 
       await createAuditLog({
         adminId: actor.id,

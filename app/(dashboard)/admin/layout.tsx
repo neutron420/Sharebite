@@ -23,7 +23,6 @@ import {
   ClipboardList,
   Settings,
   Map,
-  MapPin,
   Info,
   CheckCircle,
   AlertTriangle,
@@ -95,7 +94,6 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     ],
   },
   { label: "NGO Verification", icon: UserCheck, id: "verification", href: "/admin/verification" },
-  { label: "Ground Verification", icon: MapPin, id: "ground-verification", href: "/admin/ground-verification", badge: "Field" },
   { label: "Rider Verification", icon: Users, id: "rider-verification", href: "/admin/riders-verification", badge: "New" },
   { label: "Pickup Requests", icon: ClipboardList, id: "requests", href: "/admin/requests", badge: "New" },
   { label: "NGO Partners", icon: Building2, id: "ngo-partners", href: "/admin/ngo" },
@@ -201,7 +199,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [addListener, isAuthPage, user]);
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ role: "ADMIN" }),
+    });
     router.push("/admin/login");
   };
 

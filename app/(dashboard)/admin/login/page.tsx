@@ -8,8 +8,6 @@ export default function AdminLoginPage() {
         showRoleSelector={true}
         defaultRole="ADMIN"
         roleOptions={["ADMIN", "GROUND_ADMIN"]}
-        forgotPasswordUrl="/admin/forgot-password"
-        registerUrl="/admin/register"
       />
     </Suspense>
   );

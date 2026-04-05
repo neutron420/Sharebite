@@ -42,7 +42,7 @@ export default async function proxy(request: NextRequest) {
       try {
         const referer = request.headers.get("referer") || "";
         const refererPath = referer ? new URL(referer).pathname.toLowerCase() : "";
-        isGroundAdminContext = refererPath.includes("/admin/ground-verification");
+        isGroundAdminContext = refererPath.includes("/ground-admin") || refererPath.includes("/admin/ground-verification");
       } catch {
         isGroundAdminContext = false;
       }
@@ -52,7 +52,7 @@ export default async function proxy(request: NextRequest) {
     else if (pathname.startsWith("/api/ngo")) prioritizedCookie = "ngo_session";
     else if (pathname.startsWith("/api/rider")) prioritizedCookie = "rider_session";
 
-    const allCookieNames = ["admin_session", "ground_admin_session", "donor_session", "ngo_session", "rider_session", "session"];
+    const allCookieNames = ["admin_session", "ground_admin_session", "donor_session", "ngo_session", "rider_session", "community_session", "session"];
     const tokensToCheck: string[] = [];
 
     // Prioritize the cookie matching the route
@@ -90,8 +90,16 @@ export default async function proxy(request: NextRequest) {
     }
 
     // Strict Admin Check at Proxy Level
-    if (pathname.startsWith("/api/admin") && decodedRole !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden: Admin access only" }, { status: 403 });
+    if (pathname.startsWith("/api/admin")) {
+      const groundAdminAllowedPath = pathname.startsWith("/api/admin/ngo-verifications");
+      const isGroundAdmin = decodedRole === "GROUND_ADMIN";
+      const isAdmin = decodedRole === "ADMIN";
+
+      if (!isAdmin) {
+        if (!(groundAdminAllowedPath && isGroundAdmin)) {
+          return NextResponse.json({ error: "Forbidden: Admin access only" }, { status: 403 });
+        }
+      }
     }
   }
 

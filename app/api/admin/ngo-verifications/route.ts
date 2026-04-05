@@ -3,8 +3,6 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { withSecurity } from "@/lib/api-handler";
 
-const GROUND_ADMIN_ACTIONS = ["GROUND_ADMIN_ROLE_LOCK", "GROUND_ADMIN_LOGIN"] as const;
-
 const ALLOWED_STATUSES = [
   "PENDING",
   "ONLINE_VERIFIED",
@@ -31,8 +29,8 @@ function isGroundVerifiedStatus(status: VerificationStatus) {
 
 async function getNgoVerificationsHandler(request: Request) {
   try {
-    const session = await getSession({ preferredRole: "ADMIN", request });
-    if (!session || session.role !== "ADMIN") {
+    const session = await getSession({ request });
+    if (!session || (session.role !== "ADMIN" && session.role !== "GROUND_ADMIN")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -44,7 +42,7 @@ async function getNgoVerificationsHandler(request: Request) {
     const page = Math.max(1, Number(searchParams.get("page") || "1"));
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || "25")));
 
-    const [actor, ngos, groundAdminLoginEvents] = await Promise.all([
+    const [actor, ngos] = await Promise.all([
       prisma.user.findUnique({
         where: { id: session.userId as string },
         select: { id: true, name: true, email: true, city: true },
@@ -113,44 +111,38 @@ async function getNgoVerificationsHandler(request: Request) {
           },
         },
       }),
-      prisma.auditLog.findMany({
-        where: {
-          action: {
-            in: [...GROUND_ADMIN_ACTIONS],
-          },
-        },
-        select: {
-          adminId: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: 2000,
-      }),
     ]);
 
-    const groundAdminIds = Array.from(new Set(groundAdminLoginEvents.map((event) => event.adminId)));
-    const fieldOfficers =
-      groundAdminIds.length > 0
-        ? await prisma.user.findMany({
-            where: {
-              role: "ADMIN",
-              id: {
-                in: groundAdminIds,
-              },
-            },
-            orderBy: [{ city: "asc" }, { name: "asc" }],
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              city: true,
-            },
-          })
-        : [];
+    let fieldOfficers: Array<{
+      id: string;
+      name: string;
+      email: string;
+      city: string | null;
+    }> = [];
+
+    try {
+      fieldOfficers = await prisma.user.findMany({
+        where: {
+          role: "GROUND_ADMIN",
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          city: true,
+        },
+        orderBy: {
+          city: "asc",
+        },
+        take: 500,
+      });
+    } catch (fieldOfficerError) {
+      console.error("Ground admin lookup failed while loading NGO verification queue:", fieldOfficerError);
+    }
 
     const actorCity = actor?.city?.toLowerCase() || "";
-    const isGroundAdminActor = groundAdminIds.includes(session.userId as string);
+    const isGroundAdminActor = session.role === "GROUND_ADMIN";
+    const isAdminActor = session.role === "ADMIN";
 
     const items = ngos
       .map((ngo) => {
@@ -208,6 +200,11 @@ async function getNgoVerificationsHandler(request: Request) {
       .filter((item) => {
         if (statusFilter && item.status !== statusFilter) return false;
 
+        // Default admin queue shows active pipeline items only.
+        if (!statusFilter && scope === "admin" && item.status === "FULLY_VERIFIED") {
+          return false;
+        }
+
         if (cityFilter) {
           const itemCity = (item.fieldVisitCity || item.city || "").toLowerCase();
           if (itemCity !== cityFilter) return false;
@@ -222,7 +219,12 @@ async function getNgoVerificationsHandler(request: Request) {
           return assignedToActor || sameCityAsActor;
         }
 
-        return true;
+        if (scope === "admin") {
+          if (!isAdminActor) return false;
+          return true;
+        }
+
+        return false;
       });
 
     const total = items.length;

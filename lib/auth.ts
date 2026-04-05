@@ -11,7 +11,7 @@ const getSecretKey = () => {
   return new TextEncoder().encode(process.env.JWT_SECRET);
 };
 
-const sessionRoles = ["ADMIN", "DONOR", "NGO", "RIDER", "COMMUNITY"] as const;
+const sessionRoles = ["ADMIN", "GROUND_ADMIN", "DONOR", "NGO", "RIDER", "COMMUNITY"] as const;
 export const SESSION_COOKIE_NAMES = [
   "session",
   "admin_session",
@@ -58,6 +58,7 @@ function isSessionPayload(payload: JWTPayload): payload is SessionPayload {
 }
 
 function inferPreferredRole(currentPath: string): SessionRole | undefined {
+  if (currentPath.includes("/ground-admin") || currentPath.includes("/ground-verification")) return "GROUND_ADMIN";
   if (currentPath.includes("/admin")) return "ADMIN";
   if (currentPath.includes("/donor")) return "DONOR";
   if (currentPath.includes("/ngo")) return "NGO";
@@ -140,6 +141,7 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
   // 3. Priority check based on path context
   const tokenByRole: Record<SessionRole, string | undefined> = {
     ADMIN: adminToken,
+    GROUND_ADMIN: groundAdminToken,
     DONOR: donorToken,
     NGO: ngoToken,
     RIDER: riderToken,
@@ -147,21 +149,8 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
   };
   const tokenChecks: Array<string | undefined> = [];
   const preferredRole = options?.preferredRole ?? inferPreferredRole(currentPath);
-  const isGroundAdminContext = currentPath.includes("/ground-verification");
 
-  if (preferredRole === "ADMIN") {
-    if (isGroundAdminContext) {
-      tokenChecks.push(groundAdminToken, adminToken, generalToken);
-    } else {
-      tokenChecks.push(adminToken, groundAdminToken, generalToken);
-    }
-
-    for (const role of sessionRoles) {
-      if (role !== preferredRole) {
-        tokenChecks.push(tokenByRole[role]);
-      }
-    }
-  } else if (preferredRole) {
+  if (preferredRole) {
     tokenChecks.push(tokenByRole[preferredRole], generalToken);
 
     for (const role of sessionRoles) {
@@ -169,8 +158,6 @@ export async function getSession(options?: GetSessionOptions): Promise<SessionPa
         tokenChecks.push(tokenByRole[role]);
       }
     }
-
-    tokenChecks.push(adminToken, groundAdminToken);
   } else {
     // Default order: check all tokens
     tokenChecks.push(generalToken, adminToken, groundAdminToken, donorToken, ngoToken, riderToken, communityToken);

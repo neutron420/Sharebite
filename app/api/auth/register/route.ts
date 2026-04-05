@@ -4,11 +4,14 @@ import prisma from "@/lib/prisma";
 import { registerSchema } from "@/lib/validations/auth";
 import { withSecurity } from "@/lib/api-handler";
 import { createNotification } from "@/lib/notifications";
+import { NotificationType, Prisma, UserRole } from "@/app/generated/prisma";
+import { ZodError } from "zod";
 
 async function registerHandler(request: Request) {
   try {
     const body = await request.json();
     const { turnstileToken, ...registerData } = body;
+    const isProduction = process.env.NODE_ENV === "production";
     const normalizedTurnstileToken = typeof turnstileToken === "string"
       ? turnstileToken.replace(/[\u200B-\u200D\uFEFF]/g, "").trim()
       : "";
@@ -21,18 +24,30 @@ async function registerHandler(request: Request) {
     const TURNSTILE_SECRET_KEY = (process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY || "0x4AAAAAACtsY-pmCM5GL9xHM5ivTIxV9jQ")
       .replace(/[\u200B-\u200D\uFEFF]/g, "")
       .trim();
-    const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        secret: TURNSTILE_SECRET_KEY,
-        response: normalizedTurnstileToken,
-      }),
-    });
+    try {
+      const verifyRes = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: TURNSTILE_SECRET_KEY,
+          response: normalizedTurnstileToken,
+        }),
+      });
 
-    const verifyData = await verifyRes.json();
-    if (!verifyData.success) {
-      return NextResponse.json({ error: "Security verification failed. Please refresh." }, { status: 403 });
+      const verifyData = await verifyRes.json().catch(() => null);
+      if (!verifyRes.ok || !verifyData?.success) {
+        return NextResponse.json({ error: "Security verification failed. Please refresh." }, { status: 403 });
+      }
+    } catch (turnstileError) {
+      console.error("Turnstile verification error:", turnstileError);
+
+      // Keep local development unblocked if Cloudflare verification is temporarily unavailable.
+      if (isProduction) {
+        return NextResponse.json(
+          { error: "Security verification service unavailable. Please try again." },
+          { status: 503 }
+        );
+      }
     }
     
     // 2. Validate input
@@ -55,10 +70,22 @@ async function registerHandler(request: Request) {
 
     // SECURITY NOTE: In production, you should wrap ADMIN registration behind an invite code or secret key.
     // For now, allowing direct ADMIN creation as requested for the /admin/register portal.
-    let assignedRole = validatedData.role;
+    const normalizedRole = String(validatedData.role || "").trim().toUpperCase();
+    const assignedRole = UserRole[normalizedRole as keyof typeof UserRole];
+
+    if (!assignedRole) {
+      return NextResponse.json(
+        {
+          error:
+            "Server role configuration is out of sync. Run `bunx prisma generate` and restart the dev server.",
+        },
+        { status: 503 }
+      );
+    }
+
     let selectedNgo: { id: string; name: string } | null = null;
 
-    if (assignedRole === "RIDER") {
+    if (assignedRole === UserRole.RIDER) {
       if (!validatedData.riderNgoId) {
         return NextResponse.json(
           { error: "Please select an NGO before registering as a rider." },
@@ -115,12 +142,12 @@ async function registerHandler(request: Request) {
         longitude: validatedData.longitude,
         imageUrl: validatedData.imageUrl,
         verificationDoc: validatedData.verificationDoc,
-        donorType: (validatedData as any).donorType,
+        donorType: validatedData.donorType,
       },
 
     });
 
-    if (user.role === "NGO") {
+    if (user.role === UserRole.NGO) {
       await prisma.ngoVerification.create({
         data: {
           ngoId: user.id,
@@ -130,7 +157,7 @@ async function registerHandler(request: Request) {
       });
     }
 
-    if (user.role === "RIDER" && selectedNgo) {
+    if (user.role === UserRole.RIDER && selectedNgo) {
       await prisma.riderVerificationRequest.create({
         data: {
           riderId: user.id,
@@ -156,9 +183,9 @@ async function registerHandler(request: Request) {
 
       const notificationData = admins.map(admin => ({
         userId: admin.id,
-        type: "SYSTEM" as any,
+        type: NotificationType.SYSTEM,
         title: "New Registration Alert",
-        message: user.role === "RIDER" && selectedNgo
+        message: user.role === UserRole.RIDER && selectedNgo
           ? `New RIDER "${user.name}" applied under NGO "${selectedNgo.name}" from ${user.city || "an Unknown sector"}.`
           : `New ${user.role} "${user.name}" has joined the platform from ${user.city || "an Unknown sector"}.`,
         link: `/admin/users`
@@ -188,7 +215,8 @@ async function registerHandler(request: Request) {
     }
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user;
+    void password;
 
     return NextResponse.json(
       { 
@@ -198,17 +226,59 @@ async function registerHandler(request: Request) {
       { status: 201 }
     );
 
-  } catch (error: any) {
-    if (error.name === "ZodError") {
+  } catch (error: unknown) {
+    if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues },
         { status: 400 }
       );
     }
 
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        return NextResponse.json(
+          { error: "User already exists with this email" },
+          { status: 400 }
+        );
+      }
+
+      if (error.code === "P1001") {
+        return NextResponse.json(
+          { error: "Database is currently unreachable. Please try again." },
+          { status: 503 }
+        );
+      }
+    }
+
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      if (
+        error.message.includes("Invalid value for argument `role`") ||
+        error.message.includes("Expected UserRole")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Prisma client enum is out of sync with GROUND_ADMIN. Run `bunx prisma generate` and restart the dev server.",
+          },
+          { status: 503 }
+        );
+      }
+    }
+
+    if (
+      error instanceof Error &&
+      (error.message.includes("SASL") || error.message.includes("client password must be a string"))
+    ) {
+      return NextResponse.json(
+        { error: "Database connection configuration issue. Please verify DATABASE_URL." },
+        { status: 503 }
+      );
+    }
+
     console.error("Registration error:", error);
+    const message = error instanceof Error ? error.message : "Internal Server Error";
     return   NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: process.env.NODE_ENV === "production" ? "Internal Server Error" : `Internal Server Error: ${message}` },
       { status: 500 }
     );
   }
