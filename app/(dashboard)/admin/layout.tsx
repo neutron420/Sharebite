@@ -32,6 +32,8 @@ import {
   Zap,
   ShieldAlert,
   LayoutGrid,
+  TrendingUp,
+  DownloadCloud
 } from "lucide-react";
 import { useSocket } from "@/components/providers/socket-provider";
 import { 
@@ -94,6 +96,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     ],
   },
   { label: "NGO Verification", icon: UserCheck, id: "verification", href: "/admin/verification" },
+  { label: "Ground Admins", icon: ShieldCheck, id: "ground-admins", href: "/admin/ground-admins", badge: "New" },
   { label: "Rider Verification", icon: Users, id: "rider-verification", href: "/admin/riders-verification", badge: "New" },
   { label: "Pickup Requests", icon: ClipboardList, id: "requests", href: "/admin/requests", badge: "New" },
   { label: "NGO Partners", icon: Building2, id: "ngo-partners", href: "/admin/ngo" },
@@ -105,6 +108,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { label: "Reviews", icon: Star, id: "reviews", href: "/admin/reviews" },
   { label: "Payments", icon: CreditCard, id: "payments", href: "/admin/payments" },
   { label: "Operations Map", icon: Map, id: "map", href: "/admin/map" },
+  { label: "Data Reports", icon: TrendingUp, id: "data-reports", href: "/admin/data-reports", badge: "Export" },
   { label: "Notifications", icon: Bell, id: "notifications", href: "/admin/notifications" },
   { label: "Audit Logs", icon: FileText, id: "audit-logs", href: "/admin/logs" },
   { label: "Settings", icon: Settings, id: "settings", href: "/admin/settings" },

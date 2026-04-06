@@ -285,12 +285,23 @@ async function patchNgoVerificationHandler(
       },
     });
 
-    const adminUsers = await prisma.user.findMany({
-      where: { role: "ADMIN" },
-      select: { id: true },
-      take: 100,
-    });
+    const [adminUsers, groundAdminUsers] = await Promise.all([
+      prisma.user.findMany({
+        where: { role: "ADMIN" },
+        select: { id: true },
+        take: 100,
+      }),
+      prisma.user.findMany({
+        where: { role: "GROUND_ADMIN" },
+        select: { id: true },
+        take: 100,
+      }),
+    ]);
     const adminIds = adminUsers.map((user) => user.id);
+    const groundAdminIds = groundAdminUsers.map((user) => user.id);
+
+    // Collect all user IDs who should receive realtime verification updates
+    const assignedFieldOfficerId = verification.fieldOfficerId;
 
     const emitVerificationRealtime = async (
       status: string,
@@ -305,9 +316,16 @@ async function patchNgoVerificationHandler(
         ...extraPayload,
       };
 
+      // Build unique set of recipients: admins + ground admins + assigned officer + NGO
+      const recipientIds = new Set<string>([
+        ...adminIds,
+        ...groundAdminIds,
+      ]);
+      if (assignedFieldOfficerId) recipientIds.add(assignedFieldOfficerId);
+
       await Promise.all([
         relayRealtimeEvent({
-          userIds: adminIds,
+          userIds: Array.from(recipientIds),
           type: "NGO_VERIFICATION_UPDATED",
           payload,
         }),
@@ -487,12 +505,30 @@ async function patchNgoVerificationHandler(
         details: `Scheduled field visit for NGO ${ngo.email} to officer ${officer.email} (${fieldVisitCity})`,
       });
 
-      await emitVerificationRealtime(updatedVerification.status, {
-        fieldOfficerId: updatedVerification.fieldOfficerId,
-        fieldOfficerName: updatedVerification.fieldOfficerName,
-        fieldVisitCity: updatedVerification.fieldVisitCity,
-        fieldVisitScheduledAt: updatedVerification.fieldVisitScheduledAt,
-      });
+      // Also send directly to the newly assigned officer (they might not yet be in groundAdminIds if just registered)
+      await Promise.all([
+        emitVerificationRealtime(updatedVerification.status, {
+          fieldOfficerId: updatedVerification.fieldOfficerId,
+          fieldOfficerName: updatedVerification.fieldOfficerName,
+          fieldVisitCity: updatedVerification.fieldVisitCity,
+          fieldVisitScheduledAt: updatedVerification.fieldVisitScheduledAt,
+        }),
+        relayRealtimeEvent({
+          userId: officer.id,
+          type: "NGO_VERIFICATION_UPDATED",
+          payload: {
+            ngoId,
+            status: updatedVerification.status,
+            action,
+            byUserId: actor.id,
+            updatedAt: new Date().toISOString(),
+            fieldOfficerId: updatedVerification.fieldOfficerId,
+            fieldOfficerName: updatedVerification.fieldOfficerName,
+            fieldVisitCity: updatedVerification.fieldVisitCity,
+            fieldVisitScheduledAt: updatedVerification.fieldVisitScheduledAt,
+          },
+        }),
+      ]);
 
       return NextResponse.json({ message: "Field visit scheduled", verification: updatedVerification });
     }

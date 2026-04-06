@@ -212,7 +212,8 @@ async function getNgoVerificationsHandler(request: Request) {
 
         if (scope === "field") {
           if (!isGroundAdminActor) return false;
-          if (item.status !== "FIELD_VISIT_SCHEDULED") return false;
+          // Show both pending assignments AND recently submitted reports
+          if (item.status !== "FIELD_VISIT_SCHEDULED" && item.status !== "FIELD_VERIFIED") return false;
 
           const assignedToActor = item.fieldOfficerId === (session.userId as string);
           const sameCityAsActor = !!actorCity && (item.fieldVisitCity || "").toLowerCase() === actorCity;

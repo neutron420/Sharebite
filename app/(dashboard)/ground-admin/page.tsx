@@ -239,8 +239,12 @@ export default function GroundAdminDashboardPage() {
                 <p className="font-semibold text-gray-900">{item.name}</p>
                 <p className="text-xs text-gray-500">{item.email}</p>
               </div>
-              <span className="text-[10px] px-2 py-1 rounded-full bg-orange-50 text-orange-700 font-bold">
-                Field Visit Scheduled
+              <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${
+                item.status === "FIELD_VERIFIED"
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-orange-50 text-orange-700"
+              }`}>
+                {item.status === "FIELD_VERIFIED" ? "Report Submitted ✓" : "Field Visit Scheduled"}
               </span>
             </div>
             <p className="text-xs text-gray-600 inline-flex items-center gap-1.5">
@@ -249,12 +253,18 @@ export default function GroundAdminDashboardPage() {
             <p className="text-xs text-gray-500">Officer: {item.fieldOfficerName || "Not assigned"}</p>
             <p className="text-xs text-gray-500">Visit: {item.fieldVisitScheduledAt ? new Date(item.fieldVisitScheduledAt).toLocaleString() : "Not scheduled"}</p>
 
-            <button
-              onClick={() => openReportModal(item)}
-              className="w-full mt-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700"
-            >
-              Submit Field Report
-            </button>
+            {item.status === "FIELD_VISIT_SCHEDULED" ? (
+              <button
+                onClick={() => openReportModal(item)}
+                className="w-full mt-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700"
+              >
+                Submit Field Report
+              </button>
+            ) : (
+              <p className="w-full mt-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs font-semibold text-center">
+                ✓ Field report submitted — awaiting final admin review
+              </p>
+            )}
           </div>
         ))}
 
