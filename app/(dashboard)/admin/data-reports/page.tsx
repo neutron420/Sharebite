@@ -26,10 +26,11 @@ import {
   Legend, 
   ResponsiveContainer 
 } from "recharts";
-import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
+import { Skeleton } from "boneyard-js/react";
 import { DonutChart } from "@/components/donut-chart";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/line-charts-6";
+import { format } from "date-fns";
 
 interface ReportData {
   summary: {
@@ -133,9 +134,9 @@ export default function DataReportsPage() {
   };
 
   const chartData = data ? [
-    { name: "Donations", total: data.summary.totalDonations },
-    { name: "Pickups", total: data.summary.totalPickups },
-    { name: "New Users", total: data.summary.newUsers },
+    { name: "Donations", total: data?.summary?.totalDonations || 0 },
+    { name: "Pickups", total: data?.summary?.totalPickups || 0 },
+    { name: "New Users", total: data?.summary?.newUsers || 0 },
   ] : [];
 
   const chartConfig = {
@@ -151,16 +152,16 @@ export default function DataReportsPage() {
 
   const lineChartData = data ? Array.from({ length: new Date(selectedYear, selectedMonth + 1, 0).getDate() }, (_, i) => {
     const day = i + 1;
-    const donationsCount = data.donations.filter((d: any) => new Date(d.createdAt).getDate() === day).length;
-    const pickupsCount = data.pickups.filter((p: any) => new Date(p.createdAt).getDate() === day).length;
+    const donationsCount = data?.donations?.filter((d: any) => new Date(d.createdAt).getDate() === day).length || 0;
+    const pickupsCount = data?.pickups?.filter((p: any) => new Date(p.createdAt).getDate() === day).length || 0;
     return { day, donations: donationsCount, pickups: pickupsCount };
   }) : [];
 
   const userRoleData = data ? [
-    { label: "Donors", value: data.users.filter((u: any) => u.role === "DONOR").length, color: "#f97316" },
-    { label: "NGOs", value: data.users.filter((u: any) => u.role === "NGO").length, color: "#3b82f6" },
-    { label: "Community", value: data.users.filter((u: any) => u.role === "COMMUNITY").length, color: "#8b5cf6" },
-    { label: "Riders", value: data.users.filter((u: any) => u.role === "RIDER").length, color: "#10b981" },
+    { label: "Donors", value: data?.users?.filter((u: any) => u.role === "DONOR").length || 0, color: "#f97316" },
+    { label: "NGOs", value: data?.users?.filter((u: any) => u.role === "NGO").length || 0, color: "#3b82f6" },
+    { label: "Community", value: data?.users?.filter((u: any) => u.role === "COMMUNITY").length || 0, color: "#8b5cf6" },
+    { label: "Riders", value: data?.users?.filter((u: any) => u.role === "RIDER").length || 0, color: "#10b981" },
   ] : [];
 
   return (
@@ -231,12 +232,7 @@ export default function DataReportsPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="h-64 flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 shadow-sm print-hide">
-           <div className="h-10 w-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-           <p className="mt-4 text-gray-500 font-medium animate-pulse">Generating Report...</p>
-        </div>
-      ) : data ? (
+      <Skeleton name="admin-data-report-skeleton" loading={loading}>
         <div id="printable-report" ref={printRef} className="space-y-6">
           <div className="hidden print:block mb-8 pb-4 border-b-2 border-gray-900">
             <h1 className="text-3xl font-black text-gray-900">ShareBite Monthly Report</h1>
@@ -250,8 +246,8 @@ export default function DataReportsPage() {
                 <h3 className="text-sm font-medium text-gray-500">Total Donations</h3>
                 <div className="p-2 bg-orange-50 text-orange-600 rounded-lg"><Utensils className="h-5 w-5" /></div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">{data.summary.totalDonations}</div>
-              <p className="text-xs text-emerald-600 font-medium mt-1">{data.summary.activeDonations} Currently Active</p>
+              <div className="text-3xl font-bold text-gray-900">{data?.summary?.totalDonations || 0}</div>
+              <p className="text-xs text-emerald-600 font-medium mt-1">{data?.summary?.activeDonations || 0} Currently Active</p>
             </motion.div>
 
             <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay:0.1}} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 print-break-inside-avoid">
@@ -259,8 +255,8 @@ export default function DataReportsPage() {
                 <h3 className="text-sm font-medium text-gray-500">Pickups / Deliveries</h3>
                 <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Truck className="h-5 w-5" /></div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">{data.summary.totalPickups}</div>
-              <p className="text-xs text-emerald-600 font-medium mt-1">{data.summary.completedPickups} Completed Delivery</p>
+              <div className="text-3xl font-bold text-gray-900">{data?.summary?.totalPickups || 0}</div>
+              <p className="text-xs text-emerald-600 font-medium mt-1">{data?.summary?.completedPickups || 0} Completed Delivery</p>
             </motion.div>
 
             <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay:0.2}} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 print-break-inside-avoid">
@@ -268,7 +264,7 @@ export default function DataReportsPage() {
                 <h3 className="text-sm font-medium text-gray-500">Food Saved (kg)</h3>
                 <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><Scale className="h-5 w-5" /></div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">{data.summary.totalWeight.toFixed(1)}</div>
+              <div className="text-3xl font-bold text-gray-900">{(data?.summary?.totalWeight || 0).toFixed(1)}</div>
               <p className="text-xs text-gray-500 font-medium mt-1">Total Weight Diverted</p>
             </motion.div>
 
@@ -277,7 +273,7 @@ export default function DataReportsPage() {
                 <h3 className="text-sm font-medium text-gray-500">New Registrations</h3>
                 <div className="p-2 bg-purple-50 text-purple-600 rounded-lg"><Users className="h-5 w-5" /></div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">{data.summary.newUsers}</div>
+              <div className="text-3xl font-bold text-gray-900">{data?.summary?.newUsers || 0}</div>
               <p className="text-xs text-gray-500 font-medium mt-1">Across all roles</p>
             </motion.div>
           </div>
@@ -307,7 +303,7 @@ export default function DataReportsPage() {
                     data={userRoleData.filter((d: any) => d.value > 0)} 
                     size={220} 
                     strokeWidth={24}
-                    centerContent={<div className="text-center"><p className="text-3xl font-bold text-gray-900">{data.summary.newUsers}</p><p className="text-xs text-gray-500 font-medium">Total Users</p></div>}
+                    centerContent={<div className="text-center"><p className="text-3xl font-bold text-gray-900">{data?.summary?.newUsers || 0}</p><p className="text-xs text-gray-500 font-medium">Total Users</p></div>}
                   />
                 ) : (
                   <div className="p-8 bg-gray-50 rounded-2xl text-center border border-gray-100">
@@ -335,11 +331,11 @@ export default function DataReportsPage() {
                           <Utensils className="h-4 w-4 text-orange-600" />
                           <p className="font-bold text-gray-900 text-base">Donations Data</p>
                         </div>
-                        <p className="text-sm font-medium text-gray-500">{data.donations.length} records generated</p>
+                        <p className="text-sm font-medium text-gray-500">{data?.donations?.length || 0} records generated</p>
                      </div>
                      <div className="flex gap-2 print-hide w-full">
-                        <button onClick={() => handleDownloadCSV(data.donations, "Donations_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-orange-600 hover:border-orange-200 transition-all">CSV EXPORT</button>
-                        <button onClick={() => handleDownloadExcel(data.donations, "Donations_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-emerald-600 hover:border-emerald-200 transition-all">EXCEL EXPORT</button>
+                        <button onClick={() => handleDownloadCSV(data?.donations || [], "Donations_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-orange-600 hover:border-orange-200 transition-all">CSV EXPORT</button>
+                        <button onClick={() => handleDownloadExcel(data?.donations || [], "Donations_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-emerald-600 hover:border-emerald-200 transition-all">EXCEL EXPORT</button>
                      </div>
                   </div>
                   <div className="p-5 bg-gradient-to-br from-blue-50 to-white rounded-xl border border-blue-100 shadow-[0_2px_10px_-4px_rgba(59,130,246,0.1)] flex flex-col hover:border-blue-300 transition-all duration-300 group">
@@ -348,11 +344,11 @@ export default function DataReportsPage() {
                           <Truck className="h-4 w-4 text-blue-600" />
                           <p className="font-bold text-gray-900 text-base">Deliveries Data</p>
                         </div>
-                        <p className="text-sm font-medium text-gray-500">{data.pickups.length} records generated</p>
+                        <p className="text-sm font-medium text-gray-500">{data?.pickups?.length || 0} records generated</p>
                      </div>
                      <div className="flex gap-2 print-hide w-full">
-                        <button onClick={() => handleDownloadCSV(data.pickups, "Pickups_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-orange-600 hover:border-orange-200 transition-all">CSV EXPORT</button>
-                        <button onClick={() => handleDownloadExcel(data.pickups, "Pickups_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-emerald-600 hover:border-emerald-200 transition-all">EXCEL EXPORT</button>
+                        <button onClick={() => handleDownloadCSV(data?.pickups || [], "Pickups_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-orange-600 hover:border-orange-200 transition-all">CSV EXPORT</button>
+                        <button onClick={() => handleDownloadExcel(data?.pickups || [], "Pickups_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-emerald-600 hover:border-emerald-200 transition-all">EXCEL EXPORT</button>
                      </div>
                   </div>
                   <div className="p-5 bg-gradient-to-br from-purple-50 to-white rounded-xl border border-purple-100 shadow-[0_2px_10px_-4px_rgba(168,85,247,0.1)] flex flex-col hover:border-purple-300 transition-all duration-300 group">
@@ -361,18 +357,18 @@ export default function DataReportsPage() {
                           <Users className="h-4 w-4 text-purple-600" />
                           <p className="font-bold text-gray-900 text-base">Users Data</p>
                         </div>
-                        <p className="text-sm font-medium text-gray-500">{data.users.length} records generated</p>
+                        <p className="text-sm font-medium text-gray-500">{data?.users?.length || 0} records generated</p>
                      </div>
                      <div className="flex gap-2 print-hide w-full">
-                        <button onClick={() => handleDownloadCSV(data.users, "Users_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-orange-600 hover:border-orange-200 transition-all">CSV EXPORT</button>
-                        <button onClick={() => handleDownloadExcel(data.users, "Users_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-emerald-600 hover:border-emerald-200 transition-all">EXCEL EXPORT</button>
+                        <button onClick={() => handleDownloadCSV(data?.users || [], "Users_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-orange-600 hover:border-orange-200 transition-all">CSV EXPORT</button>
+                        <button onClick={() => handleDownloadExcel(data?.users || [], "Users_Report")} className="flex-1 py-1.5 text-xs font-bold bg-white shadow-sm border border-gray-200 rounded-lg text-gray-700 hover:text-emerald-600 hover:border-emerald-200 transition-all">EXCEL EXPORT</button>
                      </div>
                   </div>
                </div>
             </motion.div>
           </div>
         </div>
-      ) : null}
+      </Skeleton>
     </div>
   );
 }
