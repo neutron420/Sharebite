@@ -46,7 +46,7 @@ export default function CookieConsent() {
           transition={{ type: "spring", stiffness: 200, damping: 25 }}
           className="fixed bottom-6 left-6 z-[100] w-full max-w-sm"
         >
-          <Card size="sm" className="bg-white shadow-2xl border-slate-100 hover:shadow-orange-100 transition-all duration-500">
+          <Card className="bg-white shadow-2xl border-slate-100 hover:shadow-orange-100 transition-all duration-500">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg font-bold text-slate-900 tracking-tight">Cookie Policy</CardTitle>
               <CardDescription className="text-[12px] font-medium text-slate-400 uppercase tracking-widest">

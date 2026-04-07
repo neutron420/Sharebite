@@ -27,7 +27,7 @@ import { FiArrowRight, FiAward, FiCheckCircle, FiClock, FiX } from "react-icons/
 import DonationList from "@/components/ui/donation-list";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import LiveRiderMap from "@/components/ui/live-rider-map";
+import { LiveRiderMap } from "@/components/map/LiveRiderMap";
 import { useSocket } from "@/components/providers/socket-provider";
 import {
   Pagination,
@@ -368,8 +368,14 @@ export default function DonorDashboard() {
                      </div>
                    </div>
                    {isTracking && (
-                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-[250px] w-full rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-lg relative bg-slate-50">
-                        <LiveRiderMap riderId={approvedReq.riderId} riderName={approvedReq.rider?.name || "Rider"} donorCoords={[donation.longitude, donation.latitude]} ngoCoords={[approvedReq.ngo.longitude, approvedReq.ngo.latitude]} status={approvedReq.status} />
+                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="h-[300px] w-full rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-lg relative bg-slate-50">
+                        <LiveRiderMap 
+                          riderId={approvedReq.riderId} 
+                          pickupCoords={{ lat: donation.latitude, lng: donation.longitude }} 
+                          deliveryCoords={{ lat: approvedReq.ngo.latitude, lng: approvedReq.ngo.longitude }}
+                          pickupLabel={donation.title}
+                          deliveryLabel={approvedReq.ngo.name}
+                        />
                         <div className="absolute bottom-4 left-6 z-10"><Badge className="bg-black/80 text-white backdrop-blur-md border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">Live Pursuit Grid</Badge></div>
                      </motion.div>
                    )}

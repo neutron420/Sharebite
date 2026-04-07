@@ -255,6 +255,20 @@ wss.on("connection", async (ws, req) => {
           const typingMsg = JSON.stringify({ userId: receiverId, type: "TYPING_INDICATOR", payload: { conversationId, isTyping, userId } });
           if (redisAvailable) pub!.publish("notifications", typingMsg).catch(() => {});
           else deliverToUser(receiverId, "TYPING_INDICATOR", { conversationId, isTyping, userId });
+        } else if (type === "RIDER_LOCATION_UPDATE") {
+          const { userIds, lat, lng, riderId: rId, heading, speed } = msgPayload;
+          const locationMsg = JSON.stringify({ 
+            type: "RIDER_LOCATION_UPDATE", 
+            userIds, 
+            lat, 
+            lng, 
+            riderId: rId, 
+            heading, 
+            speed 
+          });
+          
+          if (redisAvailable) pub!.publish("notifications", locationMsg).catch(() => {});
+          else handleBroadcast("notifications", locationMsg);
         } else if (type === "HEARTBEAT") {
           sendWsMessage(ws, "HEARTBEAT_ACK", undefined);
         }
