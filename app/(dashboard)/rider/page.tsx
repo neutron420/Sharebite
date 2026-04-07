@@ -24,6 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { Wallet, Trophy, Coins, CreditCard } from "lucide-react";
 import { TimesheetConfirmation } from "@/components/timesheet-confirmation";
 import { RIDER_PAYOUT_AMOUNT_INR } from "@/lib/payout";
+import { useRiderLocation } from "@/hooks/use-rider-location";
+import { RouteOptimizer } from "@/components/map/RouteOptimizer";
 
 interface Task {
   id: string;
@@ -36,6 +38,8 @@ interface Task {
     status: string;
   };
   donation: {
+    longitude: number;
+    latitude: number;
     id: string;
     title: string;
     donorId: string;
@@ -46,6 +50,8 @@ interface Task {
     };
   };
   ngo: {
+    longitude: number;
+    latitude: number;
     id: string;
     name: string;
     address: string;
@@ -199,7 +205,17 @@ export default function RiderDashboard() {
   const activeMission = tasks.find(
     (t) => t.riderId && (t.status === "ASSIGNED" || t.status === "ON_THE_WAY" || isPayoutPendingMission(t))
   );
+
   const availableBounties = tasks.filter(t => !t.riderId && t.status === "APPROVED");
+
+  // Phase 1: Real-Time Location Capture
+  const { lastPosition } = useRiderLocation({
+    riderId: activeMission?.riderId || null,
+    activeMissionId: activeMission?.id || null,
+    connectedUserIds: activeMission 
+      ? [activeMission.donation.donorId, activeMission.ngoId] 
+      : []
+  });
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-20 gap-4">
@@ -251,15 +267,15 @@ export default function RiderDashboard() {
          </h2>
 
          {activeMission ? (
-           <motion.div 
+            <motion.div 
              initial={{ opacity: 0, y: 10 }} 
              animate={{ opacity: 1, y: 0 }}
              className="bg-white border border-gray-200 rounded-[2rem] sm:rounded-3xl p-6 sm:p-8 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
-           >
+            >
              <div className="absolute top-0 right-0 w-32 sm:w-48 h-32 sm:h-48 bg-orange-500/5 blur-3xl" />
              
              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 items-center relative z-10">
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-6">
                     <div className="space-y-2">
                       {(() => {
                         const step = activeMission.step || 0;
@@ -277,7 +293,8 @@ export default function RiderDashboard() {
                         );
                       })()}
                       <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{activeMission.donation.title}</h3>
-                      <div className="text-xs font-medium text-orange-600 uppercase tracking-wide">
+                      <div className="text-xs font-medium text-orange-600 uppercase tracking-wide flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-ping" />
                          {(() => {
                             const step = activeMission.step || 0;
                             if (activeMission.status === "ASSIGNED") return "Objective: Pickup Food";
@@ -287,20 +304,41 @@ export default function RiderDashboard() {
                             return "Objective: Mission Finalized";
                          })()}
                       </div>
-                   </div>
+                    </div>
 
-                   <div className="space-y-3">
-                      <MissionWayPoint 
-                         label="Pickup Site" 
-                         value={activeMission.donation.donor.address + ", " + activeMission.donation.donor.city} 
-                         active={activeMission.status === 'ASSIGNED'} 
-                      />
-                      <MissionWayPoint 
-                         label="Delivery Drop" 
-                         value={activeMission.ngo.address + ", " + activeMission.ngo.city} 
-                         active={activeMission.status === 'ON_THE_WAY'} 
-                      />
-                   </div>
+                    {/* Phase 4: Route Optimization Integration */}
+                    <RouteOptimizer 
+                      currentLocation={lastPosition}
+                      waypoints={[
+                        { 
+                          id: "pickup", 
+                          type: "pickup", 
+                          lat: activeMission.donation.latitude || 0, 
+                          lng: activeMission.donation.longitude || 0, 
+                          label: activeMission.donation.donor.name 
+                        },
+                        { 
+                          id: "delivery", 
+                          type: "delivery", 
+                          lat: activeMission.ngo.latitude || 0, 
+                          lng: activeMission.ngo.longitude || 0, 
+                          label: activeMission.ngo.name 
+                        }
+                      ]}
+                    />
+
+                    <div className="space-y-3 pt-4 border-t border-gray-50">
+                       <MissionWayPoint 
+                          label="Pickup Site" 
+                          value={activeMission.donation.donor.address + ", " + activeMission.donation.donor.city} 
+                          active={activeMission.status === 'ASSIGNED'} 
+                       />
+                       <MissionWayPoint 
+                          label="Delivery Drop" 
+                          value={activeMission.ngo.address + ", " + activeMission.ngo.city} 
+                          active={activeMission.status === 'ON_THE_WAY'} 
+                       />
+                    </div>
                 </div>
 
                 <div className="flex flex-col items-center gap-4">

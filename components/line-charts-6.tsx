@@ -106,14 +106,8 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-  React.ComponentProps<'div'> & {
-    hideLabel?: boolean;
-    hideIndicator?: boolean;
-    indicator?: 'line' | 'dot' | 'dashed';
-    nameKey?: string;
-    labelKey?: string;
-  }) {
+  ...props
+}: any) {
   const { config } = useChart();
 
   const tooltipLabel = React.useMemo(() => {
@@ -125,10 +119,16 @@ function ChartTooltipContent({
     const key = `${labelKey || item?.dataKey || item?.name || 'value'}`;
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
     const value =
-      !labelKey && typeof label === 'string' ? config[label as keyof typeof config]?.label || label : itemConfig?.label;
+      !labelKey && typeof label === 'string'
+        ? config[label as keyof typeof config]?.label || label
+        : itemConfig?.label;
 
     if (labelFormatter) {
-      return <div className={cn('font-medium', labelClassName)}>{labelFormatter(value, payload)}</div>;
+      return (
+        <div className={cn('font-medium', labelClassName)}>
+          {labelFormatter(value, payload)}
+        </div>
+      );
     }
 
     if (!value) {
@@ -150,17 +150,18 @@ function ChartTooltipContent({
         'border-border/50 bg-background grid min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl',
         className,
       )}
+      {...props}
     >
       {!nestLabel ? tooltipLabel : null}
       <div className="grid gap-1.5">
-        {payload.map((item, index) => {
+        {payload.map((item: any, index: number) => {
           const key = `${nameKey || item.name || item.dataKey || 'value'}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
-          const indicatorColor = color || item.payload.fill || item.color;
+          const indicatorColor = color || (item.payload as any)?.fill || item.color;
 
           return (
             <div
-              key={item.dataKey}
+              key={item.dataKey || index}
               className={cn(
                 '[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
                 indicator === 'dot' && 'items-center',
@@ -191,11 +192,16 @@ function ChartTooltipContent({
                     )
                   )}
                   <div
-                    className={cn('flex flex-1 justify-between leading-none', nestLabel ? 'items-end' : 'items-center')}
+                    className={cn(
+                      'flex flex-1 justify-between leading-none',
+                      nestLabel ? 'items-end' : 'items-center',
+                    )}
                   >
                     <div className="grid gap-1.5">
                       {nestLabel ? tooltipLabel : null}
-                      <span className="text-muted-foreground">{itemConfig?.label || item.name}</span>
+                      <span className="text-muted-foreground">
+                        {itemConfig?.label || item.name}
+                      </span>
                     </div>
                     {item.value && (
                       <span className="text-foreground font-mono font-medium tabular-nums">
@@ -221,11 +227,7 @@ function ChartLegendContent({
   payload,
   verticalAlign = 'bottom',
   nameKey,
-}: React.ComponentProps<'div'> &
-  Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
-    hideIcon?: boolean;
-    nameKey?: string;
-  }) {
+}: any) {
   const { config } = useChart();
 
   if (!payload?.length) {
@@ -233,14 +235,20 @@ function ChartLegendContent({
   }
 
   return (
-    <div className={cn('flex items-center justify-center gap-4', verticalAlign === 'top' ? 'pb-3' : 'pt-3', className)}>
-      {payload.map((item) => {
+    <div
+      className={cn(
+        'flex items-center justify-center gap-4',
+        verticalAlign === 'top' ? 'pb-3' : 'pt-3',
+        className,
+      )}
+    >
+      {payload.map((item: any, index: number) => {
         const key = `${nameKey || item.dataKey || 'value'}`;
         const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
         return (
           <div
-            key={item.value}
+            key={item.value || index}
             className={cn('[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3')}
           >
             {itemConfig?.icon && !hideIcon ? (

@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import LiveRiderMap from "@/components/ui/live-rider-map";
+import { LiveRiderMap } from "@/components/map/LiveRiderMap";
 import { useSocket } from "@/components/providers/socket-provider";
 
 interface Activity {
@@ -246,13 +246,13 @@ export default function NgoDashboard() {
  exit={{ opacity: 0, height: 0 }}
  className="rounded-3xl sm:rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-lg bg-slate-50 relative"
  >
- <LiveRiderMap 
- riderId={req.riderId}
- riderName={req.rider?.name || "Rider"}
- donorCoords={[req.donation.donor.longitude, req.donation.donor.latitude]}
- ngoCoords={[req.ngo.longitude, req.ngo.latitude]}
- status={req.status}
- />
+              <LiveRiderMap 
+                riderId={req.riderId}
+                pickupCoords={{ lat: req.donation.donor.latitude, lng: req.donation.donor.longitude }}
+                deliveryCoords={{ lat: req.ngo.latitude, lng: req.ngo.longitude }}
+                pickupLabel={req.donation.donor.name}
+                deliveryLabel="NGO Delivery Site"
+              />
  <div className="absolute bottom-4 left-6 z-10">
  <Badge className="bg-black/80 text-white backdrop-blur-md border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">Live Pursuit Grid</Badge>
  </div>
